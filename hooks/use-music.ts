@@ -81,7 +81,8 @@ export function useMusic() {
       audio.addEventListener("ended", endedHandler)
       endedHandlerRef.current = endedHandler
 
-      audio.play()
+      audio
+        .play()
         .then(() => {
           setCurrentTrack(track)
           setIsPlaying(true)
