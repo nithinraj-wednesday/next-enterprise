@@ -26,11 +26,17 @@ export default function MusicPage() {
     progress,
     duration,
     volume,
+    isShuffled,
+    repeatMode,
     searchMusic,
     playTrack,
     togglePlayPause,
     seekTo,
     setVolumeLevel,
+    toggleShuffle,
+    playPrevious,
+    playNext,
+    toggleRepeat,
     formatTime,
   } = useMusic()
 
@@ -222,6 +228,12 @@ export default function MusicPage() {
         onTogglePlay={togglePlayPause}
         onSeek={seekTo}
         onVolumeChange={setVolumeLevel}
+        onShuffle={toggleShuffle}
+        onPrevious={playPrevious}
+        onNext={playNext}
+        onRepeat={toggleRepeat}
+        isShuffled={isShuffled}
+        repeatMode={repeatMode}
         formatTime={formatTime}
       />
     </div>

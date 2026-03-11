@@ -12,9 +12,13 @@ export function useMusic() {
   const [progress, setProgress] = useState(0)
   const [duration, setDuration] = useState(0)
   const [volume, setVolume] = useState(0.7)
+  const [isShuffled, setIsShuffled] = useState(false)
+  const [repeatMode, setRepeatMode] = useState<"off" | "all" | "one">("off")
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const progressInterval = useRef<NodeJS.Timeout | null>(null)
   const endedHandlerRef = useRef<(() => void) | null>(null)
+  const originalTracksRef = useRef<Track[]>([])
+  const currentTrackIndexRef = useRef<number>(-1)
 
   // Cleanup on unmount
   useEffect(() => {
@@ -39,10 +43,13 @@ export function useMusic() {
       try {
         const res = await fetch(`/api/music/search?term=${encodeURIComponent(query)}&entity=${entity}&limit=${limit}`)
         const data = (await res.json()) as SearchResponse
-        setTracks(data.results.filter((t) => t.previewUrl))
+        const filteredTracks = data.results.filter((t) => t.previewUrl)
+        setTracks(filteredTracks)
+        originalTracksRef.current = filteredTracks
       } catch (err) {
         console.error("Search failed:", err)
         setTracks([])
+        originalTracksRef.current = []
       } finally {
         setLoading(false)
       }
@@ -74,6 +81,21 @@ export function useMusic() {
       })
 
       const endedHandler = () => {
+        if (repeatMode === "one") {
+          if (audioRef.current) {
+            audioRef.current.currentTime = 0
+            audioRef.current.play().catch(console.error)
+          }
+          return
+        }
+        if (repeatMode === "all") {
+          const currentIndex = tracks.findIndex((t) => t.trackId === track.trackId)
+          const nextIndex = currentIndex < tracks.length - 1 ? currentIndex + 1 : 0
+          if (tracks[nextIndex]) {
+            playTrack(tracks[nextIndex])
+            return
+          }
+        }
         setIsPlaying(false)
         setProgress(0)
         if (progressInterval.current) clearInterval(progressInterval.current)
@@ -143,6 +165,42 @@ export function useMusic() {
     return `${mins}:${secs.toString().padStart(2, "0")}`
   }, [])
 
+  const toggleShuffle = useCallback(() => {
+    setIsShuffled((prev) => {
+      if (!prev) {
+        const shuffled = [...tracks].sort(() => Math.random() - 0.5)
+        setTracks(shuffled)
+      } else {
+        setTracks(originalTracksRef.current)
+      }
+      return !prev
+    })
+  }, [tracks])
+
+  const playPrevious = useCallback(() => {
+    if (tracks.length === 0) return
+    const currentIndex = tracks.findIndex((t) => t.trackId === currentTrack?.trackId)
+    const prevIndex = currentIndex > 0 ? currentIndex - 1 : tracks.length - 1
+    const prevTrack = tracks[prevIndex]
+    if (prevTrack) playTrack(prevTrack)
+  }, [tracks, currentTrack, playTrack])
+
+  const playNext = useCallback(() => {
+    if (tracks.length === 0) return
+    const currentIndex = tracks.findIndex((t) => t.trackId === currentTrack?.trackId)
+    const nextIndex = currentIndex < tracks.length - 1 ? currentIndex + 1 : 0
+    const nextTrack = tracks[nextIndex]
+    if (nextTrack) playTrack(nextTrack)
+  }, [tracks, currentTrack, playTrack])
+
+  const toggleRepeat = useCallback(() => {
+    setRepeatMode((prev) => {
+      if (prev === "off") return "all"
+      if (prev === "all") return "one"
+      return "off"
+    })
+  }, [])
+
   return {
     tracks,
     loading,
@@ -151,11 +209,17 @@ export function useMusic() {
     progress,
     duration,
     volume,
+    isShuffled,
+    repeatMode,
     searchMusic,
     playTrack,
     togglePlayPause,
     seekTo,
     setVolumeLevel,
+    toggleShuffle,
+    playPrevious,
+    playNext,
+    toggleRepeat,
     formatTime,
   }
 }

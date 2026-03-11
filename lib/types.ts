@@ -67,5 +67,11 @@ export interface PlayerBarProps {
   onTogglePlay: () => void
   onSeek: (pct: number) => void
   onVolumeChange: (vol: number) => void
+  onShuffle: () => void
+  onPrevious: () => void
+  onNext: () => void
+  onRepeat: () => void
+  isShuffled: boolean
+  repeatMode: "off" | "all" | "one"
   formatTime: (s: number) => string
 }

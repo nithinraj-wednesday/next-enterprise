@@ -231,6 +231,12 @@ export function PlayerBar({
   onTogglePlay,
   onSeek,
   onVolumeChange,
+  onShuffle,
+  onPrevious,
+  onNext,
+  onRepeat,
+  isShuffled,
+  repeatMode,
   formatTime,
 }: PlayerBarProps) {
   const progressBarRef = useRef<HTMLDivElement>(null)
@@ -286,11 +292,23 @@ export function PlayerBar({
 
         <div className="flex flex-1 flex-col items-center gap-1">
           <div className="flex items-center gap-3">
-            <button className="text-muted-foreground hover:text-foreground p-1 transition-colors" aria-label="Shuffle">
+            <button
+              onClick={onShuffle}
+              className={cn(
+                "p-1 transition-colors",
+                isShuffled ? "text-gold" : "text-muted-foreground hover:text-foreground"
+              )}
+              aria-label={isShuffled ? "Shuffle on" : "Shuffle off"}
+              aria-pressed={isShuffled}
+            >
               <HugeiconsIcon icon={ShuffleIcon} className="size-4" strokeWidth={2} />
             </button>
 
-            <button className="text-muted-foreground hover:text-foreground p-1 transition-colors" aria-label="Previous">
+            <button
+              onClick={onPrevious}
+              className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+              aria-label="Previous"
+            >
               <HugeiconsIcon icon={PreviousIcon} className="size-5" fill="currentColor" />
             </button>
 
@@ -307,12 +325,29 @@ export function PlayerBar({
               )}
             </button>
 
-            <button className="text-muted-foreground hover:text-foreground p-1 transition-colors" aria-label="Next">
+            <button
+              onClick={onNext}
+              className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+              aria-label="Next"
+            >
               <HugeiconsIcon icon={NextIcon} className="size-5" fill="currentColor" />
             </button>
 
-            <button className="text-muted-foreground hover:text-foreground p-1 transition-colors" aria-label="Repeat">
-              <HugeiconsIcon icon={RepeatIcon} className="size-4" strokeWidth={2} />
+            <button
+              onClick={onRepeat}
+              className={cn(
+                "p-1 transition-colors",
+                repeatMode !== "off" ? "text-gold" : "text-muted-foreground hover:text-foreground"
+              )}
+              aria-label={`Repeat ${repeatMode}`}
+              aria-pressed={repeatMode !== "off"}
+            >
+              <HugeiconsIcon
+                icon={RepeatIcon}
+                className={cn("size-4", repeatMode === "one" && "text-xs")}
+                strokeWidth={2}
+              />
+              {repeatMode === "one" && <span className="absolute -mt-1 text-[8px]">1</span>}
             </button>
           </div>
 
