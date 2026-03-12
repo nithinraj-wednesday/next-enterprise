@@ -14,6 +14,7 @@ import {
   // @ts-expect-error - hugeicons moduleResolution mismatch
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 import { getArtworkUrl } from "@/app/music/constants"
 import { PlayerBarProps, SearchBarProps, TrackCardProps, TrackRowProps } from "@/lib/types"
@@ -99,10 +100,12 @@ export function TrackCard({ track, isActive, isPlaying, onPlay, index }: TrackCa
       <div className="relative mb-3 aspect-square w-full overflow-hidden rounded-lg">
         {artworkUrl ? (
           <>
-            <img
+            <Image
               src={artworkUrl}
               alt={`${track.trackName} by ${track.artistName}`}
-              className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              fill
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
               loading="lazy"
             />
             <div
@@ -196,7 +199,7 @@ export function TrackRow({ track, isActive, isPlaying, onPlay, index, formatTime
 
       <div className="relative size-10 shrink-0 overflow-hidden rounded-md">
         {artworkUrl ? (
-          <img src={artworkUrl} alt={track.trackName} className="size-full object-cover" loading="lazy" />
+          <Image src={artworkUrl} alt={track.trackName} className="object-cover" fill sizes="40px" loading="lazy" />
         ) : (
           <div className="bg-muted size-full" />
         )}
@@ -277,9 +280,9 @@ export function PlayerBar({
 
       <div className="mx-auto flex max-w-screen-2xl items-center gap-4 px-4 py-3 sm:px-6">
         <div className="flex max-w-xs min-w-0 flex-1 items-center gap-3">
-          <div className="size-12 shrink-0 overflow-hidden rounded-lg shadow-lg ring-1 ring-white/5">
+          <div className="relative size-12 shrink-0 overflow-hidden rounded-lg shadow-lg ring-1 ring-white/5">
             {artworkUrl ? (
-              <img src={artworkUrl} alt={currentTrack.trackName} className="size-full object-cover" />
+              <Image src={artworkUrl} alt={currentTrack.trackName} className="object-cover" fill sizes="48px" />
             ) : (
               <div className="bg-muted size-full" />
             )}
