@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  Logout01Icon,
   MusicNote01Icon,
   NextIcon,
   PauseIcon,
@@ -15,10 +16,137 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { getArtworkUrl } from "@/app/music/constants"
+import { signOut } from "@/lib/auth-client"
 import { PlayerBarProps, SearchBarProps, TrackCardProps, TrackRowProps } from "@/lib/types"
 import { cn } from "@/lib/utils"
+
+interface MusicAppHeaderProps {
+  activeRoute: "music" | "favorites"
+  favoriteCount: number
+  userName?: string
+}
+
+interface FavoriteButtonProps {
+  isFavorite: boolean
+  isPending?: boolean
+  onClick: () => void
+}
+
+function HeartIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" className="size-4.5" aria-hidden="true" fill={filled ? "currentColor" : "none"}>
+      <path
+        d="M12 20.7 4.9 13.9a4.8 4.8 0 0 1 0-7 4.95 4.95 0 0 1 7 0l.1.1.1-.1a4.95 4.95 0 0 1 7 7L12 20.7Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+export function FavoriteButton({ isFavorite, isPending, onClick }: FavoriteButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={isPending}
+      aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+      aria-pressed={isFavorite}
+      className={cn(
+        "flex size-9 items-center justify-center rounded-full border transition-all duration-200",
+        "backdrop-blur-sm",
+        isFavorite
+          ? "border-gold/40 bg-gold/15 text-gold shadow-[0_0_24px_-10px_var(--gold-glow)]"
+          : "text-muted-foreground hover:border-gold/30 hover:text-gold border-white/10 bg-black/35",
+        isPending && "cursor-wait opacity-70"
+      )}
+    >
+      {isPending ? (
+        <div className="border-gold/30 border-t-gold size-4 animate-spin rounded-full border-2" />
+      ) : (
+        <HeartIcon filled={isFavorite} />
+      )}
+    </button>
+  )
+}
+
+export function MusicAppHeader({ activeRoute, favoriteCount, userName }: MusicAppHeaderProps) {
+  const router = useRouter()
+
+  return (
+    <div className="mb-8 flex flex-col gap-4 sm:mb-12">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="relative size-9">
+            <div className="from-gold/80 to-gold/40 absolute inset-0 rounded-full bg-gradient-to-br">
+              <div className="bg-background absolute inset-[35%] rounded-full" />
+            </div>
+          </div>
+          <div>
+            <h1 className="font-display text-foreground text-xl leading-none font-bold tracking-tight">
+              Obsidian<span className="text-gold">Sound</span>
+            </h1>
+            <p className="text-muted-foreground font-body mt-0.5 text-[10px] tracking-[0.2em] uppercase">
+              Music Discovery
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {userName ? <span className="text-muted-foreground hidden text-sm sm:inline">{userName}</span> : null}
+          <button
+            onClick={async () => {
+              try {
+                await signOut()
+                router.push("/")
+              } catch (error) {
+                console.error("Sign out failed:", error)
+              }
+            }}
+            className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs transition-colors hover:bg-white/5"
+            aria-label="Sign out"
+          >
+            <HugeiconsIcon icon={Logout01Icon} className="size-4" />
+            <span className="hidden sm:inline">Sign out</span>
+          </button>
+        </div>
+      </div>
+
+      <nav className="flex flex-wrap items-center gap-2">
+        <Link
+          href="/music"
+          className={cn(
+            "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-all duration-200",
+            activeRoute === "music"
+              ? "border-gold/40 bg-gold/10 text-gold"
+              : "border-border/60 bg-secondary/55 text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Discover
+          <span className="rounded-full bg-black/20 px-2 py-0.5 text-[10px] tracking-[0.18em] uppercase">Live</span>
+        </Link>
+        <Link
+          href="/favorites"
+          className={cn(
+            "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-all duration-200",
+            activeRoute === "favorites"
+              ? "border-gold/40 bg-gold/10 text-gold"
+              : "border-border/60 bg-secondary/55 text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Favorites
+          <span className="rounded-full bg-black/20 px-2 py-0.5 text-[10px] tabular-nums">{favoriteCount}</span>
+        </Link>
+      </nav>
+    </div>
+  )
+}
 
 export function SearchBar({ onSearch, loading }: SearchBarProps) {
   const [query, setQuery] = useState("")
@@ -82,146 +210,198 @@ export function SearchBar({ onSearch, loading }: SearchBarProps) {
   )
 }
 
-export function TrackCard({ track, isActive, isPlaying, onPlay, index }: TrackCardProps) {
+export function TrackCard({
+  track,
+  isActive,
+  isPlaying,
+  onPlay,
+  onToggleFavorite,
+  isFavorite = false,
+  isFavoritePending = false,
+  index,
+}: TrackCardProps) {
   const artworkUrl = getArtworkUrl(track.artworkUrl100, "medium")
 
   return (
-    <button
-      onClick={() => onPlay(track)}
+    <div
       className={cn(
-        "group flex cursor-pointer flex-col rounded-xl text-left transition-all duration-300",
-        "hover:bg-secondary/60",
+        "group animate-fade-up hover:bg-secondary/60 rounded-xl p-2.5 transition-all duration-300",
         "animate-fade-up p-2.5",
         isActive && "bg-secondary/80 ring-gold/20 ring-1"
       )}
       style={{ animationDelay: `${index * 50}ms` }}
-      id={`track-card-${track.trackId}`}
     >
-      <div className="relative mb-3 aspect-square w-full overflow-hidden rounded-lg">
-        {artworkUrl ? (
-          <>
-            <Image
-              src={artworkUrl}
-              alt={`${track.trackName} by ${track.artistName}`}
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-              fill
-              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-              loading="lazy"
+      <div className="relative">
+        {onToggleFavorite ? (
+          <div className="absolute top-2 right-2 z-20">
+            <FavoriteButton
+              isFavorite={isFavorite}
+              isPending={isFavoritePending}
+              onClick={() => onToggleFavorite(track)}
             />
-            <div
-              className="artwork-glow"
-              style={{
-                background: `url(${artworkUrl})`,
-                backgroundSize: "cover",
-              }}
-            />
-          </>
-        ) : (
-          <div className="bg-muted flex size-full items-center justify-center">
-            <HugeiconsIcon icon={MusicNote01Icon} className="text-muted-foreground size-10" strokeWidth={1.5} />
           </div>
-        )}
+        ) : null}
 
-        <div className="absolute inset-0 z-10 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-          <div
-            className={cn(
-              "flex size-12 items-center justify-center rounded-full shadow-xl transition-transform duration-200",
-              "bg-gold text-primary-foreground",
-              "scale-75 group-hover:scale-100",
-              isActive && isPlaying && "animate-pulse-glow"
-            )}
-          >
-            {isActive && isPlaying ? (
-              <div className="flex h-4 items-end gap-[3px]">
-                <div className="eq-bar" />
-                <div className="eq-bar" />
-                <div className="eq-bar" />
-                <div className="eq-bar" />
-              </div>
+        <button
+          type="button"
+          onClick={() => onPlay(track)}
+          className="flex w-full cursor-pointer flex-col text-left"
+          id={`track-card-${track.trackId}`}
+        >
+          <div className="relative mb-3 aspect-square w-full overflow-hidden rounded-lg">
+            {artworkUrl ? (
+              <>
+                <Image
+                  src={artworkUrl}
+                  alt={`${track.trackName} by ${track.artistName}`}
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  fill
+                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
+                  loading="lazy"
+                />
+                <div
+                  className="artwork-glow"
+                  style={{
+                    background: `url(${artworkUrl})`,
+                    backgroundSize: "cover",
+                  }}
+                />
+              </>
             ) : (
-              <HugeiconsIcon icon={PlayIcon} className="ml-0.5 size-5" fill="currentColor" />
+              <div className="bg-muted flex size-full items-center justify-center">
+                <HugeiconsIcon icon={MusicNote01Icon} className="text-muted-foreground size-10" strokeWidth={1.5} />
+              </div>
             )}
-          </div>
-        </div>
 
-        {isActive && (
-          <div className="absolute bottom-2 left-2 z-10 flex h-3 items-end gap-[2px]">
-            <div className="eq-bar !w-[2px]" />
-            <div className="eq-bar !w-[2px]" />
-            <div className="eq-bar !w-[2px]" />
-          </div>
-        )}
-      </div>
+            <div className="absolute inset-0 z-10 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+              <div
+                className={cn(
+                  "flex size-12 items-center justify-center rounded-full shadow-xl transition-transform duration-200",
+                  "bg-gold text-primary-foreground",
+                  "scale-75 group-hover:scale-100",
+                  isActive && isPlaying && "animate-pulse-glow"
+                )}
+              >
+                {isActive && isPlaying ? (
+                  <div className="flex h-4 items-end gap-[3px]">
+                    <div className="eq-bar" />
+                    <div className="eq-bar" />
+                    <div className="eq-bar" />
+                    <div className="eq-bar" />
+                  </div>
+                ) : (
+                  <HugeiconsIcon icon={PlayIcon} className="ml-0.5 size-5" fill="currentColor" />
+                )}
+              </div>
+            </div>
 
-      <div className="flex min-w-0 flex-col gap-0.5 px-0.5">
-        <span className={cn("truncate text-sm leading-tight font-medium", isActive ? "text-gold" : "text-foreground")}>
-          {track.trackName}
-        </span>
-        <span className="text-muted-foreground truncate text-xs">{track.artistName}</span>
+            {isActive ? (
+              <div className="absolute bottom-2 left-2 z-10 flex h-3 items-end gap-[2px]">
+                <div className="eq-bar !w-[2px]" />
+                <div className="eq-bar !w-[2px]" />
+                <div className="eq-bar !w-[2px]" />
+              </div>
+            ) : null}
+          </div>
+
+          <div className="flex min-w-0 flex-col gap-0.5 px-0.5">
+            <span
+              className={cn("truncate text-sm leading-tight font-medium", isActive ? "text-gold" : "text-foreground")}
+            >
+              {track.trackName}
+            </span>
+            <span className="text-muted-foreground truncate text-xs">{track.artistName}</span>
+          </div>
+        </button>
       </div>
-    </button>
+    </div>
   )
 }
 
-export function TrackRow({ track, isActive, isPlaying, onPlay, index, formatTime }: TrackRowProps) {
+export function TrackRow({
+  track,
+  isActive,
+  isPlaying,
+  onPlay,
+  onToggleFavorite,
+  isFavorite = false,
+  isFavoritePending = false,
+  index,
+  formatTime,
+}: TrackRowProps) {
   const artworkUrl = getArtworkUrl(track.artworkUrl60, "small")
 
   return (
-    <button
-      onClick={() => onPlay(track)}
+    <div
       className={cn(
-        "group flex w-full cursor-pointer items-center gap-4 rounded-xl p-3 text-left transition-all duration-200",
+        "group flex items-center gap-2 rounded-xl p-2 transition-all duration-200",
         "hover:bg-secondary/60",
         "animate-fade-up",
         isActive && "bg-secondary/80"
       )}
       style={{ animationDelay: `${index * 30}ms` }}
-      id={`track-row-${track.trackId}`}
     >
-      <div className="w-8 shrink-0 text-center">
-        {isActive && isPlaying ? (
-          <div className="flex h-4 items-end justify-center gap-[2px]">
-            <div className="eq-bar !w-[2px]" />
-            <div className="eq-bar !w-[2px]" />
-            <div className="eq-bar !w-[2px]" />
+      <button
+        type="button"
+        onClick={() => onPlay(track)}
+        className="flex min-w-0 flex-1 cursor-pointer items-center gap-4 rounded-lg px-1 py-1 text-left"
+        id={`track-row-${track.trackId}`}
+      >
+        <div className="w-8 shrink-0 text-center">
+          {isActive && isPlaying ? (
+            <div className="flex h-4 items-end justify-center gap-[2px]">
+              <div className="eq-bar !w-[2px]" />
+              <div className="eq-bar !w-[2px]" />
+              <div className="eq-bar !w-[2px]" />
+            </div>
+          ) : (
+            <span
+              className={cn(
+                "text-sm tabular-nums transition-colors",
+                isActive ? "text-gold" : "text-muted-foreground group-hover:text-foreground"
+              )}
+            >
+              {String(index + 1).padStart(2, "0")}
+            </span>
+          )}
+        </div>
+
+        <div className="relative size-10 shrink-0 overflow-hidden rounded-md">
+          {artworkUrl ? (
+            <Image src={artworkUrl} alt={track.trackName} className="object-cover" fill sizes="40px" loading="lazy" />
+          ) : (
+            <div className="bg-muted size-full" />
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className={cn("truncate text-sm font-medium", isActive ? "text-gold" : "text-foreground")}>
+            {track.trackName}
           </div>
-        ) : (
-          <span
-            className={cn(
-              "text-sm tabular-nums transition-colors",
-              isActive ? "text-gold" : "text-muted-foreground group-hover:text-foreground"
-            )}
-          >
-            {String(index + 1).padStart(2, "0")}
-          </span>
-        )}
-      </div>
-
-      <div className="relative size-10 shrink-0 overflow-hidden rounded-md">
-        {artworkUrl ? (
-          <Image src={artworkUrl} alt={track.trackName} className="object-cover" fill sizes="40px" loading="lazy" />
-        ) : (
-          <div className="bg-muted size-full" />
-        )}
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <div className={cn("truncate text-sm font-medium", isActive ? "text-gold" : "text-foreground")}>
-          {track.trackName}
+          <div className="text-muted-foreground truncate text-xs">
+            {track.artistName} · {track.collectionName}
+          </div>
         </div>
-        <div className="text-muted-foreground truncate text-xs">
-          {track.artistName} · {track.collectionName}
+
+        <span className="text-muted-foreground bg-muted/60 hidden rounded-full px-2 py-0.5 text-xs md:inline-flex">
+          {track.primaryGenreName}
+        </span>
+
+        <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
+          {formatTime(track.trackTimeMillis / 1000)}
+        </span>
+      </button>
+
+      {onToggleFavorite ? (
+        <div className="shrink-0">
+          <FavoriteButton
+            isFavorite={isFavorite}
+            isPending={isFavoritePending}
+            onClick={() => onToggleFavorite(track)}
+          />
         </div>
-      </div>
-
-      <span className="text-muted-foreground bg-muted/60 hidden rounded-full px-2 py-0.5 text-xs md:inline-flex">
-        {track.primaryGenreName}
-      </span>
-
-      <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
-        {formatTime(track.trackTimeMillis / 1000)}
-      </span>
-    </button>
+      ) : null}
+    </div>
   )
 }
 
@@ -427,6 +607,28 @@ export function EmptyState() {
           catalog.
         </p>
       </div>
+    </div>
+  )
+}
+
+export function FavoritesEmptyState() {
+  return (
+    <div className="glass-card animate-fade-up mx-auto flex max-w-3xl flex-col items-center justify-center gap-6 rounded-[2rem] px-8 py-16 text-center">
+      <div className="border-gold/20 bg-gold/8 text-gold flex size-20 items-center justify-center rounded-full border">
+        <HeartIcon filled />
+      </div>
+      <div className="max-w-md space-y-3">
+        <h3 className="font-display text-foreground text-2xl font-semibold">Your saved stack is empty</h3>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          Start favoriting tracks from discovery to build a replayable shortlist you can come back to any time.
+        </p>
+      </div>
+      <Link
+        href="/music"
+        className="border-gold/30 bg-gold/10 text-gold hover:bg-gold/15 rounded-full border px-5 py-2 text-sm transition-colors"
+      >
+        Browse songs
+      </Link>
     </div>
   )
 }

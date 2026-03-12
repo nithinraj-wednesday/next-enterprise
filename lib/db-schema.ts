@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
 export const user = sqliteTable("user", {
   id: text("id").primaryKey(),
@@ -40,3 +40,24 @@ export const account = sqliteTable("account", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 })
+
+export const favoriteSong = sqliteTable(
+  "favorite_song",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    trackId: integer("track_id").notNull(),
+    trackName: text("track_name").notNull(),
+    artistName: text("artist_name").notNull(),
+    collectionName: text("collection_name").notNull(),
+    previewUrl: text("preview_url").notNull(),
+    artworkUrl60: text("artwork_url_60").notNull(),
+    artworkUrl100: text("artwork_url_100").notNull(),
+    trackTimeMillis: integer("track_time_millis").notNull(),
+    primaryGenreName: text("primary_genre_name").notNull(),
+    trackViewUrl: text("track_view_url"),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.trackId] })]
+)
