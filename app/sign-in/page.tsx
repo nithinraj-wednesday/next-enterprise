@@ -21,21 +21,26 @@ export default function SignInPage() {
     setError("")
     setLoading(true)
 
-    await signIn.email(
-      {
-        email,
-        password,
-      },
-      {
-        onSuccess: () => {
-          router.push("/music")
+    try {
+      await signIn.email(
+        {
+          email,
+          password,
         },
-        onError: (ctx) => {
-          setError(ctx.error.message ?? "Invalid email or password")
-          setLoading(false)
-        },
-      }
-    )
+        {
+          onSuccess: () => {
+            router.push("/music")
+          },
+          onError: (ctx) => {
+            setError(ctx.error.message ?? "Invalid email or password")
+            setLoading(false)
+          },
+        }
+      )
+    } catch (err: any) {
+      setError(err?.message ?? "Something went wrong")
+      setLoading(false)
+    }
   }
 
   return (

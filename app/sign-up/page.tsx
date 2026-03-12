@@ -34,22 +34,27 @@ export default function SignUpPage() {
 
     setLoading(true)
 
-    await signUp.email(
-      {
-        name,
-        email,
-        password,
-      },
-      {
-        onSuccess: () => {
-          router.push("/music")
+    try {
+      await signUp.email(
+        {
+          name,
+          email,
+          password,
         },
-        onError: (ctx) => {
-          setError(ctx.error.message ?? "Something went wrong")
-          setLoading(false)
-        },
-      }
-    )
+        {
+          onSuccess: () => {
+            router.push("/music")
+          },
+          onError: (ctx) => {
+            setError(ctx.error.message ?? "Something went wrong")
+            setLoading(false)
+          },
+        }
+      )
+    } catch (err: any) {
+      setError(err?.message ?? "Something went wrong")
+      setLoading(false)
+    }
   }
 
   return (
