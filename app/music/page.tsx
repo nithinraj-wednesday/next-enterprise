@@ -1,8 +1,9 @@
 "use client"
 
 // @ts-expect-error Will fix it
-import { GridViewIcon, ListViewIcon } from "@hugeicons/core-free-icons"
+import { GridViewIcon, ListViewIcon, Logout01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
 import {
   EmptyState,
@@ -13,11 +14,14 @@ import {
   TrackRow,
 } from "@/components/music/MusicComponents"
 import { useMusic } from "@/hooks/use-music"
+import { signOut, useSession } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
 
 import { FEATURED_SEARCHES, ViewMode } from "./constants"
 
 export default function MusicPage() {
+  const router = useRouter()
+  const { data: sessionData } = useSession()
   const {
     tracks,
     loading,
@@ -123,6 +127,27 @@ export default function MusicPage() {
                 </button>
               </div>
             )}
+
+            <div className="flex items-center gap-3">
+              {sessionData?.user && (
+                <span className="text-muted-foreground hidden text-sm sm:inline">{sessionData.user.name}</span>
+              )}
+              <button
+                onClick={async () => {
+                  try {
+                    await signOut()
+                    router.push("/sign-in")
+                  } catch (error) {
+                    console.error("Sign out failed:", error)
+                  }
+                }}
+                className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs transition-colors hover:bg-white/5"
+                aria-label="Sign out"
+              >
+                <HugeiconsIcon icon={Logout01Icon} className="size-4" />
+                <span className="hidden sm:inline">Sign out</span>
+              </button>
+            </div>
           </div>
 
           <div className="mb-8 text-center sm:mb-10">
