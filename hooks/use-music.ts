@@ -18,7 +18,6 @@ export function useMusic() {
   const progressInterval = useRef<NodeJS.Timeout | null>(null)
   const endedHandlerRef = useRef<(() => void) | null>(null)
   const originalTracksRef = useRef<Track[]>([])
-  const currentTrackIndexRef = useRef<number>(-1)
 
   // Cleanup on unmount
   useEffect(() => {
@@ -201,6 +200,11 @@ export function useMusic() {
     })
   }, [])
 
+  const setTrackList = useCallback((nextTracks: Track[]) => {
+    setTracks(nextTracks)
+    originalTracksRef.current = nextTracks
+  }, [])
+
   return {
     tracks,
     loading,
@@ -220,6 +224,7 @@ export function useMusic() {
     playPrevious,
     playNext,
     toggleRepeat,
+    setTrackList,
     formatTime,
   }
 }
