@@ -136,7 +136,7 @@ export default function MusicPage() {
                 onClick={async () => {
                   try {
                     await signOut()
-                    router.push("/sign-in")
+                    router.push("/")
                   } catch (error) {
                     console.error("Sign out failed:", error)
                   }
