@@ -34,20 +34,22 @@ export default function SignUpPage() {
 
     setLoading(true)
 
-    const { error: authError } = await signUp.email({
-      name,
-      email,
-      password,
-    })
-
-    if (authError) {
-      setError(authError.message ?? "Something went wrong")
-      setLoading(false)
-      return
-    }
-
-    setLoading(false)
-    router.push("/music")
+    await signUp.email(
+      {
+        name,
+        email,
+        password,
+      },
+      {
+        onSuccess: () => {
+          router.push("/music")
+        },
+        onError: (ctx) => {
+          setError(ctx.error.message ?? "Something went wrong")
+          setLoading(false)
+        },
+      }
+    )
   }
 
   return (
