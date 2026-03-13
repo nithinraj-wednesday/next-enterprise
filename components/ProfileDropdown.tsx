@@ -53,7 +53,7 @@ export function ProfileDropdown() {
       {/* Profile Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        type="submit"
+        type="button"
         className={cn(
           "flex items-center gap-2 rounded-full border border-white/10 bg-black/35 p-1 pr-3 transition-all",
           "hover:border-gold/30 hover:bg-black/50",
