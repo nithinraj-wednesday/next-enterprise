@@ -157,7 +157,7 @@ export default function SignInPage() {
               {githubLoading ? "Redirecting to GitHub…" : "Continue with GitHub"}
             </Button>
 
-            <div className="flex items-center gap-3 text-xs uppercase tracking-[0.24em] text-white/40">
+            <div className="flex items-center gap-3 text-xs tracking-[0.24em] text-white/40 uppercase">
               <span className="h-px flex-1 bg-white/10" />
               <span>or</span>
               <span className="h-px flex-1 bg-white/10" />

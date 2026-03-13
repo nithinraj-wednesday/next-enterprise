@@ -53,6 +53,7 @@ export function ProfileDropdown() {
       {/* Profile Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
+        type="submit"
         className={cn(
           "flex items-center gap-2 rounded-full border border-white/10 bg-black/35 p-1 pr-3 transition-all",
           "hover:border-gold/30 hover:bg-black/50",
@@ -70,11 +71,11 @@ export function ProfileDropdown() {
             className="size-8 rounded-full object-cover"
           />
         ) : (
-          <div className="flex size-8 items-center justify-center rounded-full bg-gold/20">
-            <HugeiconsIcon icon={UserIcon} className="size-4 text-gold" />
+          <div className="bg-gold/20 flex size-8 items-center justify-center rounded-full">
+            <HugeiconsIcon icon={UserIcon} className="text-gold size-4" />
           </div>
         )}
-        <span className="text-sm text-white/80 hidden sm:inline">{userName || "My Profile"}</span>
+        <span className="hidden text-sm text-white/80 sm:inline">{userName || "My Profile"}</span>
         <svg
           className={cn("size-3 text-white/60 transition-transform", isOpen && "rotate-180")}
           viewBox="0 0 24 24"
@@ -89,15 +90,15 @@ export function ProfileDropdown() {
       {/* Dropdown Menu */}
       <div
         className={cn(
-          "absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-white/10 bg-[#0a0a0a] shadow-xl transition-all",
-          "opacity-0 invisible translate-y-2",
-          isOpen && "opacity-100 visible translate-y-0"
+          "absolute top-full right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-white/10 bg-[#0a0a0a] shadow-xl transition-all",
+          "invisible translate-y-2 opacity-0",
+          isOpen && "visible translate-y-0 opacity-100"
         )}
       >
         {/* User Info */}
         <div className="border-b border-white/10 px-4 py-3">
-          {userName && <p className="text-sm font-medium text-white truncate">{userName}</p>}
-          {userEmail && <p className="text-xs text-white/50 truncate">{userEmail}</p>}
+          {userName && <p className="truncate text-sm font-medium text-white">{userName}</p>}
+          {userEmail && <p className="truncate text-xs text-white/50">{userEmail}</p>}
         </div>
 
         {/* Menu Items */}
@@ -119,7 +120,7 @@ export function ProfileDropdown() {
           >
             <HugeiconsIcon icon={Logout01Icon} className="size-4" />
             Sign out
-            <HugeiconsIcon icon={ArrowRight01Icon} className="size-3 ml-auto" />
+            <HugeiconsIcon icon={ArrowRight01Icon} className="ml-auto size-3" />
           </button>
         </div>
       </div>
