@@ -130,7 +130,7 @@ export function MusicAppHeader({ activeRoute, favoriteCount, userName: _userName
               : "border-border/60 bg-secondary/55 text-muted-foreground hover:text-foreground"
           )}
         >
-          Favorites
+          Playlists
           <span className="bg-foreground/10 rounded-full px-2 py-0.5 text-[10px] tabular-nums">{favoriteCount}</span>
         </Link>
       </nav>
@@ -319,6 +319,7 @@ export function TrackRow({
   isFavoritePending = false,
   index,
   formatTime,
+  optionsMenu,
 }: TrackRowProps) {
   const artworkUrl = getArtworkUrl(track.artworkUrl60, "small")
 
@@ -383,15 +384,16 @@ export function TrackRow({
         </span>
       </button>
 
-      {onToggleFavorite ? (
-        <div className="shrink-0">
+      <div className="flex shrink-0 items-center gap-2">
+        {optionsMenu}
+        {onToggleFavorite ? (
           <FavoriteButton
             isFavorite={isFavorite}
             isPending={isFavoritePending}
             onClick={() => onToggleFavorite(track)}
           />
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </div>
   )
 }

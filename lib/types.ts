@@ -61,6 +61,7 @@ export interface TrackRowProps {
   isFavoritePending?: boolean
   index: number
   formatTime: (ms: number) => string
+  optionsMenu?: React.ReactNode
 }
 
 export interface PlayerBarProps {
@@ -79,4 +80,28 @@ export interface PlayerBarProps {
   isShuffled: boolean
   repeatMode: "off" | "all" | "one"
   formatTime: (s: number) => string
+}
+
+export interface Playlist {
+  id: string
+  name: string
+  userId: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PlaylistTrack extends Track {
+  addedAt: string
+}
+
+export interface PlaylistsResponse {
+  playlists: Playlist[]
+}
+
+export interface PlaylistResponse {
+  playlist: Playlist
+}
+
+export interface PlaylistTracksResponse {
+  tracks: PlaylistTrack[]
 }
