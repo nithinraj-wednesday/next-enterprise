@@ -27,6 +27,7 @@ interface MusicAppHeaderProps {
   activeRoute: "music" | "favorites"
   favoriteCount: number
   userName?: string
+  searchBar?: React.ReactNode
 }
 
 interface FavoriteButtonProps {
@@ -75,11 +76,11 @@ export function FavoriteButton({ isFavorite, isPending, onClick }: FavoriteButto
   )
 }
 
-export function MusicAppHeader({ activeRoute, favoriteCount, userName: _userName }: MusicAppHeaderProps) {
+export function MusicAppHeader({ activeRoute, favoriteCount, userName: _userName, searchBar }: MusicAppHeaderProps) {
   return (
     <div className="mb-8 flex flex-col gap-4 sm:mb-12">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link href="/" className="flex items-center gap-3" aria-label="Go to home page">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <Link href="/" className="flex shrink-0 items-center gap-3" aria-label="Go to home page">
           <div className="relative size-9">
             <div className="from-gold/80 to-gold/40 absolute inset-0 rounded-full bg-gradient-to-br">
               <div className="bg-background absolute inset-[35%] rounded-full" />
@@ -95,7 +96,11 @@ export function MusicAppHeader({ activeRoute, favoriteCount, userName: _userName
           </div>
         </Link>
 
-        <div className="flex items-center gap-3">
+        {searchBar ? (
+          <div className="order-3 w-full flex-1 md:order-none md:w-auto md:max-w-md">{searchBar}</div>
+        ) : null}
+
+        <div className="order-2 flex shrink-0 items-center gap-3 md:order-none">
           <ThemeToggle />
           <ProfileDropdown />
         </div>
@@ -133,7 +138,7 @@ export function MusicAppHeader({ activeRoute, favoriteCount, userName: _userName
   )
 }
 
-export function SearchBar({ onSearch, loading }: SearchBarProps) {
+export function SearchBar({ onSearch, loading, className }: SearchBarProps) {
   const [query, setQuery] = useState("")
   const [focused, setFocused] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -160,7 +165,8 @@ export function SearchBar({ onSearch, loading }: SearchBarProps) {
       className={cn(
         "relative mx-auto flex w-full max-w-2xl items-center gap-3 rounded-2xl px-5 py-3 transition-all duration-300",
         "bg-secondary/80 border-border border",
-        focused && "border-gold/40 ring-gold-glow shadow-[0_0_30px_-5px_var(--gold-glow)] ring-2"
+        focused && "border-gold/40 ring-gold-glow shadow-[0_0_30px_-5px_var(--gold-glow)] ring-2",
+        className
       )}
     >
       <HugeiconsIcon
