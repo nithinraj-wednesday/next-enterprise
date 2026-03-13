@@ -1,7 +1,6 @@
 "use client"
 
 import {
-  Logout01Icon,
   MusicNote01Icon,
   NextIcon,
   PauseIcon,
@@ -17,10 +16,9 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { getArtworkUrl } from "@/app/music/constants"
-import { signOut } from "@/lib/auth-client"
+import { ProfileDropdown } from "@/components/ProfileDropdown"
 import { PlayerBarProps, SearchBarProps, TrackCardProps, TrackRowProps } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -76,9 +74,7 @@ export function FavoriteButton({ isFavorite, isPending, onClick }: FavoriteButto
   )
 }
 
-export function MusicAppHeader({ activeRoute, favoriteCount, userName }: MusicAppHeaderProps) {
-  const router = useRouter()
-
+export function MusicAppHeader({ activeRoute, favoriteCount, userName: _userName }: MusicAppHeaderProps) {
   return (
     <div className="mb-8 flex flex-col gap-4 sm:mb-12">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -99,22 +95,7 @@ export function MusicAppHeader({ activeRoute, favoriteCount, userName }: MusicAp
         </div>
 
         <div className="flex items-center gap-3">
-          {userName ? <span className="text-muted-foreground hidden text-sm sm:inline">{userName}</span> : null}
-          <button
-            onClick={async () => {
-              try {
-                await signOut()
-                router.push("/")
-              } catch (error) {
-                console.error("Sign out failed:", error)
-              }
-            }}
-            className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs transition-colors hover:bg-white/5"
-            aria-label="Sign out"
-          >
-            <HugeiconsIcon icon={Logout01Icon} className="size-4" />
-            <span className="hidden sm:inline">Sign out</span>
-          </button>
+          <ProfileDropdown />
         </div>
       </div>
 

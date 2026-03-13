@@ -16,6 +16,14 @@ const config: NextConfig = {
         protocol: "https",
         hostname: "*.mzstatic.com",
       },
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
     ],
   },
   rewrites: async () => [

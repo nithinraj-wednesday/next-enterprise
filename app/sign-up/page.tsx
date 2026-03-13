@@ -1,12 +1,17 @@
 "use client"
 
+// @ts-expect-error Will Fix it
+import { GithubIcon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { signUp, useSession } from "@/lib/auth-client"
+import { signIn, signUp, useSession } from "@/lib/auth-client"
+import GoogleIconImg from "@/public/images/google.png"
 
 export default function SignUpPage() {
   const [name, setName] = useState("")
@@ -15,6 +20,8 @@ export default function SignUpPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [githubLoading, setGithubLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const { data: sessionData, isPending: isSessionPending } = useSession()
 
   useEffect(() => {
@@ -63,6 +70,56 @@ export default function SignUpPage() {
     }
   }
 
+  async function handleGitHubSignIn() {
+    setError("")
+    setGithubLoading(true)
+
+    try {
+      await signIn.social(
+        {
+          provider: "github",
+          callbackURL: "/music",
+          errorCallbackURL: "/sign-up",
+        },
+        {
+          onError: (ctx) => {
+            setError(ctx.error.message ?? "Unable to continue with GitHub")
+            setGithubLoading(false)
+          },
+        }
+      )
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unable to continue with GitHub"
+      setError(message)
+      setGithubLoading(false)
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    setError("")
+    setGoogleLoading(true)
+
+    try {
+      await signIn.social(
+        {
+          provider: "google",
+          callbackURL: "/music",
+          errorCallbackURL: "/sign-up",
+        },
+        {
+          onError: (ctx) => {
+            setError(ctx.error.message ?? "Unable to continue with Google")
+            setGoogleLoading(false)
+          },
+        }
+      )
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unable to continue with Google"
+      setError(message)
+      setGoogleLoading(false)
+    }
+  }
+
   return (
     <div className="bg-background relative flex min-h-screen items-center justify-center px-4">
       <div className="noise-overlay" />
@@ -91,6 +148,36 @@ export default function SignUpPage() {
                 {error}
               </div>
             )}
+
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="w-full"
+              disabled={loading || githubLoading || googleLoading}
+              onClick={handleGoogleSignIn}
+            >
+              <Image src={GoogleIconImg} alt="Google" width={16} height={16} style={{ height: "auto" }} />
+              {googleLoading ? "Redirecting to Google…" : "Continue with Google"}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="w-full"
+              disabled={loading || githubLoading || googleLoading}
+              onClick={handleGitHubSignIn}
+            >
+              <HugeiconsIcon icon={GithubIcon} className="size-4" />
+              {githubLoading ? "Redirecting to GitHub…" : "Continue with GitHub"}
+            </Button>
+
+            <div className="flex items-center gap-3 text-xs tracking-[0.24em] text-white/40 uppercase">
+              <span className="h-px flex-1 bg-white/10" />
+              <span>or</span>
+              <span className="h-px flex-1 bg-white/10" />
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
@@ -146,7 +233,7 @@ export default function SignUpPage() {
           </CardContent>
 
           <CardFooter className="flex flex-col gap-4 border-none bg-transparent px-4 pb-6">
-            <Button type="submit" size="lg" className="w-full" disabled={loading}>
+            <Button type="submit" size="lg" className="w-full" disabled={loading || githubLoading || googleLoading}>
               {loading ? "Creating account…" : "Sign up"}
             </Button>
             <p className="text-muted-foreground text-sm">
