@@ -127,7 +127,7 @@ export default function SignUpPage() {
 
       <Card className="relative z-10 w-full max-w-md border-none ring-1 ring-black/5 dark:ring-white/5">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex items-center gap-3">
+          <Link href="/" className="mx-auto mb-4 flex w-fit items-center gap-3" aria-label="Go to home page">
             <div className="relative size-9">
               <div className="from-gold/80 to-gold/40 absolute inset-0 rounded-full bg-gradient-to-br">
                 <div className="bg-background absolute inset-[35%] rounded-full" />
@@ -136,7 +136,7 @@ export default function SignUpPage() {
             <span className="font-display text-xl font-bold tracking-tight">
               Obsidian<span className="text-gold">Sound</span>
             </span>
-          </div>
+          </Link>
           <CardTitle className="font-display text-2xl font-bold">Create your account</CardTitle>
           <CardDescription>Start discovering music that moves you</CardDescription>
         </CardHeader>

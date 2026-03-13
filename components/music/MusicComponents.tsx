@@ -79,7 +79,7 @@ export function MusicAppHeader({ activeRoute, favoriteCount, userName: _userName
   return (
     <div className="mb-8 flex flex-col gap-4 sm:mb-12">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3" aria-label="Go to home page">
           <div className="relative size-9">
             <div className="from-gold/80 to-gold/40 absolute inset-0 rounded-full bg-gradient-to-br">
               <div className="bg-background absolute inset-[35%] rounded-full" />
@@ -93,7 +93,7 @@ export function MusicAppHeader({ activeRoute, favoriteCount, userName: _userName
               Music Discovery
             </p>
           </div>
-        </div>
+        </Link>
 
         <div className="flex items-center gap-3">
           <ThemeToggle />
