@@ -19,6 +19,7 @@ import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 import { getArtworkUrl } from "@/app/music/constants"
 import { ProfileDropdown } from "@/components/ProfileDropdown"
+import { ThemeToggle } from "@/components/ThemeToggle"
 import { PlayerBarProps, SearchBarProps, TrackCardProps, TrackRowProps } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -61,7 +62,7 @@ export function FavoriteButton({ isFavorite, isPending, onClick }: FavoriteButto
         "backdrop-blur-sm",
         isFavorite
           ? "border-gold/40 bg-gold/15 text-gold shadow-[0_0_24px_-10px_var(--gold-glow)]"
-          : "text-muted-foreground hover:border-gold/30 hover:text-gold border-white/10 bg-black/35",
+          : "text-muted-foreground hover:border-gold/30 hover:text-gold border-border bg-background/80 dark:border-white/10 dark:bg-black/35",
         isPending && "cursor-wait opacity-70"
       )}
     >
@@ -95,6 +96,7 @@ export function MusicAppHeader({ activeRoute, favoriteCount, userName: _userName
         </div>
 
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           <ProfileDropdown />
         </div>
       </div>
@@ -110,7 +112,9 @@ export function MusicAppHeader({ activeRoute, favoriteCount, userName: _userName
           )}
         >
           Discover
-          <span className="rounded-full bg-black/20 px-2 py-0.5 text-[10px] tracking-[0.18em] uppercase">Live</span>
+          <span className="bg-foreground/10 rounded-full px-2 py-0.5 text-[10px] tracking-[0.18em] uppercase">
+            Live
+          </span>
         </Link>
         <Link
           href="/favorites"
@@ -122,7 +126,7 @@ export function MusicAppHeader({ activeRoute, favoriteCount, userName: _userName
           )}
         >
           Favorites
-          <span className="rounded-full bg-black/20 px-2 py-0.5 text-[10px] tabular-nums">{favoriteCount}</span>
+          <span className="bg-foreground/10 rounded-full px-2 py-0.5 text-[10px] tabular-nums">{favoriteCount}</span>
         </Link>
       </nav>
     </div>

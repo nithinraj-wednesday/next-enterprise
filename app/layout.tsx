@@ -1,6 +1,7 @@
 import "styles/tailwind.css"
 import { Metadata } from "next"
 import { DM_Sans, Syne } from "next/font/google"
+import { ThemeProvider } from "@/components/ThemeProvider"
 import { cn } from "@/lib/utils"
 
 const syne = Syne({
@@ -26,8 +27,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={cn(syne.variable, dmSans.variable)}>
-      <body className="font-body antialiased">{children}</body>
+    <html lang="en" className={cn(syne.variable, dmSans.variable)} suppressHydrationWarning>
+      <body className="font-body antialiased">
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange={false}>
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   )
 }

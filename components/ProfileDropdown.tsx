@@ -55,9 +55,9 @@ export function ProfileDropdown() {
         onClick={() => setIsOpen(!isOpen)}
         type="button"
         className={cn(
-          "flex items-center gap-2 rounded-full border border-white/10 bg-black/35 p-1 pr-3 transition-all",
-          "hover:border-gold/30 hover:bg-black/50",
-          isOpen && "border-gold/30 bg-black/50"
+          "border-border bg-background/80 flex items-center gap-2 rounded-full border p-1 pr-3 transition-all dark:border-white/10 dark:bg-black/35",
+          "hover:border-gold/30 hover:bg-accent/10 dark:hover:bg-black/50",
+          isOpen && "border-gold/30 bg-accent/10 dark:bg-black/50"
         )}
         aria-label="Profile menu"
         aria-expanded={isOpen}
@@ -75,9 +75,9 @@ export function ProfileDropdown() {
             <HugeiconsIcon icon={UserIcon} className="text-gold size-4" />
           </div>
         )}
-        <span className="hidden text-sm text-white/80 sm:inline">{userName || "My Profile"}</span>
+        <span className="text-foreground/80 hidden text-sm sm:inline">{userName || "My Profile"}</span>
         <svg
-          className={cn("size-3 text-white/60 transition-transform", isOpen && "rotate-180")}
+          className={cn("text-muted-foreground size-3 transition-transform", isOpen && "rotate-180")}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -90,15 +90,15 @@ export function ProfileDropdown() {
       {/* Dropdown Menu */}
       <div
         className={cn(
-          "absolute top-full right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-white/10 bg-[#0a0a0a] shadow-xl transition-all",
+          "border-border bg-card absolute top-full right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border shadow-xl transition-all dark:border-white/10 dark:bg-[#0a0a0a]",
           "invisible translate-y-2 opacity-0",
           isOpen && "visible translate-y-0 opacity-100"
         )}
       >
         {/* User Info */}
-        <div className="border-b border-white/10 px-4 py-3">
-          {userName && <p className="truncate text-sm font-medium text-white">{userName}</p>}
-          {userEmail && <p className="truncate text-xs text-white/50">{userEmail}</p>}
+        <div className="border-border border-b px-4 py-3">
+          {userName && <p className="text-foreground truncate text-sm font-medium">{userName}</p>}
+          {userEmail && <p className="text-muted-foreground truncate text-xs">{userEmail}</p>}
         </div>
 
         {/* Menu Items */}
@@ -108,7 +108,7 @@ export function ProfileDropdown() {
               setIsOpen(false)
               router.push("/profile")
             }}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-white/80 transition-colors hover:bg-white/5 hover:text-white"
+            className="text-foreground/80 hover:bg-accent/60 hover:text-foreground flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors"
           >
             <HugeiconsIcon icon={UserIcon} className="size-4" />
             My Profile
