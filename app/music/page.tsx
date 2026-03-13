@@ -19,7 +19,7 @@ import { createOptimisticFavorite, trackToFavoritePayload } from "@/lib/favorite
 import { FavoriteSong, Track } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
-import { FEATURED_SEARCHES, ViewMode } from "./constants"
+import { ViewMode } from "./constants"
 
 export default function MusicPage() {
   const { data: sessionData } = useSession()
@@ -46,7 +46,7 @@ export default function MusicPage() {
   } = useMusic()
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid")
-  const [searchTerm, setSearchTerm] = useState("classical piano")
+  const [searchTerm, setSearchTerm] = useState("trending")
   const [hasSearched, setHasSearched] = useState(false)
   const [favorites, setFavorites] = useState<FavoriteSong[]>([])
   const [favoritesLoading, setFavoritesLoading] = useState(true)
@@ -56,7 +56,7 @@ export default function MusicPage() {
   const favoriteIds = new Set(favorites.map((favorite) => favorite.trackId))
 
   useEffect(() => {
-    searchMusic("classical piano")
+    searchMusic("trending")
     setHasSearched(true)
   }, [searchMusic])
 
@@ -184,28 +184,43 @@ export default function MusicPage() {
     <div className="bg-background relative min-h-screen">
       <div className="noise-overlay" />
 
-      <header className="hero-gradient relative pt-8 pb-6 sm:pt-12 sm:pb-10">
+      <header className="hero-gradient relative pt-8 pb-6 sm:pt-12 sm:pb-8">
         <div className="relative z-10 mx-auto max-w-screen-xl px-4 sm:px-6">
-          <MusicAppHeader activeRoute="music" favoriteCount={favorites.length} userName={sessionData?.user?.name} />
+          <MusicAppHeader
+            activeRoute="music"
+            favoriteCount={favorites.length}
+            userName={sessionData?.user?.name}
+            searchBar={<SearchBar onSearch={handleSearch} loading={loading} className="!px-4 !py-2" />}
+          />
+        </div>
+      </header>
 
-          <div className="mb-8 text-center sm:mb-10">
-            <h2 className="font-display text-foreground mb-3 text-3xl leading-[1.1] font-bold tracking-tight sm:text-5xl lg:text-6xl">
-              Feel the <span className="text-gold italic">frequency</span>
-            </h2>
-            <p className="text-muted-foreground font-body mx-auto max-w-lg text-sm sm:text-base">
-              Explore millions of songs. Preview instantly. Discover what moves you.
-            </p>
+      <main className="relative z-10 mx-auto max-w-screen-xl px-4 py-2 sm:px-6 sm:py-4">
+        {favoriteError ? (
+          <div className="animate-fade-up mb-6 rounded-2xl border border-red-400/20 bg-red-500/8 px-4 py-3 text-sm text-red-100">
+            {favoriteError}
           </div>
+        ) : null}
 
-          <SearchBar onSearch={handleSearch} loading={loading} />
-
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-            <div className="glass-card flex items-center gap-2 rounded-full px-4 py-2 text-xs tracking-[0.18em] uppercase">
-              <span className="text-gold">{favoritesLoading ? "..." : String(favorites.length).padStart(2, "0")}</span>
-              <span className="text-muted-foreground">Saved tracks</span>
+        {hasSearched && !loading && tracks.length > 0 && (
+          <div className="animate-fade-up mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <div>
+              <h3 className="font-display text-foreground text-lg font-semibold">
+                {searchTerm.toLowerCase() === "trending" ? "Trending" : `Results for "${searchTerm}"`}
+              </h3>
+              <p className="text-muted-foreground mt-0.5 text-xs">
+                {tracks.length} tracks found · 30s previews · tap the heart to save for later
+              </p>
             </div>
 
-            {hasSearched && tracks.length > 0 ? (
+            <div className="flex items-center gap-3">
+              <div className="glass-card flex items-center gap-2 rounded-full px-4 py-2 text-xs tracking-[0.18em] uppercase">
+                <span className="text-gold">
+                  {favoritesLoading ? "..." : String(favorites.length).padStart(2, "0")}
+                </span>
+                <span className="text-muted-foreground">Saved tracks</span>
+              </div>
+
               <div className="bg-secondary/60 border-border/50 flex items-center gap-1 rounded-lg border p-1">
                 <button
                   onClick={() => setViewMode("grid")}
@@ -232,45 +247,6 @@ export default function MusicPage() {
                   <HugeiconsIcon icon={ListViewIcon} className="size-4" />
                 </button>
               </div>
-            ) : null}
-          </div>
-
-          <div className="mx-auto mt-5 flex max-w-2xl flex-wrap justify-center gap-2">
-            {FEATURED_SEARCHES.map((item) => (
-              <button
-                key={item.label}
-                onClick={() => handleSearch(item.query)}
-                className={cn(
-                  "cursor-pointer rounded-full border px-3 py-1.5 text-xs transition-all duration-200",
-                  "bg-secondary/50 border-border/50 text-muted-foreground",
-                  "hover:border-gold/30 hover:text-foreground hover:bg-secondary/80",
-                  searchTerm === item.query && "border-gold/40 text-gold bg-gold/5"
-                )}
-              >
-                <span className="mr-1">{item.emoji}</span>
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </header>
-
-      <main className={cn("relative z-10 mx-auto max-w-screen-xl px-4 py-6 sm:px-6 sm:py-10", currentTrack && "pb-28")}>
-        {favoriteError ? (
-          <div className="animate-fade-up mb-6 rounded-2xl border border-red-400/20 bg-red-500/8 px-4 py-3 text-sm text-red-100">
-            {favoriteError}
-          </div>
-        ) : null}
-
-        {hasSearched && !loading && tracks.length > 0 && (
-          <div className="animate-fade-up mb-6 flex items-center justify-between">
-            <div>
-              <h3 className="font-display text-foreground text-lg font-semibold">
-                Results for &ldquo;{searchTerm}&rdquo;
-              </h3>
-              <p className="text-muted-foreground mt-0.5 text-xs">
-                {tracks.length} tracks found · 30s previews · tap the heart to save for later
-              </p>
             </div>
           </div>
         )}
@@ -286,7 +262,7 @@ export default function MusicPage() {
         )}
 
         {!loading && tracks.length > 0 && viewMode === "grid" && (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          <div className="mb-12 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {tracks.map((track, i) => (
               <TrackCard
                 key={track.trackId}
@@ -304,7 +280,7 @@ export default function MusicPage() {
         )}
 
         {!loading && tracks.length > 0 && viewMode === "list" && (
-          <div className="flex flex-col gap-1">
+          <div className="mb-12 flex flex-col gap-1">
             <div className="text-muted-foreground border-border/50 mb-1 flex items-center gap-4 border-b px-3 py-2 text-xs tracking-wider uppercase">
               <span className="w-8 text-center">#</span>
               <span className="size-10 shrink-0" />

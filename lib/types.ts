@@ -37,6 +37,7 @@ export interface FavoriteSong extends FavoritePayload {
 export interface SearchBarProps {
   onSearch: (query: string) => void
   loading: boolean
+  className?: string
 }
 
 export interface TrackCardProps {
