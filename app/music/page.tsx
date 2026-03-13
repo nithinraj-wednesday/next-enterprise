@@ -79,9 +79,6 @@ export default function MusicPage() {
         }
       } catch (error) {
         console.error("Failed to load favorites:", error)
-        if (!cancelled) {
-          setFavoriteError("Saved songs are temporarily unavailable.")
-        }
       } finally {
         if (!cancelled) {
           setFavoritesLoading(false)
