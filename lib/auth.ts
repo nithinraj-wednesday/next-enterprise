@@ -21,10 +21,20 @@ export const auth = betterAuth({
     github: {
       clientId: env.GITHUB_CLIENT_ID,
       clientSecret: env.GITHUB_CLIENT_SECRET,
+      overrideUserInfoOnSignIn: true,
+      mapProfileToUser: (profile) => ({
+        name: profile.name || profile.login || "",
+        image: profile.avatar_url,
+      }),
     },
     google: {
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
+      overrideUserInfoOnSignIn: true,
+      mapProfileToUser: (profile) => ({
+        name: profile.name || "",
+        image: profile.picture,
+      }),
     },
   },
   databaseHooks: {
