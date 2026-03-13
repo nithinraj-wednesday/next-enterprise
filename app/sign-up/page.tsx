@@ -1,8 +1,9 @@
 "use client"
 
 // @ts-expect-error Will Fix it
-import { GithubIcon, GoogleIcon } from "@hugeicons/core-free-icons"
+import { GithubIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -10,6 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { signIn, signUp, useSession } from "@/lib/auth-client"
+import GoogleIconImg from "@/public/images/google.png"
 
 export default function SignUpPage() {
   const [name, setName] = useState("")
@@ -155,7 +157,7 @@ export default function SignUpPage() {
               disabled={loading || githubLoading || googleLoading}
               onClick={handleGoogleSignIn}
             >
-              <HugeiconsIcon icon={GoogleIcon} className="size-4" />
+              <Image src={GoogleIconImg} alt="Google" width={16} height={16} style={{ height: "auto" }} />
               {googleLoading ? "Redirecting to Google…" : "Continue with Google"}
             </Button>
 
