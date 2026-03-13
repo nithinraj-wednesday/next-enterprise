@@ -61,3 +61,25 @@ export const favoriteSong = sqliteTable(
   },
   (table) => [primaryKey({ columns: [table.userId, table.trackId] })]
 )
+
+export const playlist = sqliteTable("playlist", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+})
+
+export const playlistTrack = sqliteTable(
+  "playlist_track",
+  {
+    playlistId: text("playlist_id")
+      .notNull()
+      .references(() => playlist.id, { onDelete: "cascade" }),
+    trackId: integer("track_id").notNull(),
+    addedAt: integer("added_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.playlistId, table.trackId] })]
+)
