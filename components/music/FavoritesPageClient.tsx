@@ -164,7 +164,7 @@ export function FavoritesPageClient({ initialFavorites, userName }: FavoritesPag
               </div>
             </div>
 
-            <div className="glass-card relative overflow-hidden rounded-[2rem] border border-white/8 p-5">
+            <div className="glass-card border-border/30 relative overflow-hidden rounded-[2rem] border p-5 dark:border-white/8">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,oklch(0.78_0.145_75_/_0.18),transparent_45%)]" />
               <div className="relative flex min-h-[280px] items-end justify-between gap-4">
                 <div className="max-w-[12rem] space-y-2">
@@ -192,7 +192,7 @@ export function FavoritesPageClient({ initialFavorites, userName }: FavoritesPag
                         <div
                           key={favorite.trackId}
                           className={cn(
-                            "absolute top-0 right-0 overflow-hidden rounded-[1.6rem] border border-white/10 shadow-2xl",
+                            "border-border/40 absolute top-0 right-0 overflow-hidden rounded-[1.6rem] border shadow-2xl dark:border-white/10",
                             index === 0 && "rotate-[-9deg]",
                             index === 1 && "translate-x-[-1.25rem] translate-y-4 rotate-[3deg]",
                             index === 2 && "translate-x-[-2.4rem] translate-y-8 rotate-[10deg]"
@@ -208,7 +208,7 @@ export function FavoritesPageClient({ initialFavorites, userName }: FavoritesPag
                         </div>
                       ))
                   ) : (
-                    <div className="from-secondary to-muted text-muted-foreground flex h-44 w-44 items-center justify-center rounded-[1.6rem] border border-white/8 bg-gradient-to-br text-sm">
+                    <div className="from-secondary to-muted text-muted-foreground border-border/30 flex h-44 w-44 items-center justify-center rounded-[1.6rem] border bg-gradient-to-br text-sm dark:border-white/8">
                       No covers yet
                     </div>
                   )}
@@ -227,7 +227,7 @@ export function FavoritesPageClient({ initialFavorites, userName }: FavoritesPag
         ) : null}
 
         {hasSavedSongs ? (
-          <div className="glass-card animate-fade-up mb-6 flex flex-col gap-4 rounded-[2rem] border border-white/8 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="glass-card animate-fade-up border-border/30 mb-6 flex flex-col gap-4 rounded-[2rem] border p-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/8">
             <div className="flex-1">
               <label
                 htmlFor="favorite-search-input"
@@ -281,7 +281,7 @@ export function FavoritesPageClient({ initialFavorites, userName }: FavoritesPag
         {!hasSavedSongs ? (
           <FavoritesEmptyState />
         ) : hasVisibleResults ? (
-          <div className="glass-card animate-fade-up overflow-hidden rounded-[2rem] border border-white/8 p-3 sm:p-4">
+          <div className="glass-card animate-fade-up border-border/30 overflow-hidden rounded-[2rem] border p-3 sm:p-4 dark:border-white/8">
             <div className="text-muted-foreground border-border/50 mb-2 flex items-center gap-4 border-b px-3 py-3 text-xs tracking-[0.18em] uppercase">
               <span className="w-8 text-center">#</span>
               <span className="size-10 shrink-0" />
@@ -312,7 +312,7 @@ export function FavoritesPageClient({ initialFavorites, userName }: FavoritesPag
             </div>
           </div>
         ) : (
-          <div className="glass-card animate-fade-up rounded-[2rem] border border-white/8 px-8 py-14 text-center">
+          <div className="glass-card animate-fade-up border-border/30 rounded-[2rem] border px-8 py-14 text-center dark:border-white/8">
             <div className="mx-auto max-w-md space-y-3">
               <p className="text-muted-foreground text-xs tracking-[0.18em] uppercase">No matches</p>
               <h3 className="font-display text-foreground text-2xl font-semibold">Nothing fits that filter</h3>

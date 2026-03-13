@@ -111,7 +111,7 @@ export default function SignInPage() {
       <div className="noise-overlay" />
       <div className="hero-gradient pointer-events-none fixed inset-0" />
 
-      <Card className="relative z-10 w-full max-w-md border-none ring-1 ring-white/5">
+      <Card className="relative z-10 w-full max-w-md border-none ring-1 ring-black/5 dark:ring-white/5">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex items-center gap-3">
             <div className="relative size-9">
@@ -159,10 +159,10 @@ export default function SignInPage() {
               {githubLoading ? "Redirecting to GitHub…" : "Continue with GitHub"}
             </Button>
 
-            <div className="flex items-center gap-3 text-xs tracking-[0.24em] text-white/40 uppercase">
-              <span className="h-px flex-1 bg-white/10" />
+            <div className="text-muted-foreground flex items-center gap-3 text-xs tracking-[0.24em] uppercase">
+              <span className="bg-border h-px flex-1" />
               <span>or</span>
-              <span className="h-px flex-1 bg-white/10" />
+              <span className="bg-border h-px flex-1" />
             </div>
 
             <div className="space-y-2">
