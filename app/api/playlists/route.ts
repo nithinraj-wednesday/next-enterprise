@@ -5,10 +5,28 @@ import { requireServerSession } from "@/lib/auth-server"
 import { db } from "@/lib/db"
 import { playlist } from "@/lib/db-schema"
 import { getPostHogClient } from "@/lib/posthog-server"
+import { redis } from "@/lib/redis"
+
+const CACHE_TTL = 60 // 1 minute
+
+function getCacheKey(userId: string) {
+  return `playlists:${userId}`
+}
 
 export async function GET(request: NextRequest) {
   try {
     const session = await requireServerSession()
+
+    // Check Redis cache first
+    const cacheKey = getCacheKey(session.user.id)
+    try {
+      const cached = await redis.get(cacheKey)
+      if (cached) {
+        return NextResponse.json({ playlists: cached, cached: true })
+      }
+    } catch (cacheError) {
+      console.error("Redis cache read error:", cacheError)
+    }
 
     // Fetch playlists for the user
     const playlists = await db
@@ -16,6 +34,13 @@ export async function GET(request: NextRequest) {
       .from(playlist)
       .where(eq(playlist.userId, session.user.id))
       .orderBy(desc(playlist.createdAt))
+
+    // Cache the results
+    try {
+      await redis.setex(cacheKey, CACHE_TTL, playlists)
+    } catch (cacheError) {
+      console.error("Redis cache write error:", cacheError)
+    }
 
     return NextResponse.json({ playlists })
   } catch (error) {
@@ -47,6 +72,14 @@ export async function POST(request: NextRequest) {
     const newPlaylist = await db.query.playlist.findFirst({
       where: eq(playlist.id, id),
     })
+
+    // Invalidate cache
+    const cacheKey = getCacheKey(session.user.id)
+    try {
+      await redis.del(cacheKey)
+    } catch (cacheError) {
+      console.error("Redis cache invalidation error:", cacheError)
+    }
 
     try {
       const posthog = getPostHogClient()
