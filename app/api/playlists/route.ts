@@ -2,27 +2,27 @@
 import { desc, eq } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
 import { requireServerSession } from "@/lib/auth-server"
+import { CACHE_TTL, getCacheKey } from "@/lib/cache"
 import { db } from "@/lib/db"
 import { playlist } from "@/lib/db-schema"
 import { getPostHogClient } from "@/lib/posthog-server"
 import { redis } from "@/lib/redis"
-
-const CACHE_TTL = 60 // 1 minute
-
-function getCacheKey(userId: string) {
-  return `playlists:${userId}`
-}
 
 export async function GET(request: NextRequest) {
   try {
     const session = await requireServerSession()
 
     // Check Redis cache first
-    const cacheKey = getCacheKey(session.user.id)
+    const cacheKey = getCacheKey("playlists", session.user.id)
     try {
-      const cached = await redis.get(cacheKey)
-      if (cached) {
-        return NextResponse.json({ playlists: cached, cached: true })
+      if (redis) {
+        const cached = await redis.get(cacheKey)
+        if (cached) {
+          return NextResponse.json({
+            playlists: typeof cached === "string" ? JSON.parse(cached) : cached,
+            cached: true,
+          })
+        }
       }
     } catch (cacheError) {
       console.error("Redis cache read error:", cacheError)
@@ -37,7 +37,9 @@ export async function GET(request: NextRequest) {
 
     // Cache the results
     try {
-      await redis.setex(cacheKey, CACHE_TTL, playlists)
+      if (redis) {
+        await redis.set(cacheKey, JSON.stringify(playlists), { ex: CACHE_TTL.playlists })
+      }
     } catch (cacheError) {
       console.error("Redis cache write error:", cacheError)
     }
@@ -74,9 +76,11 @@ export async function POST(request: NextRequest) {
     })
 
     // Invalidate cache
-    const cacheKey = getCacheKey(session.user.id)
+    const cacheKey = getCacheKey("playlists", session.user.id)
     try {
-      await redis.del(cacheKey)
+      if (redis) {
+        await redis.del(cacheKey)
+      }
     } catch (cacheError) {
       console.error("Redis cache invalidation error:", cacheError)
     }

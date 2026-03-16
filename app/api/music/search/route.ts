@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server"
 import { SEARCH_DEFAULTS } from "@/app/music/constants"
+import { CACHE_TTL, getCacheKey } from "@/lib/cache"
 import { redis } from "@/lib/redis"
 
 export async function GET(request: NextRequest) {
@@ -14,15 +15,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ resultCount: 0, results: [] })
   }
 
-  // Create cache key
-  const cacheKey = `search:${term}:${entity}:${limit}:${country}`
-  const CACHE_TTL = 300 // 5 minutes
+  // Create cache key with normalized term
+  const cacheKey = getCacheKey("search", term, entity, limit, country)
+  const ttl = CACHE_TTL.search
 
   // Check Redis cache first
   try {
-    const cached = await redis.get(cacheKey)
-    if (cached) {
-      return NextResponse.json(cached)
+    if (redis) {
+      const cached = await redis.get(cacheKey)
+      if (cached) {
+        return NextResponse.json(typeof cached === "string" ? JSON.parse(cached) : cached)
+      }
     }
   } catch (cacheError) {
     console.error("Redis cache read error:", cacheError)
@@ -70,7 +73,10 @@ export async function GET(request: NextRequest) {
 
       // Cache the results
       try {
-        await redis.setex(cacheKey, CACHE_TTL, { resultCount: results.length, results })
+        if (redis) {
+          const payload = { resultCount: results.length, results }
+          await redis.set(cacheKey, JSON.stringify(payload), { ex: ttl })
+        }
       } catch (cacheError) {
         console.error("Redis cache write error:", cacheError)
       }
@@ -93,7 +99,9 @@ export async function GET(request: NextRequest) {
 
     // Cache the results
     try {
-      await redis.setex(cacheKey, CACHE_TTL, data)
+      if (redis) {
+        await redis.set(cacheKey, JSON.stringify(data), { ex: ttl })
+      }
     } catch (cacheError) {
       console.error("Redis cache write error:", cacheError)
     }
