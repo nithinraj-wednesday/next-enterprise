@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils"
 
 interface MusicAppHeaderProps {
   activeRoute: "music" | "favorites"
-  favoriteCount: number
+  playlistCount: number
   userName?: string
   searchBar?: React.ReactNode
 }
@@ -77,7 +77,7 @@ export function FavoriteButton({ isFavorite, isPending, onClick }: FavoriteButto
   )
 }
 
-export function MusicAppHeader({ activeRoute, favoriteCount, userName: _userName, searchBar }: MusicAppHeaderProps) {
+export function MusicAppHeader({ activeRoute, playlistCount, userName: _userName, searchBar }: MusicAppHeaderProps) {
   return (
     <div className="mb-8 flex flex-col gap-4 sm:mb-12">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -132,7 +132,7 @@ export function MusicAppHeader({ activeRoute, favoriteCount, userName: _userName
           )}
         >
           Playlists
-          <span className="bg-foreground/10 rounded-full px-2 py-0.5 text-[10px] tabular-nums">{favoriteCount}</span>
+          <span className="bg-foreground/10 rounded-full px-2 py-0.5 text-[10px] tabular-nums">{playlistCount}</span>
         </Link>
       </nav>
     </div>
@@ -284,7 +284,6 @@ export function TrackCard({
     >
       <div className="relative">
         <div className="absolute top-2 left-2 z-20 flex items-center gap-1.5">
-          {optionsMenu}
           <div className="bg-background/80 text-muted-foreground inline-flex rounded-full border border-white/10 px-2 py-0.5 text-[10px] tabular-nums backdrop-blur-sm sm:opacity-0 sm:transition-opacity sm:group-focus-within:opacity-100 sm:group-hover:opacity-100">
             {formatTime(track.trackTimeMillis / 1000)}
           </div>
@@ -341,12 +340,7 @@ export function TrackCard({
                 )}
               >
                 {isActive && isPlaying ? (
-                  <div className="flex h-4 items-end gap-[3px]">
-                    <div className="eq-bar" />
-                    <div className="eq-bar" />
-                    <div className="eq-bar" />
-                    <div className="eq-bar" />
-                  </div>
+                  <HugeiconsIcon icon={PauseIcon} className="size-5" fill="currentColor" />
                 ) : (
                   <HugeiconsIcon icon={PlayIcon} className="ml-0.5 size-5" fill="currentColor" />
                 )}
@@ -363,11 +357,14 @@ export function TrackCard({
           </div>
 
           <div className="flex min-w-0 flex-col gap-0.5 px-0.5">
-            <span
-              className={cn("truncate text-sm leading-tight font-medium", isActive ? "text-gold" : "text-foreground")}
-            >
-              {track.trackName}
-            </span>
+            <div className="flex items-start justify-between gap-2">
+              <span
+                className={cn("truncate text-sm leading-tight font-medium", isActive ? "text-gold" : "text-foreground")}
+              >
+                {track.trackName}
+              </span>
+              {optionsMenu && <div className="-mt-1.5 -mr-1.5 shrink-0">{optionsMenu}</div>}
+            </div>
             <span className="text-muted-foreground truncate text-xs">{track.artistName}</span>
           </div>
         </button>
@@ -499,6 +496,7 @@ export function PlayerBar({
   const currentTime = (progress / 100) * duration
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>, barRef: React.RefObject<HTMLDivElement | null>) => {
+    e.stopPropagation()
     if (!barRef.current) return
     const rect = barRef.current.getBoundingClientRect()
     const pct = ((e.clientX - rect.left) / rect.width) * 100
@@ -666,7 +664,11 @@ export function PlayerBar({
           </div>
         </>
       ) : (
-        <div className="player-glass animate-fade-up fixed right-0 bottom-0 left-0 z-50" id="player-bar">
+        <div
+          className="player-glass animate-fade-up fixed right-0 bottom-0 left-0 z-50 cursor-pointer transition-colors hover:bg-white/[0.03]"
+          id="player-bar"
+          onClick={() => setIsExpanded(true)}
+        >
           <div
             ref={collapsedProgressBarRef}
             onClick={(event) => handleProgressClick(event, collapsedProgressBarRef)}
@@ -704,7 +706,10 @@ export function PlayerBar({
 
             <div className="ml-auto flex items-center gap-1 sm:gap-2">
               <button
-                onClick={onPrevious}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onPrevious()
+                }}
                 className="text-muted-foreground hover:text-foreground p-1 transition-colors"
                 aria-label="Previous"
               >
@@ -712,7 +717,10 @@ export function PlayerBar({
               </button>
 
               <button
-                onClick={onTogglePlay}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onTogglePlay()
+                }}
                 className="bg-foreground text-background flex size-9 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95"
                 aria-label={isPlaying ? "Pause" : "Play"}
                 id="player-play-pause"
@@ -725,7 +733,10 @@ export function PlayerBar({
               </button>
 
               <button
-                onClick={onNext}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onNext()
+                }}
                 className="text-muted-foreground hover:text-foreground p-1 transition-colors"
                 aria-label="Next"
               >

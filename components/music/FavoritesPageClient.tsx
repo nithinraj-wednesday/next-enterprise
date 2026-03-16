@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { useMusic } from "@/hooks/use-music"
 import { favoriteToTrack } from "@/lib/favorites"
 import { FavoriteSong, Playlist, PlaylistResponse, PlaylistTracksResponse, Track } from "@/lib/types"
@@ -135,6 +136,17 @@ export function FavoritesPageClient({
     selectedPlaylistId === LIKED_PLAYLIST_ID ? undefined : playlistTracks[selectedPlaylistId]
 
   const activeTracks = selectedPlaylistId === LIKED_PLAYLIST_ID ? likedTracks : selectedPlaylistTracks ?? EMPTY_TRACKS
+
+  const handlePlayTrack = useCallback(
+    (track: Track) => {
+      if (currentTrack?.trackId === track.trackId) {
+        togglePlayPause()
+      } else {
+        playTrack(track)
+      }
+    },
+    [currentTrack, playTrack, togglePlayPause]
+  )
 
   const filteredTracks = useMemo(() => {
     if (!searchTerm.trim()) return activeTracks
@@ -498,7 +510,7 @@ export function FavoritesPageClient({
         <div className="relative z-30 mx-auto max-w-screen-xl px-4 sm:px-6">
           <MusicAppHeader
             activeRoute="favorites"
-            favoriteCount={favorites.length}
+            playlistCount={playlists.length + 1}
             userName={userName}
             searchBar={<SearchBar onSearch={handleSearch} loading={false} className="!px-4 !py-2" />}
           />
@@ -566,96 +578,99 @@ export function FavoritesPageClient({
           </Dialog>
         </div>
 
-        <div className="-mx-1 mb-8 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pt-2 pb-2">
-          <Card
-            role="button"
-            tabIndex={0}
-            onClick={() => setSelectedPlaylistId(LIKED_PLAYLIST_ID)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault()
-                setSelectedPlaylistId(LIKED_PLAYLIST_ID)
-              }
-            }}
-            className={cn(
-              "w-[min(85vw,20rem)] shrink-0 cursor-pointer snap-start transition-all hover:-translate-y-0.5",
-              selectedPlaylistId === LIKED_PLAYLIST_ID
-                ? "ring-gold/40 bg-gold/8 ring-2"
-                : "ring-border/40 hover:ring-border"
-            )}
-          >
-            <CardHeader>
-              <CardTitle className="font-display">{LIKED_PLAYLIST_NAME}</CardTitle>
-              <CardDescription>Pinned playlist</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <p className="text-muted-foreground text-sm">{favorites.length} tracks</p>
-            </CardContent>
-          </Card>
-
-          {playlists.map((playlist) => (
+        <ScrollArea className="w-full pb-4 whitespace-nowrap">
+          <div className="flex w-max gap-3 px-1 pt-2 pb-2">
             <Card
-              key={playlist.id}
               role="button"
               tabIndex={0}
-              onClick={() => setSelectedPlaylistId(playlist.id)}
+              onClick={() => setSelectedPlaylistId(LIKED_PLAYLIST_ID)}
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
                   event.preventDefault()
-                  setSelectedPlaylistId(playlist.id)
+                  setSelectedPlaylistId(LIKED_PLAYLIST_ID)
                 }
               }}
               className={cn(
                 "w-[min(85vw,20rem)] shrink-0 cursor-pointer snap-start transition-all hover:-translate-y-0.5",
-                selectedPlaylistId === playlist.id
+                selectedPlaylistId === LIKED_PLAYLIST_ID
                   ? "ring-gold/40 bg-gold/8 ring-2"
                   : "ring-border/40 hover:ring-border"
               )}
             >
-              <CardHeader className="flex items-start justify-between gap-3">
-                <div className="flex flex-col gap-1">
-                  <CardTitle className="font-display truncate">{playlist.name}</CardTitle>
-                  <CardDescription>{playlistTracksMap[playlist.id]?.size ?? 0} tracks</CardDescription>
-                </div>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={(event) => event.stopPropagation()}
-                      aria-label={`Manage ${playlist.name}`}
-                    >
-                      <EllipsisVertical />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
-                    <DropdownMenuGroup>
-                      <DropdownMenuItem
-                        onSelect={() => {
-                          setPlaylistToRename(playlist)
-                          setRenamePlaylistName(playlist.name)
-                        }}
-                      >
-                        <PencilLine data-icon="inline-start" />
-                        Rename
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onSelect={() => {
-                          setPlaylistToDelete(playlist)
-                        }}
-                      >
-                        <Trash2 data-icon="inline-start" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+              <CardHeader>
+                <CardTitle className="font-display">{LIKED_PLAYLIST_NAME}</CardTitle>
+                <CardDescription>Pinned playlist</CardDescription>
               </CardHeader>
+              <CardContent className="pt-0">
+                <p className="text-muted-foreground text-sm">{favorites.length} tracks</p>
+              </CardContent>
             </Card>
-          ))}
-        </div>
+
+            {playlists.map((playlist) => (
+              <Card
+                key={playlist.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelectedPlaylistId(playlist.id)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault()
+                    setSelectedPlaylistId(playlist.id)
+                  }
+                }}
+                className={cn(
+                  "w-[min(85vw,20rem)] shrink-0 cursor-pointer snap-start transition-all hover:-translate-y-0.5",
+                  selectedPlaylistId === playlist.id
+                    ? "ring-gold/40 bg-gold/8 ring-2"
+                    : "ring-border/40 hover:ring-border"
+                )}
+              >
+                <CardHeader className="flex items-start justify-between gap-3">
+                  <div className="flex flex-col gap-1">
+                    <CardTitle className="font-display truncate">{playlist.name}</CardTitle>
+                    <CardDescription>{playlistTracksMap[playlist.id]?.size ?? 0} tracks</CardDescription>
+                  </div>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={(event) => event.stopPropagation()}
+                        aria-label={`Manage ${playlist.name}`}
+                      >
+                        <EllipsisVertical />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
+                      <DropdownMenuGroup>
+                        <DropdownMenuItem
+                          onSelect={() => {
+                            setPlaylistToRename(playlist)
+                            setRenamePlaylistName(playlist.name)
+                          }}
+                        >
+                          <PencilLine data-icon="inline-start" />
+                          Rename
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onSelect={() => {
+                            setPlaylistToDelete(playlist)
+                          }}
+                        >
+                          <Trash2 data-icon="inline-start" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
 
         <Card className="glass-card border-border/30 overflow-hidden rounded-[2rem] border">
           <CardHeader className="border-border/50 border-b">
@@ -710,7 +725,7 @@ export function FavoritesPageClient({
                       track={track}
                       isActive={currentTrack?.trackId === track.trackId}
                       isPlaying={isPlaying}
-                      onPlay={playTrack}
+                      onPlay={handlePlayTrack}
                       onToggleFavorite={selectedPlaylistId === LIKED_PLAYLIST_ID ? handleToggleFavorite : undefined}
                       isFavorite={selectedPlaylistId === LIKED_PLAYLIST_ID}
                       isFavoritePending={pendingFavoriteIds.includes(track.trackId)}

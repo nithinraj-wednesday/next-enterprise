@@ -1,15 +1,10 @@
-import { desc, eq } from "drizzle-orm"
+import { eq, sql } from "drizzle-orm"
+import { Music, User } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { requireServerSession } from "@/lib/auth-server"
 import { db } from "@/lib/db"
-import { account } from "@/lib/db-schema"
-
-const providerLabels: Record<string, string> = {
-  credential: "Email & Password",
-  github: "GitHub",
-  google: "Google",
-}
+import { favoriteSong, playlist, playlistTrack } from "@/lib/db-schema"
 
 function getInitials(name: string, email: string) {
   const source = name.trim() || email.trim()
@@ -25,22 +20,51 @@ function getInitials(name: string, email: string) {
   return source.slice(0, 2).toUpperCase()
 }
 
+function splitName(fullName: string) {
+  const tokens = fullName.trim().split(/\s+/).filter(Boolean)
+  if (tokens.length > 1) {
+    return { firstName: tokens[0], lastName: tokens.slice(1).join(" ") }
+  }
+  return { firstName: tokens[0] || "", lastName: "" }
+}
+
 export default async function ProfilePage() {
   const session = await requireServerSession()
 
-  const linkedAccounts = await db
-    .select({
-      providerId: account.providerId,
-      createdAt: account.createdAt,
-    })
-    .from(account)
-    .where(eq(account.userId, session.user.id))
-    .orderBy(desc(account.createdAt))
+  // Get user's playlists count
+  const playlistsResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(playlist)
+    .where(eq(playlist.userId, session.user.id))
+  const playlistsCount = playlistsResult[0]?.count ?? 0
 
-  const uniqueProviders = Array.from(new Set(linkedAccounts.map((entry) => entry.providerId)))
+  // Get total songs across all playlists
+  const userPlaylistIds = await db
+    .select({ id: playlist.id })
+    .from(playlist)
+    .where(eq(playlist.userId, session.user.id))
+
+  let totalSongsInPlaylists = 0
+  if (userPlaylistIds.length > 0) {
+    const playlistIds = userPlaylistIds.map((p) => p.id)
+    const songsResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(playlistTrack)
+      .where(sql`${playlistTrack.playlistId} IN ${playlistIds}`)
+    totalSongsInPlaylists = songsResult[0]?.count ?? 0
+  }
+
+  // Get favorites count
+  const favoritesResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(favoriteSong)
+    .where(eq(favoriteSong.userId, session.user.id))
+  const favoritesCount = favoritesResult[0]?.count ?? 0
+
   const displayName = session.user.name || "Music Explorer"
   const displayEmail = session.user.email || "No email available"
   const initials = getInitials(displayName, displayEmail)
+  const { firstName, lastName } = splitName(displayName)
 
   return (
     <div className="bg-background relative min-h-screen px-4 py-8 sm:px-6 sm:py-12">
@@ -81,21 +105,60 @@ export default async function ProfilePage() {
             </div>
           </div>
 
-          <div className="mt-8">
-            <p className="text-muted-foreground mb-3 text-xs tracking-[0.18em] uppercase">Connected sign-in methods</p>
-            <div className="flex flex-wrap gap-2">
-              {uniqueProviders.length > 0 ? (
-                uniqueProviders.map((providerId) => (
-                  <span
-                    key={providerId}
-                    className="border-border/60 bg-secondary/60 text-foreground rounded-full border px-3 py-1.5 text-xs"
-                  >
-                    {providerLabels[providerId] ?? providerId}
-                  </span>
-                ))
-              ) : (
-                <span className="text-muted-foreground text-sm">No linked providers found.</span>
-              )}
+          {/* User Details Grid */}
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {/* First Name */}
+            <div className="bg-secondary/40 border-border/50 rounded-xl border p-4">
+              <div className="text-muted-foreground mb-2 flex items-center gap-2 text-xs tracking-[0.18em] uppercase">
+                <User className="size-3.5" />
+                First Name
+              </div>
+              <p className="text-foreground font-medium">{firstName || "—"}</p>
+            </div>
+
+            {/* Last Name */}
+            <div className="bg-secondary/40 border-border/50 rounded-xl border p-4">
+              <div className="text-muted-foreground mb-2 flex items-center gap-2 text-xs tracking-[0.18em] uppercase">
+                <User className="size-3.5" />
+                Last Name
+              </div>
+              <p className="text-foreground font-medium">{lastName || "—"}</p>
+            </div>
+
+            {/* Email */}
+            <div className="bg-secondary/40 border-border/50 rounded-xl border p-4 sm:col-span-2">
+              <div className="text-muted-foreground mb-2 flex items-center gap-2 text-xs tracking-[0.18em] uppercase">
+                <User className="size-3.5" />
+                Email Address
+              </div>
+              <p className="text-foreground font-medium">{displayEmail}</p>
+            </div>
+
+            {/* Total Playlists */}
+            <div className="bg-secondary/40 border-border/50 rounded-xl border p-4">
+              <div className="text-muted-foreground mb-2 flex items-center gap-2 text-xs tracking-[0.18em] uppercase">
+                <Music className="size-3.5" />
+                Total Playlists
+              </div>
+              <p className="text-foreground font-medium">{playlistsCount}</p>
+            </div>
+
+            {/* Total Songs in Playlists */}
+            <div className="bg-secondary/40 border-border/50 rounded-xl border p-4">
+              <div className="text-muted-foreground mb-2 flex items-center gap-2 text-xs tracking-[0.18em] uppercase">
+                <Music className="size-3.5" />
+                Songs in Playlists
+              </div>
+              <p className="text-foreground font-medium">{totalSongsInPlaylists}</p>
+            </div>
+
+            {/* Total Favorites */}
+            <div className="bg-secondary/40 border-border/50 rounded-xl border p-4 sm:col-span-2">
+              <div className="text-muted-foreground mb-2 flex items-center gap-2 text-xs tracking-[0.18em] uppercase">
+                <Music className="size-3.5" />
+                Saved Tracks (Favorites)
+              </div>
+              <p className="text-foreground font-medium">{favoritesCount} songs</p>
             </div>
           </div>
         </section>
