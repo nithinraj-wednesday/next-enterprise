@@ -14,7 +14,7 @@ import {
   // @ts-expect-error - hugeicons moduleResolution mismatch
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { ChevronDown, ChevronUp } from "lucide-react"
+import { ChevronDown, ChevronUp, X } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
@@ -143,10 +143,38 @@ export function SearchBar({ onSearch, loading, className }: SearchBarProps) {
   const [query, setQuery] = useState("")
   const [focused, setFocused] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const lastSearchedRef = useRef("")
+
+  useEffect(() => {
+    inputRef.current?.focus()
+  }, [])
+
+  useEffect(() => {
+    const trimmedQuery = query.trim()
+    if (trimmedQuery === lastSearchedRef.current) return
+
+    const timer = setTimeout(() => {
+      onSearch(trimmedQuery, { shouldScroll: false })
+      lastSearchedRef.current = trimmedQuery
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [query, onSearch])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (query.trim()) onSearch(query.trim())
+    const trimmedQuery = query.trim()
+    if (trimmedQuery && trimmedQuery !== lastSearchedRef.current) {
+      onSearch(trimmedQuery, { shouldScroll: true })
+      lastSearchedRef.current = trimmedQuery
+    }
+  }
+
+  const handleClear = () => {
+    setQuery("")
+    lastSearchedRef.current = ""
+    onSearch("", { shouldScroll: false })
+    inputRef.current?.focus()
   }
 
   useEffect(() => {
@@ -190,6 +218,17 @@ export function SearchBar({ onSearch, loading, className }: SearchBarProps) {
         className="text-foreground placeholder:text-muted-foreground font-body flex-1 bg-transparent text-base outline-none"
         id="music-search-input"
       />
+
+      {query && (
+        <button
+          type="button"
+          onClick={handleClear}
+          className="text-muted-foreground hover:text-foreground animate-in fade-in zoom-in p-1 transition-all duration-200"
+          aria-label="Clear search"
+        >
+          <X className="size-4" strokeWidth={2.5} />
+        </button>
+      )}
 
       {loading ? (
         <div className="border-gold/30 border-t-gold size-5 animate-spin rounded-full border-2" />

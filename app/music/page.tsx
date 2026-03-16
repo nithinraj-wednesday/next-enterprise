@@ -296,12 +296,15 @@ export default function MusicPage() {
   }, [])
 
   const handleSearch = useCallback(
-    (query: string) => {
-      setSearchTerm(query)
+    (query: string, options?: { shouldScroll?: boolean }) => {
+      const searchTermToUse = query.trim() || "trending"
+      setSearchTerm(searchTermToUse)
       setHasSearched(true)
-      searchMusic(query)
+      searchMusic(searchTermToUse)
       posthog.capture("music_searched", { query })
-      resultsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+      if (options?.shouldScroll) {
+        resultsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+      }
     },
     [searchMusic]
   )
@@ -578,7 +581,7 @@ export default function MusicPage() {
       <div className="noise-overlay" />
 
       <header className="hero-gradient relative pt-8 pb-6 sm:pt-12 sm:pb-8">
-        <div className="relative z-10 mx-auto max-w-screen-xl px-4 sm:px-6">
+        <div className="relative z-30 mx-auto max-w-screen-xl px-4 sm:px-6">
           <MusicAppHeader
             activeRoute="music"
             favoriteCount={favorites.length}

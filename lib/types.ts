@@ -35,7 +35,7 @@ export interface FavoriteSong extends FavoritePayload {
 }
 
 export interface SearchBarProps {
-  onSearch: (query: string) => void
+  onSearch: (query: string, options?: { shouldScroll?: boolean }) => void
   loading: boolean
   className?: string
 }

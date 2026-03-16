@@ -4,7 +4,7 @@ import { EllipsisVertical, Loader2, PencilLine, Plus, Trash2 } from "lucide-reac
 import Link from "next/link"
 import posthog from "posthog-js"
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react"
-import { MusicAppHeader, PlayerBar, TrackRow } from "@/components/music/MusicComponents"
+import { MusicAppHeader, PlayerBar, SearchBar, TrackRow } from "@/components/music/MusicComponents"
 import { PlaylistDropdown } from "@/components/music/PlaylistDropdown"
 import {
   AlertDialog,
@@ -86,6 +86,8 @@ export function FavoritesPageClient({
   const [playlistToDelete, setPlaylistToDelete] = useState<Playlist | null>(null)
   const [isDeletingPlaylist, setIsDeletingPlaylist] = useState(false)
 
+  const [searchTerm, setSearchTerm] = useState("")
+
   const {
     currentTrack,
     isPlaying,
@@ -134,11 +136,22 @@ export function FavoritesPageClient({
 
   const activeTracks = selectedPlaylistId === LIKED_PLAYLIST_ID ? likedTracks : selectedPlaylistTracks ?? EMPTY_TRACKS
 
+  const filteredTracks = useMemo(() => {
+    if (!searchTerm.trim()) return activeTracks
+    const term = searchTerm.toLowerCase()
+    return activeTracks.filter(
+      (track) =>
+        track.trackName.toLowerCase().includes(term) ||
+        track.artistName.toLowerCase().includes(term) ||
+        track.collectionName.toLowerCase().includes(term)
+    )
+  }, [activeTracks, searchTerm])
+
   const isActivePlaylistLoading = selectedPlaylistId !== LIKED_PLAYLIST_ID && loadingPlaylistId === selectedPlaylistId
 
   useEffect(() => {
-    setTrackList(activeTracks)
-  }, [activeTracks, setTrackList])
+    setTrackList(filteredTracks)
+  }, [filteredTracks, setTrackList])
 
   useEffect(() => {
     if (selectedPlaylistId === LIKED_PLAYLIST_ID) {
@@ -473,13 +486,22 @@ export function FavoritesPageClient({
     }
   }, [playlistToDelete, selectedPlaylistId])
 
+  const handleSearch = useCallback((query: string) => {
+    setSearchTerm(query)
+  }, [])
+
   return (
     <div className="bg-background relative min-h-screen">
       <div className="noise-overlay" />
 
       <header className="relative pt-8 pb-4 sm:pt-12 sm:pb-6">
-        <div className="relative z-10 mx-auto max-w-screen-xl px-4 sm:px-6">
-          <MusicAppHeader activeRoute="favorites" favoriteCount={favorites.length} userName={userName} />
+        <div className="relative z-30 mx-auto max-w-screen-xl px-4 sm:px-6">
+          <MusicAppHeader
+            activeRoute="favorites"
+            favoriteCount={favorites.length}
+            userName={userName}
+            searchBar={<SearchBar onSearch={handleSearch} loading={false} className="!px-4 !py-2" />}
+          />
         </div>
       </header>
 
@@ -640,7 +662,14 @@ export function FavoritesPageClient({
             <CardTitle className="font-display text-foreground text-2xl font-semibold">
               {selectedPlaylistName}
             </CardTitle>
-            <CardDescription>{selectedPlaylistTrackCount} tracks</CardDescription>
+            <div className="flex items-center gap-2">
+              <CardDescription>{selectedPlaylistTrackCount} tracks</CardDescription>
+              {searchTerm && (
+                <span className="text-muted-foreground/60 text-xs">
+                  · {filteredTracks.length} found for &quot;{searchTerm}&quot;
+                </span>
+              )}
+            </div>
           </CardHeader>
 
           <CardContent className="px-0">
@@ -649,10 +678,12 @@ export function FavoritesPageClient({
                 <Loader2 className="size-4 animate-spin" />
                 Loading playlist tracks...
               </div>
-            ) : activeTracks.length === 0 ? (
+            ) : filteredTracks.length === 0 ? (
               <div className="flex flex-col items-center gap-4 px-4 py-12 text-center">
                 <p className="text-muted-foreground text-sm">
-                  {selectedPlaylistId === LIKED_PLAYLIST_ID
+                  {searchTerm
+                    ? `No matches found for "${searchTerm}" in this playlist.`
+                    : selectedPlaylistId === LIKED_PLAYLIST_ID
                     ? "No liked songs yet. Add songs from Discover to fill this playlist."
                     : "No songs in this playlist yet."}
                 </p>
@@ -673,7 +704,7 @@ export function FavoritesPageClient({
                 </div>
 
                 <div className="flex flex-col gap-1 px-3 pb-3">
-                  {activeTracks.map((track, index) => (
+                  {filteredTracks.map((track, index) => (
                     <TrackRow
                       key={`${selectedPlaylistId}-${track.trackId}`}
                       track={track}
