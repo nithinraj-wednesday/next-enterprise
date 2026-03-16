@@ -690,8 +690,8 @@ export function PlayerBar({
               </div>
               <div className="min-w-0">
                 <div className="text-foreground truncate text-sm font-medium">{currentTrack.trackName}</div>
-                <div className="text-muted-foreground flex items-center gap-2 truncate text-xs">
-                  <span className="truncate">{currentTrack.artistName}</span>
+                <div className="text-muted-foreground flex items-center gap-2 text-xs">
+                  <span className="min-w-0 flex-1 truncate">{currentTrack.artistName}</span>
                   <span className="flex items-center gap-1.5 whitespace-nowrap opacity-60">
                     <span className="bg-foreground/10 h-2.5 w-px" />
                     <span className="tabular-nums">
