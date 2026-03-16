@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-body antialiased">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange={false}>
           {children}
-          <Toaster position="bottom-right" richColors />
+          <Toaster position="top-right" richColors />
         </ThemeProvider>
       </body>
     </html>
