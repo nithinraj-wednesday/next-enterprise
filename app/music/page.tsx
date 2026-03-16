@@ -100,6 +100,7 @@ export default function MusicPage() {
     }, {})
   )
   const [categoryLoadError, setCategoryLoadError] = useState<string | null>(null)
+  const [resultsExpanded, setResultsExpanded] = useState(false)
 
   const resultsSectionRef = useRef<HTMLDivElement>(null)
   const favoriteIds = new Set(favorites.map((favorite) => favorite.trackId))
@@ -238,7 +239,9 @@ export default function MusicPage() {
       const results = await Promise.allSettled(
         FEATURED_SEARCHES.map(async (category) => {
           const response = await fetch(
-            `/api/music/search?term=${encodeURIComponent(category.query)}&entity=${SEARCH_DEFAULTS.entity}&limit=12`,
+            `/api/music/search?term=${encodeURIComponent(category.query)}&entity=${SEARCH_DEFAULTS.entity}&limit=${
+              SEARCH_DEFAULTS.limit
+            }`,
             { cache: "no-store" }
           )
 
@@ -737,51 +740,68 @@ export default function MusicPage() {
             </div>
           )}
 
-          {!loading && tracks.length > 0 && viewMode === "grid" && (
-            <div className="mb-12 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-              {tracks.map((track, index) => (
-                <TrackCard
-                  key={track.trackId}
-                  track={track}
-                  isActive={currentTrack?.trackId === track.trackId}
-                  isPlaying={isPlaying}
-                  onPlay={handlePlayTrack}
-                  onToggleFavorite={handleToggleFavorite}
-                  isFavorite={favoriteIds.has(track.trackId)}
-                  isFavoritePending={pendingFavoriteIds.includes(track.trackId)}
-                  optionsMenu={renderPlaylistMenu(track)}
-                  index={index}
-                />
-              ))}
-            </div>
-          )}
+          {!loading && tracks.length > 0 && (
+            <>
+              {viewMode === "grid" ? (
+                <div className="mb-12 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
+                  {(resultsExpanded ? tracks : tracks.slice(0, 6)).map((track, index) => (
+                    <TrackCard
+                      key={track.trackId}
+                      track={track}
+                      isActive={currentTrack?.trackId === track.trackId}
+                      isPlaying={isPlaying}
+                      onPlay={handlePlayTrack}
+                      onToggleFavorite={handleToggleFavorite}
+                      isFavorite={favoriteIds.has(track.trackId)}
+                      isFavoritePending={pendingFavoriteIds.includes(track.trackId)}
+                      optionsMenu={renderPlaylistMenu(track)}
+                      index={index}
+                      formatTime={formatTime}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="mb-12 flex flex-col gap-1">
+                  <div className="text-muted-foreground border-border/50 mb-1 flex items-center gap-4 border-b px-3 py-2 text-xs tracking-wider uppercase">
+                    <span className="w-8 text-center">#</span>
+                    <span className="size-10 shrink-0" />
+                    <span className="flex-1">Title</span>
+                    <span className="hidden md:inline-flex">Genre</span>
+                    <span className="ml-4 shrink-0">Duration</span>
+                  </div>
 
-          {!loading && tracks.length > 0 && viewMode === "list" && (
-            <div className="mb-12 flex flex-col gap-1">
-              <div className="text-muted-foreground border-border/50 mb-1 flex items-center gap-4 border-b px-3 py-2 text-xs tracking-wider uppercase">
-                <span className="w-8 text-center">#</span>
-                <span className="size-10 shrink-0" />
-                <span className="flex-1">Title</span>
-                <span className="hidden md:inline-flex">Genre</span>
-                <span className="ml-4 shrink-0">Duration</span>
-              </div>
+                  {(resultsExpanded ? tracks : tracks.slice(0, 6)).map((track, index) => (
+                    <TrackRow
+                      key={track.trackId}
+                      track={track}
+                      isActive={currentTrack?.trackId === track.trackId}
+                      isPlaying={isPlaying}
+                      onPlay={handlePlayTrack}
+                      onToggleFavorite={handleToggleFavorite}
+                      isFavorite={favoriteIds.has(track.trackId)}
+                      isFavoritePending={pendingFavoriteIds.includes(track.trackId)}
+                      index={index}
+                      formatTime={formatTime}
+                      optionsMenu={renderPlaylistMenu(track)}
+                    />
+                  ))}
+                </div>
+              )}
 
-              {tracks.map((track, index) => (
-                <TrackRow
-                  key={track.trackId}
-                  track={track}
-                  isActive={currentTrack?.trackId === track.trackId}
-                  isPlaying={isPlaying}
-                  onPlay={handlePlayTrack}
-                  onToggleFavorite={handleToggleFavorite}
-                  isFavorite={favoriteIds.has(track.trackId)}
-                  isFavoritePending={pendingFavoriteIds.includes(track.trackId)}
-                  index={index}
-                  formatTime={formatTime}
-                  optionsMenu={renderPlaylistMenu(track)}
-                />
-              ))}
-            </div>
+              {tracks.length > 6 && (
+                <div className="-mt-8 mb-12 flex justify-center pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setResultsExpanded(!resultsExpanded)}
+                    className="text-muted-foreground border-border/60 hover:border-gold/40 hover:text-gold bg-secondary/30 inline-flex items-center justify-center rounded-full border p-2 transition-colors"
+                    aria-label={resultsExpanded ? "Collapse results" : "Expand results"}
+                    aria-expanded={resultsExpanded}
+                  >
+                    {resultsExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                  </button>
+                </div>
+              )}
+            </>
           )}
 
           {!hasSearched && !loading && <EmptyState />}
@@ -792,9 +812,7 @@ export default function MusicPage() {
             <div>
               <h2 className="font-display text-foreground text-xl font-semibold">Browse Categories</h2>
               <p className="text-muted-foreground mt-1 text-sm">
-                {viewMode === "list"
-                  ? "List mode shows 5 songs per category first. Use each arrow to expand that category."
-                  : "Explore curated rails and tap any track to play instantly."}
+                Both modes show 6 songs per category first. Use the arrow to expand that category.
               </p>
             </div>
           </div>
@@ -804,8 +822,8 @@ export default function MusicPage() {
               const tracksForCategory = categoryTracks[category.query] ?? []
               const isCategoryLoading = categoryLoadingMap[category.query] ?? false
               const isCategoryExpanded = categoryExpandedMap[category.query] ?? false
-              const visibleCategoryTracks = isCategoryExpanded ? tracksForCategory : tracksForCategory.slice(0, 5)
-              const hasMoreCategoryTracks = tracksForCategory.length > 5
+              const visibleCategoryTracks = isCategoryExpanded ? tracksForCategory : tracksForCategory.slice(0, 6)
+              const hasMoreCategoryTracks = tracksForCategory.length > 6
 
               return (
                 <section key={category.query} className="space-y-3">
@@ -825,9 +843,9 @@ export default function MusicPage() {
 
                   {isCategoryLoading ? (
                     viewMode === "grid" ? (
-                      <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                        {Array.from({ length: 5 }).map((_, index) => (
-                          <div key={index} className="skeleton-shimmer h-56 w-40 shrink-0 rounded-xl sm:w-44" />
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                        {Array.from({ length: 6 }).map((_, index) => (
+                          <div key={index} className="skeleton-shimmer h-56 w-full rounded-xl" />
                         ))}
                       </div>
                     ) : (
@@ -841,49 +859,54 @@ export default function MusicPage() {
                     <div className="text-muted-foreground rounded-xl border border-dashed px-4 py-5 text-sm">
                       No tracks available in this category right now.
                     </div>
-                  ) : viewMode === "grid" ? (
-                    <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                      {tracksForCategory.map((track, index) => (
-                        <div key={`${category.query}-${track.trackId}`} className="w-40 shrink-0 sm:w-44 md:w-48">
-                          <TrackCard
-                            track={track}
-                            isActive={currentTrack?.trackId === track.trackId}
-                            isPlaying={isPlaying}
-                            onPlay={handlePlayTrack}
-                            onToggleFavorite={handleToggleFavorite}
-                            isFavorite={favoriteIds.has(track.trackId)}
-                            isFavoritePending={pendingFavoriteIds.includes(track.trackId)}
-                            optionsMenu={renderPlaylistMenu(track)}
-                            index={index}
-                          />
-                        </div>
-                      ))}
-                    </div>
                   ) : (
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground border-border/50 mb-1 flex items-center gap-4 border-b px-3 py-2 text-xs tracking-wider uppercase">
-                        <span className="w-8 text-center">#</span>
-                        <span className="size-10 shrink-0" />
-                        <span className="flex-1">Title</span>
-                        <span className="hidden md:inline-flex">Genre</span>
-                        <span className="ml-4 shrink-0">Duration</span>
-                      </div>
+                    <>
+                      {viewMode === "grid" ? (
+                        <div className="grid grid-cols-2 gap-3 pb-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                          {visibleCategoryTracks.map((track, index) => (
+                            <div key={`${category.query}-${track.trackId}`} className="w-full">
+                              <TrackCard
+                                track={track}
+                                isActive={currentTrack?.trackId === track.trackId}
+                                isPlaying={isPlaying}
+                                onPlay={handlePlayTrack}
+                                onToggleFavorite={handleToggleFavorite}
+                                isFavorite={favoriteIds.has(track.trackId)}
+                                isFavoritePending={pendingFavoriteIds.includes(track.trackId)}
+                                optionsMenu={renderPlaylistMenu(track)}
+                                index={index}
+                                formatTime={formatTime}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          <div className="text-muted-foreground border-border/50 mb-1 flex items-center gap-4 border-b px-3 py-2 text-xs tracking-wider uppercase">
+                            <span className="w-8 text-center">#</span>
+                            <span className="size-10 shrink-0" />
+                            <span className="flex-1">Title</span>
+                            <span className="hidden md:inline-flex">Genre</span>
+                            <span className="ml-4 shrink-0">Duration</span>
+                          </div>
 
-                      {visibleCategoryTracks.map((track, index) => (
-                        <TrackRow
-                          key={`${category.query}-${track.trackId}`}
-                          track={track}
-                          isActive={currentTrack?.trackId === track.trackId}
-                          isPlaying={isPlaying}
-                          onPlay={handlePlayTrack}
-                          onToggleFavorite={handleToggleFavorite}
-                          isFavorite={favoriteIds.has(track.trackId)}
-                          isFavoritePending={pendingFavoriteIds.includes(track.trackId)}
-                          index={index}
-                          formatTime={formatTime}
-                          optionsMenu={renderPlaylistMenu(track)}
-                        />
-                      ))}
+                          {visibleCategoryTracks.map((track, index) => (
+                            <TrackRow
+                              key={`${category.query}-${track.trackId}`}
+                              track={track}
+                              isActive={currentTrack?.trackId === track.trackId}
+                              isPlaying={isPlaying}
+                              onPlay={handlePlayTrack}
+                              onToggleFavorite={handleToggleFavorite}
+                              isFavorite={favoriteIds.has(track.trackId)}
+                              isFavoritePending={pendingFavoriteIds.includes(track.trackId)}
+                              index={index}
+                              formatTime={formatTime}
+                              optionsMenu={renderPlaylistMenu(track)}
+                            />
+                          ))}
+                        </div>
+                      )}
 
                       {hasMoreCategoryTracks ? (
                         <div className="flex justify-center pt-2">
@@ -903,7 +926,7 @@ export default function MusicPage() {
                           </button>
                         </div>
                       ) : null}
-                    </div>
+                    </>
                   )}
                 </section>
               )
