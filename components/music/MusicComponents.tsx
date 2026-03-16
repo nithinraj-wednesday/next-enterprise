@@ -164,9 +164,13 @@ export function SearchBar({ onSearch, loading, className }: SearchBarProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const trimmedQuery = query.trim()
-    if (trimmedQuery && trimmedQuery !== lastSearchedRef.current) {
-      onSearch(trimmedQuery, { shouldScroll: true })
-      lastSearchedRef.current = trimmedQuery
+    if (trimmedQuery) {
+      if (trimmedQuery !== lastSearchedRef.current) {
+        onSearch(trimmedQuery, { shouldScroll: true })
+        lastSearchedRef.current = trimmedQuery
+      } else {
+        onSearch(trimmedQuery, { shouldScroll: true })
+      }
     }
   }
 

@@ -302,7 +302,8 @@ export default function MusicPage() {
       setHasSearched(true)
       searchMusic(searchTermToUse)
       posthog.capture("music_searched", { query })
-      if (options?.shouldScroll) {
+      const shouldScroll = options?.shouldScroll ?? true
+      if (shouldScroll) {
         resultsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
       }
     },
