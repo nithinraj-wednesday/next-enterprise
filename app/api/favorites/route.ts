@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "@/lib/auth-server"
 import { favoritePayloadSchema } from "@/lib/favorites"
 import { createFavoriteForUser, listFavoritesForUser } from "@/lib/favorites-db"
+import { getPostHogClient } from "@/lib/posthog-server"
 
 export async function GET() {
   const session = await getServerSession()
@@ -26,6 +27,24 @@ export async function POST(request: Request) {
     const body = await request.json()
     const payload = favoritePayloadSchema.parse(body)
     const favorite = await createFavoriteForUser(session.user.id, payload)
+
+    try {
+      const posthog = getPostHogClient()
+      if (posthog) {
+        posthog.capture({
+          distinctId: session.user.id,
+          event: "track_favorited",
+          properties: {
+            track_id: payload.trackId,
+            track_name: payload.trackName,
+            artist_name: payload.artistName,
+          },
+        })
+        posthog.shutdown().catch((err) => console.error("PostHog shutdown error:", err))
+      }
+    } catch (analyticsError) {
+      console.error("PostHog analytics error:", analyticsError)
+    }
 
     return NextResponse.json(favorite, { status: 201 })
   } catch (error) {

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { requireServerSession } from "@/lib/auth-server"
 import { db } from "@/lib/db"
 import { playlist } from "@/lib/db-schema"
+import { getPostHogClient } from "@/lib/posthog-server"
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -34,6 +35,23 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       where: eq(playlist.id, id),
     })
 
+    try {
+      const posthog = getPostHogClient()
+      if (posthog) {
+        try {
+          posthog.capture({
+            distinctId: session.user.id,
+            event: "playlist_renamed",
+            properties: { playlist_id: id, new_name: name },
+          })
+        } finally {
+          await posthog.shutdown().catch((err) => console.error("PostHog shutdown error:", err))
+        }
+      }
+    } catch (analyticsError) {
+      console.error("PostHog analytics error:", analyticsError)
+    }
+
     return NextResponse.json({ playlist: updatedPlaylist })
   } catch (error) {
     console.error("Failed to rename playlist:", error)
@@ -55,6 +73,20 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     await db.delete(playlist).where(eq(playlist.id, id))
+
+    try {
+      const posthog = getPostHogClient()
+      if (posthog) {
+        posthog.capture({
+          distinctId: session.user.id,
+          event: "playlist_deleted",
+          properties: { playlist_id: id, playlist_name: targetPlaylist.name },
+        })
+        await posthog.shutdown()
+      }
+    } catch (analyticsError) {
+      console.error("PostHog analytics error:", analyticsError)
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

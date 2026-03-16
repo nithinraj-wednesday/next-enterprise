@@ -5,6 +5,7 @@ import { GithubIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"
 import Link from "next/link"
+import posthog from "posthog-js"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -54,9 +55,16 @@ export default function SignUpPage() {
           password,
         },
         {
-          onSuccess: () => {
+          onSuccess: (ctx) => {
+            const user = ctx.data.user
+            if (user) {
+              posthog.identify(user.id, { email: user.email, name: user.name })
+              posthog.alias(email, user.id)
+            }
+            posthog.capture("user_signed_up", { method: "email" })
             window.location.assign("/music")
           },
+
           onError: (ctx) => {
             setError(ctx.error.message ?? "Something went wrong")
             setLoading(false)
@@ -64,6 +72,7 @@ export default function SignUpPage() {
         }
       )
     } catch (err: unknown) {
+      posthog.captureException(err)
       const message = err instanceof Error ? err.message : "Something went wrong"
       setError(message)
       setLoading(false)
@@ -73,6 +82,7 @@ export default function SignUpPage() {
   async function handleGitHubSignIn() {
     setError("")
     setGithubLoading(true)
+    posthog.capture("user_initiated_social_signin", { provider: "github", page: "sign-up" })
 
     try {
       await signIn.social(
@@ -82,6 +92,9 @@ export default function SignUpPage() {
           errorCallbackURL: "/sign-up",
         },
         {
+          onSuccess: () => {
+            posthog.capture("user_signed_in_social", { provider: "github", status: "redirecting" })
+          },
           onError: (ctx) => {
             setError(ctx.error.message ?? "Unable to continue with GitHub")
             setGithubLoading(false)
@@ -89,6 +102,7 @@ export default function SignUpPage() {
         }
       )
     } catch (err: unknown) {
+      posthog.captureException(err)
       const message = err instanceof Error ? err.message : "Unable to continue with GitHub"
       setError(message)
       setGithubLoading(false)
@@ -98,6 +112,7 @@ export default function SignUpPage() {
   async function handleGoogleSignIn() {
     setError("")
     setGoogleLoading(true)
+    posthog.capture("user_initiated_social_signin", { provider: "google", page: "sign-up" })
 
     try {
       await signIn.social(
@@ -107,6 +122,9 @@ export default function SignUpPage() {
           errorCallbackURL: "/sign-up",
         },
         {
+          onSuccess: () => {
+            posthog.capture("user_signed_in_social", { provider: "google", status: "redirecting" })
+          },
           onError: (ctx) => {
             setError(ctx.error.message ?? "Unable to continue with Google")
             setGoogleLoading(false)
@@ -114,6 +132,7 @@ export default function SignUpPage() {
         }
       )
     } catch (err: unknown) {
+      posthog.captureException(err)
       const message = err instanceof Error ? err.message : "Unable to continue with Google"
       setError(message)
       setGoogleLoading(false)

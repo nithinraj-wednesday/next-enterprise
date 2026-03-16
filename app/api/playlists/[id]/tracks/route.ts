@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { requireServerSession } from "@/lib/auth-server"
 import { db } from "@/lib/db"
 import { favoriteSong, playlist, playlistTrack } from "@/lib/db-schema"
+import { getPostHogClient } from "@/lib/posthog-server"
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -103,6 +104,25 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       addedAt: new Date(),
     })
 
+    try {
+      const posthog = getPostHogClient()
+      if (posthog) {
+        posthog.capture({
+          distinctId: session.user.id,
+          event: "playlist_track_added",
+          properties: {
+            playlist_id: id,
+            track_id: trackData.trackId,
+            track_name: trackData.trackName,
+            artist_name: trackData.artistName,
+          },
+        })
+        await posthog.shutdown()
+      }
+    } catch (analyticsError) {
+      console.error("PostHog analytics error during track addition:", analyticsError)
+    }
+
     return NextResponse.json({ success: true }, { status: 201 })
   } catch (error) {
     console.error("Failed to add track to playlist:", error)
@@ -146,6 +166,23 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     await db.delete(playlistTrack).where(and(eq(playlistTrack.playlistId, id), eq(playlistTrack.trackId, trackId)))
+
+    // Fire and forget analytics
+    ;(async () => {
+      try {
+        const posthog = getPostHogClient()
+        if (posthog) {
+          posthog.capture({
+            distinctId: session.user.id,
+            event: "playlist_track_removed",
+            properties: { playlist_id: id, track_id: trackId },
+          })
+          await posthog.shutdown()
+        }
+      } catch (analyticsError) {
+        console.error("PostHog analytics error during track removal:", analyticsError)
+      }
+    })()
 
     return NextResponse.json({ success: true })
   } catch (error) {
