@@ -300,6 +300,7 @@ export default function MusicPage() {
 
   const handleSearch = useCallback(
     (query: string, options?: { shouldScroll?: boolean }) => {
+      setResultsExpanded(false)
       const searchTermToUse = query.trim() || "trending"
       setSearchTerm(searchTermToUse)
       setHasSearched(true)
