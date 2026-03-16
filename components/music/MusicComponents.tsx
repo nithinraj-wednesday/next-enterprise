@@ -285,7 +285,7 @@ export function TrackCard({
       <div className="relative">
         <div className="absolute top-2 left-2 z-20 flex items-center gap-1.5">
           {optionsMenu}
-          <div className="bg-background/80 text-muted-foreground hidden rounded-full border border-white/10 px-2 py-0.5 text-[10px] tabular-nums backdrop-blur-sm group-hover:inline-flex">
+          <div className="bg-background/80 text-muted-foreground inline-flex rounded-full border border-white/10 px-2 py-0.5 text-[10px] tabular-nums backdrop-blur-sm sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
             {formatTime(track.trackTimeMillis / 1000)}
           </div>
         </div>
