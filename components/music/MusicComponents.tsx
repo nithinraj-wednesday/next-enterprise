@@ -144,6 +144,7 @@ export function SearchBar({ onSearch, loading, className }: SearchBarProps) {
   const [focused, setFocused] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const lastSearchedRef = useRef("")
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -153,16 +154,25 @@ export function SearchBar({ onSearch, loading, className }: SearchBarProps) {
     const trimmedQuery = query.trim()
     if (trimmedQuery === lastSearchedRef.current) return
 
-    const timer = setTimeout(() => {
+    debounceTimerRef.current = setTimeout(() => {
       onSearch(trimmedQuery, { shouldScroll: false })
       lastSearchedRef.current = trimmedQuery
     }, 500)
 
-    return () => clearTimeout(timer)
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+        debounceTimerRef.current = null
+      }
+    }
   }, [query, onSearch])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+      debounceTimerRef.current = null
+    }
     const trimmedQuery = query.trim()
     if (trimmedQuery) {
       if (trimmedQuery !== lastSearchedRef.current) {
@@ -175,6 +185,10 @@ export function SearchBar({ onSearch, loading, className }: SearchBarProps) {
   }
 
   const handleClear = () => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+      debounceTimerRef.current = null
+    }
     setQuery("")
     lastSearchedRef.current = ""
     onSearch("", { shouldScroll: false })
