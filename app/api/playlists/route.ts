@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { requireServerSession } from "@/lib/auth-server"
 import { db } from "@/lib/db"
 import { playlist } from "@/lib/db-schema"
+import { getPostHogClient } from "@/lib/posthog-server"
 
 export async function GET(request: NextRequest) {
   try {
@@ -46,6 +47,14 @@ export async function POST(request: NextRequest) {
     const newPlaylist = await db.query.playlist.findFirst({
       where: eq(playlist.id, id),
     })
+
+    const posthog = getPostHogClient()
+    posthog.capture({
+      distinctId: session.user.id,
+      event: "playlist_created",
+      properties: { playlist_id: id, playlist_name: name },
+    })
+    await posthog.shutdown()
 
     return NextResponse.json({ playlist: newPlaylist }, { status: 201 })
   } catch (error) {

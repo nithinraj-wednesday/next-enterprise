@@ -2,6 +2,7 @@
 
 import { EllipsisVertical, Loader2, PencilLine, Plus, Trash2 } from "lucide-react"
 import Link from "next/link"
+import posthog from "posthog-js"
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import { MusicAppHeader, PlayerBar, TrackRow } from "@/components/music/MusicComponents"
 import { PlaylistDropdown } from "@/components/music/PlaylistDropdown"
@@ -214,6 +215,11 @@ export function FavoritesPageClient({
       setPageError(null)
       setPendingFavoriteIds((current) => [...current, track.trackId])
       setFavorites((current) => current.filter((entry) => entry.trackId !== track.trackId))
+      posthog.capture("favorite_removed", {
+        track_id: track.trackId,
+        track_name: track.trackName,
+        artist_name: track.artistName,
+      })
 
       try {
         const response = await fetch(`/api/favorites/${track.trackId}`, {
@@ -224,6 +230,7 @@ export function FavoritesPageClient({
           throw new Error(`Favorite delete failed: ${response.status}`)
         }
       } catch (error) {
+        posthog.captureException(error)
         console.error("Failed to remove favorite:", error)
         setPageError("Could not remove that track right now.")
         setFavorites((current) => [favorite, ...current.filter((entry) => entry.trackId !== favorite.trackId)])
@@ -247,6 +254,13 @@ export function FavoritesPageClient({
         throw new Error(`Failed to add track to playlist: ${response.status}`)
       }
 
+      posthog.capture("track_added_to_playlist", {
+        playlist_id: playlistId,
+        track_id: track.trackId,
+        track_name: track.trackName,
+        artist_name: track.artistName,
+      })
+
       setPlaylistTracksMap((current) => {
         const next = { ...current }
         if (!next[playlistId]) {
@@ -268,6 +282,7 @@ export function FavoritesPageClient({
         }
       })
     } catch (error) {
+      posthog.captureException(error)
       console.error("Failed to add track to playlist:", error)
       setPageError("Failed to add track to that playlist.")
     }
@@ -285,6 +300,8 @@ export function FavoritesPageClient({
       if (!response.ok) {
         throw new Error(`Failed to remove track from playlist: ${response.status}`)
       }
+
+      posthog.capture("track_removed_from_playlist", { playlist_id: playlistId, track_id: trackId })
 
       setPlaylistTracksMap((current) => {
         const next = { ...current }
@@ -306,6 +323,7 @@ export function FavoritesPageClient({
         }
       })
     } catch (error) {
+      posthog.captureException(error)
       console.error("Failed to remove track from playlist:", error)
       setPageError("Failed to remove track from that playlist.")
     }
@@ -341,10 +359,12 @@ export function FavoritesPageClient({
           throw new Error("Playlist was not returned by the API")
         }
 
+        posthog.capture("playlist_created", { playlist_id: data.playlist.id, playlist_name: data.playlist.name })
         setPlaylists((current) => [data.playlist, ...current])
         setCreatePlaylistName("")
         setIsCreateDialogOpen(false)
       } catch (error) {
+        posthog.captureException(error)
         console.error("Failed to create playlist:", error)
         setPageError("Failed to create playlist.")
       } finally {
@@ -388,6 +408,7 @@ export function FavoritesPageClient({
           throw new Error("Updated playlist was not returned by the API")
         }
 
+        posthog.capture("playlist_renamed", { playlist_id: data.playlist.id, new_name: data.playlist.name })
         setPlaylists((current) =>
           current.map((playlist) => (playlist.id === data.playlist.id ? data.playlist : playlist))
         )
@@ -422,6 +443,8 @@ export function FavoritesPageClient({
 
       const deletedPlaylistId = playlistToDelete.id
 
+      posthog.capture("playlist_deleted", { playlist_id: deletedPlaylistId, playlist_name: playlistToDelete.name })
+
       setPlaylists((current) => current.filter((playlist) => playlist.id !== deletedPlaylistId))
       setPlaylistTracksMap((current) => {
         const next = { ...current }
@@ -440,6 +463,7 @@ export function FavoritesPageClient({
 
       setPlaylistToDelete(null)
     } catch (error) {
+      posthog.captureException(error)
       console.error("Failed to delete playlist:", error)
       setPageError("Failed to delete playlist.")
     } finally {

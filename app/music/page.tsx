@@ -3,6 +3,7 @@
 // @ts-expect-error Will fix it
 import { GridViewIcon, ListViewIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import posthog from "posthog-js"
 import { useCallback, useEffect, useState } from "react"
 import {
   EmptyState,
@@ -98,6 +99,7 @@ export default function MusicPage() {
       setSearchTerm(query)
       setHasSearched(true)
       searchMusic(query)
+      posthog.capture("music_searched", { query })
     },
     [searchMusic]
   )
@@ -116,6 +118,19 @@ export default function MusicPage() {
     return () => window.removeEventListener("keydown", handleKey)
   }, [togglePlayPause])
 
+  const handlePlayTrack = useCallback(
+    (track: Track) => {
+      playTrack(track)
+      posthog.capture("track_played", {
+        track_id: track.trackId,
+        track_name: track.trackName,
+        artist_name: track.artistName,
+        genre: track.primaryGenreName,
+      })
+    },
+    [playTrack]
+  )
+
   const handleToggleFavorite = useCallback(
     async (track: Track) => {
       const existingFavorite = favorites.find((favorite) => favorite.trackId === track.trackId)
@@ -129,11 +144,22 @@ export default function MusicPage() {
 
       if (existingFavorite) {
         setFavorites((current) => current.filter((favorite) => favorite.trackId !== track.trackId))
+        posthog.capture("track_unfavorited", {
+          track_id: track.trackId,
+          track_name: track.trackName,
+          artist_name: track.artistName,
+        })
       } else {
         setFavorites((current) => [
           createOptimisticFavorite(track),
           ...current.filter((favorite) => favorite.trackId !== track.trackId),
         ])
+        posthog.capture("track_favorited", {
+          track_id: track.trackId,
+          track_name: track.trackName,
+          artist_name: track.artistName,
+          genre: track.primaryGenreName,
+        })
       }
 
       try {
@@ -223,7 +249,10 @@ export default function MusicPage() {
 
               <div className="bg-secondary/60 border-border/50 flex items-center gap-1 rounded-lg border p-1">
                 <button
-                  onClick={() => setViewMode("grid")}
+                  onClick={() => {
+                    setViewMode("grid")
+                    posthog.capture("view_mode_changed", { view_mode: "grid" })
+                  }}
                   className={cn(
                     "rounded-md p-1.5 transition-all",
                     viewMode === "grid" ? "bg-gold/15 text-gold" : "text-muted-foreground hover:text-foreground"
@@ -235,7 +264,10 @@ export default function MusicPage() {
                   <HugeiconsIcon icon={GridViewIcon} className="size-4" />
                 </button>
                 <button
-                  onClick={() => setViewMode("list")}
+                  onClick={() => {
+                    setViewMode("list")
+                    posthog.capture("view_mode_changed", { view_mode: "list" })
+                  }}
                   className={cn(
                     "rounded-md p-1.5 transition-all",
                     viewMode === "list" ? "bg-gold/15 text-gold" : "text-muted-foreground hover:text-foreground"
@@ -269,7 +301,7 @@ export default function MusicPage() {
                 track={track}
                 isActive={currentTrack?.trackId === track.trackId}
                 isPlaying={isPlaying}
-                onPlay={playTrack}
+                onPlay={handlePlayTrack}
                 onToggleFavorite={handleToggleFavorite}
                 isFavorite={favoriteIds.has(track.trackId)}
                 isFavoritePending={pendingFavoriteIds.includes(track.trackId)}
@@ -294,7 +326,7 @@ export default function MusicPage() {
                 track={track}
                 isActive={currentTrack?.trackId === track.trackId}
                 isPlaying={isPlaying}
-                onPlay={playTrack}
+                onPlay={handlePlayTrack}
                 onToggleFavorite={handleToggleFavorite}
                 isFavorite={favoriteIds.has(track.trackId)}
                 isFavoritePending={pendingFavoriteIds.includes(track.trackId)}

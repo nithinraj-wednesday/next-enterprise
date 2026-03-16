@@ -5,6 +5,7 @@ import { GithubIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"
 import Link from "next/link"
+import posthog from "posthog-js"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -41,6 +42,8 @@ export default function SignInPage() {
         },
         {
           onSuccess: () => {
+            posthog.identify(email, { email })
+            posthog.capture("user_signed_in", { method: "email" })
             window.location.assign("/music")
           },
           onError: (ctx) => {
@@ -50,6 +53,7 @@ export default function SignInPage() {
         }
       )
     } catch (err: unknown) {
+      posthog.captureException(err)
       const message = err instanceof Error ? err.message : "Something went wrong"
       setError(message)
       setLoading(false)
@@ -59,6 +63,7 @@ export default function SignInPage() {
   async function handleGitHubSignIn() {
     setError("")
     setGithubLoading(true)
+    posthog.capture("user_signed_in_social", { provider: "github" })
 
     try {
       await signIn.social(
@@ -75,6 +80,7 @@ export default function SignInPage() {
         }
       )
     } catch (err: unknown) {
+      posthog.captureException(err)
       const message = err instanceof Error ? err.message : "Unable to sign in with GitHub"
       setError(message)
       setGithubLoading(false)
@@ -84,6 +90,7 @@ export default function SignInPage() {
   async function handleGoogleSignIn() {
     setError("")
     setGoogleLoading(true)
+    posthog.capture("user_signed_in_social", { provider: "google" })
 
     try {
       await signIn.social(
@@ -100,6 +107,7 @@ export default function SignInPage() {
         }
       )
     } catch (err: unknown) {
+      posthog.captureException(err)
       const message = err instanceof Error ? err.message : "Unable to sign in with Google"
       setError(message)
       setGoogleLoading(false)

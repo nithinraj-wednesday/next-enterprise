@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "@/lib/auth-server"
 import { deleteFavoriteForUser } from "@/lib/favorites-db"
+import { getPostHogClient } from "@/lib/posthog-server"
 
 export async function DELETE(_: Request, { params }: { params: Promise<{ trackId: string }> }) {
   const session = await getServerSession()
@@ -17,6 +18,14 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ trackId
   }
 
   const removed = await deleteFavoriteForUser(session.user.id, trackId)
+
+  const posthog = getPostHogClient()
+  posthog.capture({
+    distinctId: session.user.id,
+    event: "favorite_removed",
+    properties: { track_id: trackId },
+  })
+  await posthog.shutdown()
 
   return NextResponse.json({ removed })
 }
