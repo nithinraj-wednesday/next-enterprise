@@ -49,6 +49,7 @@ export interface TrackCardProps {
   isFavorite?: boolean
   isFavoritePending?: boolean
   index: number
+  optionsMenu?: React.ReactNode
 }
 
 export interface TrackRowProps {

@@ -14,6 +14,7 @@ import {
   // @ts-expect-error - hugeicons moduleResolution mismatch
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { ChevronDown, ChevronUp } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
@@ -210,6 +211,7 @@ export function TrackCard({
   isFavorite = false,
   isFavoritePending = false,
   index,
+  optionsMenu,
 }: TrackCardProps) {
   const artworkUrl = getArtworkUrl(track.artworkUrl100, "medium")
 
@@ -223,6 +225,8 @@ export function TrackCard({
       style={{ animationDelay: `${index * 50}ms` }}
     >
       <div className="relative">
+        {optionsMenu ? <div className="absolute top-2 left-2 z-20">{optionsMenu}</div> : null}
+
         {onToggleFavorite ? (
           <div className="absolute top-2 right-2 z-20">
             <FavoriteButton
@@ -415,17 +419,25 @@ export function PlayerBar({
   repeatMode,
   formatTime,
 }: PlayerBarProps) {
-  const progressBarRef = useRef<HTMLDivElement>(null)
+  const collapsedProgressBarRef = useRef<HTMLDivElement>(null)
+  const expandedProgressBarRef = useRef<HTMLDivElement>(null)
   const volumeBarRef = useRef<HTMLDivElement>(null)
+  const [isExpanded, setIsExpanded] = useState(false)
+
+  useEffect(() => {
+    if (currentTrack) {
+      setIsExpanded(false)
+    }
+  }, [currentTrack?.trackId])
 
   if (!currentTrack) return null
 
-  const artworkUrl = getArtworkUrl(currentTrack.artworkUrl100, "small")
+  const artworkUrl = getArtworkUrl(currentTrack.artworkUrl100, isExpanded ? "large" : "small")
   const currentTime = (progress / 100) * duration
 
-  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!progressBarRef.current) return
-    const rect = progressBarRef.current.getBoundingClientRect()
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>, barRef: React.RefObject<HTMLDivElement | null>) => {
+    if (!barRef.current) return
+    const rect = barRef.current.getBoundingClientRect()
     const pct = ((e.clientX - rect.left) / rect.width) * 100
     onSeek(Math.max(0, Math.min(100, pct)))
   }
@@ -438,128 +450,231 @@ export function PlayerBar({
   }
 
   return (
-    <div className="player-glass animate-fade-up fixed right-0 bottom-0 left-0 z-50" id="player-bar">
-      <div
-        ref={progressBarRef}
-        onClick={handleProgressClick}
-        className="progress-track bg-border/30 group absolute top-0 right-0 left-0 h-1 cursor-pointer transition-all hover:h-1.5"
-      >
-        <div className="bg-gold h-full transition-[width] duration-100" style={{ width: `${progress}%` }} />
-        <div
-          className="progress-thumb bg-gold absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-lg"
-          style={{ left: `${progress}%` }}
-        />
-      </div>
-
-      <div className="mx-auto flex max-w-screen-2xl items-center gap-4 px-4 py-3 sm:px-6">
-        <div className="flex max-w-xs min-w-0 flex-1 items-center gap-3">
-          <div className="relative size-12 shrink-0 overflow-hidden rounded-lg shadow-lg ring-1 ring-white/5">
-            {artworkUrl ? (
-              <Image src={artworkUrl} alt={currentTrack.trackName} className="object-cover" fill sizes="48px" />
-            ) : (
-              <div className="bg-muted size-full" />
-            )}
-          </div>
-          <div className="min-w-0">
-            <div className="text-foreground truncate text-sm font-medium">{currentTrack.trackName}</div>
-            <div className="text-muted-foreground truncate text-xs">{currentTrack.artistName}</div>
-          </div>
-        </div>
-
-        <div className="flex flex-1 flex-col items-center gap-1">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onShuffle}
-              className={cn(
-                "p-1 transition-colors",
-                isShuffled ? "text-gold" : "text-muted-foreground hover:text-foreground"
-              )}
-              aria-label={isShuffled ? "Shuffle on" : "Shuffle off"}
-              aria-pressed={isShuffled}
-            >
-              <HugeiconsIcon icon={ShuffleIcon} className="size-4" strokeWidth={2} />
-            </button>
-
-            <button
-              onClick={onPrevious}
-              className="text-muted-foreground hover:text-foreground p-1 transition-colors"
-              aria-label="Previous"
-            >
-              <HugeiconsIcon icon={PreviousIcon} className="size-5" fill="currentColor" />
-            </button>
-
-            <button
-              onClick={onTogglePlay}
-              className="bg-foreground text-background flex size-10 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95"
-              aria-label={isPlaying ? "Pause" : "Play"}
-              id="player-play-pause"
-            >
-              {isPlaying ? (
-                <HugeiconsIcon icon={PauseIcon} className="size-5" fill="currentColor" />
-              ) : (
-                <HugeiconsIcon icon={PlayIcon} className="ml-0.5 size-5" fill="currentColor" />
-              )}
-            </button>
-
-            <button
-              onClick={onNext}
-              className="text-muted-foreground hover:text-foreground p-1 transition-colors"
-              aria-label="Next"
-            >
-              <HugeiconsIcon icon={NextIcon} className="size-5" fill="currentColor" />
-            </button>
-
-            <button
-              onClick={onRepeat}
-              className={cn(
-                "p-1 transition-colors",
-                repeatMode !== "off" ? "text-gold" : "text-muted-foreground hover:text-foreground"
-              )}
-              aria-label={`Repeat ${repeatMode}`}
-              aria-pressed={repeatMode !== "off"}
-            >
-              <HugeiconsIcon
-                icon={RepeatIcon}
-                className={cn("size-4", repeatMode === "one" && "text-xs")}
-                strokeWidth={2}
-              />
-              {repeatMode === "one" && <span className="absolute -mt-1 text-[8px]">1</span>}
-            </button>
-          </div>
-
-          <div className="text-muted-foreground hidden items-center gap-2 text-[11px] tabular-nums sm:flex">
-            <span>{formatTime(currentTime)}</span>
-            <span>/</span>
-            <span>{formatTime(duration)}</span>
-          </div>
-        </div>
-
-        <div className="hidden max-w-xs flex-1 items-center justify-end gap-2 sm:flex">
+    <>
+      {isExpanded ? (
+        <>
           <button
-            onClick={() => onVolumeChange(volume > 0 ? 0 : 0.7)}
-            className="text-muted-foreground hover:text-foreground p-1 transition-colors"
-            aria-label="Volume"
-          >
-            {volume === 0 ? (
-              <HugeiconsIcon icon={VolumeMute01Icon} className="size-4" strokeWidth={2} />
-            ) : (
-              <HugeiconsIcon icon={VolumeHighIcon} className="size-4" strokeWidth={2} />
-            )}
-          </button>
+            type="button"
+            className="fixed inset-0 z-40 bg-black/45 backdrop-blur-[2px]"
+            onClick={() => setIsExpanded(false)}
+            aria-label="Close expanded player"
+          />
+
           <div
-            ref={volumeBarRef}
-            onClick={handleVolumeClick}
-            className="bg-border/50 group relative h-1 w-24 cursor-pointer rounded-full"
+            className="animate-fade-up from-background/95 to-background/90 fixed right-0 bottom-0 left-0 z-50 h-[75vh] min-h-[360px] overflow-hidden rounded-t-[2rem] border-t border-white/10 bg-gradient-to-b shadow-[0_-20px_60px_-20px_rgba(0,0,0,0.45)] backdrop-blur-2xl"
+            id="player-bar"
           >
-            <div className="bg-foreground/70 h-full rounded-full" style={{ width: `${volume * 100}%` }} />
+            <div className="mx-auto flex h-full w-full max-w-screen-md flex-col px-5 pt-4 pb-6 sm:px-8">
+              <div className="mb-3 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setIsExpanded(false)}
+                  className="bg-secondary/65 text-muted-foreground hover:text-foreground hover:bg-secondary flex size-9 items-center justify-center rounded-full transition-colors"
+                  aria-label="Collapse player"
+                  aria-expanded={isExpanded}
+                >
+                  <ChevronDown className="size-4" />
+                </button>
+                <p className="text-muted-foreground text-xs tracking-[0.2em] uppercase">Now Playing</p>
+                <div className="size-9" />
+              </div>
+
+              <div className="relative mx-auto mb-4 aspect-square w-full max-w-[220px] overflow-hidden rounded-2xl shadow-2xl ring-1 ring-white/10">
+                {artworkUrl ? (
+                  <Image src={artworkUrl} alt={currentTrack.trackName} className="object-cover" fill sizes="220px" />
+                ) : (
+                  <div className="bg-muted flex size-full items-center justify-center">
+                    <HugeiconsIcon icon={MusicNote01Icon} className="text-muted-foreground size-12" strokeWidth={1.5} />
+                  </div>
+                )}
+              </div>
+
+              <div className="text-center">
+                <div className="text-foreground truncate text-lg font-semibold">{currentTrack.trackName}</div>
+                <div className="text-muted-foreground truncate text-sm">{currentTrack.artistName}</div>
+              </div>
+
+              <div className="mt-4">
+                <div
+                  ref={expandedProgressBarRef}
+                  onClick={(event) => handleProgressClick(event, expandedProgressBarRef)}
+                  className="progress-track bg-border/35 group relative h-1.5 cursor-pointer rounded-full"
+                >
+                  <div
+                    className="bg-gold h-full rounded-full transition-[width] duration-100"
+                    style={{ width: `${progress}%` }}
+                  />
+                  <div
+                    className="progress-thumb bg-gold absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-lg"
+                    style={{ left: `${progress}%` }}
+                  />
+                </div>
+                <div className="text-muted-foreground mt-2 flex items-center justify-between text-xs tabular-nums">
+                  <span>{formatTime(currentTime)}</span>
+                  <span>{formatTime(duration)}</span>
+                </div>
+              </div>
+
+              <div className="mt-5 flex items-center justify-center gap-4 sm:gap-6">
+                <button
+                  onClick={onShuffle}
+                  className={cn(
+                    "p-2 transition-colors",
+                    isShuffled ? "text-gold" : "text-muted-foreground hover:text-foreground"
+                  )}
+                  aria-label={isShuffled ? "Shuffle on" : "Shuffle off"}
+                  aria-pressed={isShuffled}
+                >
+                  <HugeiconsIcon icon={ShuffleIcon} className="size-5" strokeWidth={2} />
+                </button>
+
+                <button
+                  onClick={onPrevious}
+                  className="text-muted-foreground hover:text-foreground p-2 transition-colors"
+                  aria-label="Previous"
+                >
+                  <HugeiconsIcon icon={PreviousIcon} className="size-6" fill="currentColor" />
+                </button>
+
+                <button
+                  onClick={onTogglePlay}
+                  className="bg-foreground text-background flex size-14 items-center justify-center rounded-full shadow-xl transition-transform hover:scale-105 active:scale-95"
+                  aria-label={isPlaying ? "Pause" : "Play"}
+                  id="player-play-pause"
+                >
+                  {isPlaying ? (
+                    <HugeiconsIcon icon={PauseIcon} className="size-7" fill="currentColor" />
+                  ) : (
+                    <HugeiconsIcon icon={PlayIcon} className="ml-0.5 size-7" fill="currentColor" />
+                  )}
+                </button>
+
+                <button
+                  onClick={onNext}
+                  className="text-muted-foreground hover:text-foreground p-2 transition-colors"
+                  aria-label="Next"
+                >
+                  <HugeiconsIcon icon={NextIcon} className="size-6" fill="currentColor" />
+                </button>
+
+                <button
+                  onClick={onRepeat}
+                  className={cn(
+                    "p-2 transition-colors",
+                    repeatMode !== "off" ? "text-gold" : "text-muted-foreground hover:text-foreground"
+                  )}
+                  aria-label={`Repeat ${repeatMode}`}
+                  aria-pressed={repeatMode !== "off"}
+                >
+                  <HugeiconsIcon
+                    icon={RepeatIcon}
+                    className={cn("size-5", repeatMode === "one" && "text-xs")}
+                    strokeWidth={2}
+                  />
+                </button>
+              </div>
+
+              <div className="mt-5 flex items-center justify-center gap-3">
+                <button
+                  onClick={() => onVolumeChange(volume > 0 ? 0 : 0.7)}
+                  className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+                  aria-label="Volume"
+                >
+                  {volume === 0 ? (
+                    <HugeiconsIcon icon={VolumeMute01Icon} className="size-5" strokeWidth={2} />
+                  ) : (
+                    <HugeiconsIcon icon={VolumeHighIcon} className="size-5" strokeWidth={2} />
+                  )}
+                </button>
+
+                <div
+                  ref={volumeBarRef}
+                  onClick={handleVolumeClick}
+                  className="bg-border/50 group relative h-1.5 w-36 cursor-pointer rounded-full"
+                >
+                  <div className="bg-foreground/75 h-full rounded-full" style={{ width: `${volume * 100}%` }} />
+                  <div
+                    className="bg-foreground absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0 transition-opacity group-hover:opacity-100"
+                    style={{ left: `${volume * 100}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="player-glass animate-fade-up fixed right-0 bottom-0 left-0 z-50" id="player-bar">
+          <div
+            ref={collapsedProgressBarRef}
+            onClick={(event) => handleProgressClick(event, collapsedProgressBarRef)}
+            className="progress-track bg-border/30 group absolute top-0 right-0 left-0 h-1 cursor-pointer transition-all hover:h-1.5"
+          >
+            <div className="bg-gold h-full transition-[width] duration-100" style={{ width: `${progress}%` }} />
             <div
-              className="bg-foreground absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0 transition-opacity group-hover:opacity-100"
-              style={{ left: `${volume * 100}%` }}
+              className="progress-thumb bg-gold absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-lg"
+              style={{ left: `${progress}%` }}
             />
           </div>
+
+          <div className="mx-auto flex max-w-screen-2xl items-center gap-4 px-4 py-2.5 sm:px-6">
+            <div className="flex max-w-xs min-w-0 flex-1 items-center gap-3">
+              <div className="relative size-12 shrink-0 overflow-hidden rounded-lg shadow-lg ring-1 ring-white/5">
+                {artworkUrl ? (
+                  <Image src={artworkUrl} alt={currentTrack.trackName} className="object-cover" fill sizes="48px" />
+                ) : (
+                  <div className="bg-muted size-full" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="text-foreground truncate text-sm font-medium">{currentTrack.trackName}</div>
+                <div className="text-muted-foreground truncate text-xs">{currentTrack.artistName}</div>
+              </div>
+            </div>
+
+            <div className="ml-auto flex items-center gap-1 sm:gap-2">
+              <button
+                onClick={onPrevious}
+                className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+                aria-label="Previous"
+              >
+                <HugeiconsIcon icon={PreviousIcon} className="size-5" fill="currentColor" />
+              </button>
+
+              <button
+                onClick={onTogglePlay}
+                className="bg-foreground text-background flex size-9 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95"
+                aria-label={isPlaying ? "Pause" : "Play"}
+                id="player-play-pause"
+              >
+                {isPlaying ? (
+                  <HugeiconsIcon icon={PauseIcon} className="size-5" fill="currentColor" />
+                ) : (
+                  <HugeiconsIcon icon={PlayIcon} className="ml-0.5 size-5" fill="currentColor" />
+                )}
+              </button>
+
+              <button
+                onClick={onNext}
+                className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+                aria-label="Next"
+              >
+                <HugeiconsIcon icon={NextIcon} className="size-5" fill="currentColor" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsExpanded(true)}
+                className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center rounded-full border border-transparent transition-colors"
+                aria-label="Expand player"
+                aria-expanded={isExpanded}
+              >
+                <ChevronUp className="size-4" />
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   )
 }
 

@@ -544,7 +544,7 @@ export function FavoritesPageClient({
           </Dialog>
         </div>
 
-        <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="-mx-1 mb-8 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pt-2 pb-2">
           <Card
             role="button"
             tabIndex={0}
@@ -556,7 +556,7 @@ export function FavoritesPageClient({
               }
             }}
             className={cn(
-              "cursor-pointer transition-all hover:-translate-y-0.5",
+              "w-[min(85vw,20rem)] shrink-0 cursor-pointer snap-start transition-all hover:-translate-y-0.5",
               selectedPlaylistId === LIKED_PLAYLIST_ID
                 ? "ring-gold/40 bg-gold/8 ring-2"
                 : "ring-border/40 hover:ring-border"
@@ -584,7 +584,7 @@ export function FavoritesPageClient({
                 }
               }}
               className={cn(
-                "cursor-pointer transition-all hover:-translate-y-0.5",
+                "w-[min(85vw,20rem)] shrink-0 cursor-pointer snap-start transition-all hover:-translate-y-0.5",
                 selectedPlaylistId === playlist.id
                   ? "ring-gold/40 bg-gold/8 ring-2"
                   : "ring-border/40 hover:ring-border"
@@ -610,8 +610,7 @@ export function FavoritesPageClient({
                   <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
                     <DropdownMenuGroup>
                       <DropdownMenuItem
-                        onSelect={(event) => {
-                          event.preventDefault()
+                        onSelect={() => {
                           setPlaylistToRename(playlist)
                           setRenamePlaylistName(playlist.name)
                         }}
@@ -621,8 +620,7 @@ export function FavoritesPageClient({
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         variant="destructive"
-                        onSelect={(event) => {
-                          event.preventDefault()
+                        onSelect={() => {
                           setPlaylistToDelete(playlist)
                         }}
                       >

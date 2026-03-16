@@ -75,8 +75,7 @@ export function PlaylistDropdown({
                 <DropdownMenuItem
                   key={playlist.id}
                   className="focus:bg-gold/10 focus:text-gold flex cursor-pointer items-center justify-between rounded-lg px-2 py-2 transition-colors"
-                  onSelect={(e) => {
-                    e.preventDefault() // Keep open while loading
+                  onSelect={() => {
                     if (!isLoading) {
                       handleTogglePlaylist(playlist.id, isInPlaylist)
                     }
