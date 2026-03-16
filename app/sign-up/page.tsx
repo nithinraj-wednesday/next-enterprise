@@ -55,11 +55,16 @@ export default function SignUpPage() {
           password,
         },
         {
-          onSuccess: () => {
-            posthog.identify(email, { email, name })
+          onSuccess: (ctx) => {
+            const user = ctx.data.user
+            if (user) {
+              posthog.identify(user.id, { email: user.email, name: user.name })
+              posthog.alias(email, user.id)
+            }
             posthog.capture("user_signed_up", { method: "email" })
             window.location.assign("/music")
           },
+
           onError: (ctx) => {
             setError(ctx.error.message ?? "Something went wrong")
             setLoading(false)
@@ -77,7 +82,7 @@ export default function SignUpPage() {
   async function handleGitHubSignIn() {
     setError("")
     setGithubLoading(true)
-    posthog.capture("user_signed_in_social", { provider: "github", page: "sign-up" })
+    posthog.capture("user_initiated_social_signin", { provider: "github", page: "sign-up" })
 
     try {
       await signIn.social(
@@ -87,6 +92,9 @@ export default function SignUpPage() {
           errorCallbackURL: "/sign-up",
         },
         {
+          onSuccess: () => {
+            posthog.capture("user_signed_in_social", { provider: "github", status: "redirecting" })
+          },
           onError: (ctx) => {
             setError(ctx.error.message ?? "Unable to continue with GitHub")
             setGithubLoading(false)
@@ -104,7 +112,7 @@ export default function SignUpPage() {
   async function handleGoogleSignIn() {
     setError("")
     setGoogleLoading(true)
-    posthog.capture("user_signed_in_social", { provider: "google", page: "sign-up" })
+    posthog.capture("user_initiated_social_signin", { provider: "google", page: "sign-up" })
 
     try {
       await signIn.social(
@@ -114,6 +122,9 @@ export default function SignUpPage() {
           errorCallbackURL: "/sign-up",
         },
         {
+          onSuccess: () => {
+            posthog.capture("user_signed_in_social", { provider: "google", status: "redirecting" })
+          },
           onError: (ctx) => {
             setError(ctx.error.message ?? "Unable to continue with Google")
             setGoogleLoading(false)

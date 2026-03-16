@@ -144,22 +144,11 @@ export default function MusicPage() {
 
       if (existingFavorite) {
         setFavorites((current) => current.filter((favorite) => favorite.trackId !== track.trackId))
-        posthog.capture("track_unfavorited", {
-          track_id: track.trackId,
-          track_name: track.trackName,
-          artist_name: track.artistName,
-        })
       } else {
         setFavorites((current) => [
           createOptimisticFavorite(track),
           ...current.filter((favorite) => favorite.trackId !== track.trackId),
         ])
-        posthog.capture("track_favorited", {
-          track_id: track.trackId,
-          track_name: track.trackName,
-          artist_name: track.artistName,
-          genre: track.primaryGenreName,
-        })
       }
 
       try {
@@ -180,7 +169,19 @@ export default function MusicPage() {
           throw new Error(`Favorite mutation failed: ${response.status}`)
         }
 
-        if (!existingFavorite) {
+        if (existingFavorite) {
+          posthog.capture("track_unfavorited", {
+            track_id: track.trackId,
+            track_name: track.trackName,
+            artist_name: track.artistName,
+          })
+        } else {
+          posthog.capture("track_favorited", {
+            track_id: track.trackId,
+            track_name: track.trackName,
+            artist_name: track.artistName,
+            genre: track.primaryGenreName,
+          })
           const savedFavorite = (await response.json()) as FavoriteSong
           setFavorites((current) => [
             savedFavorite,

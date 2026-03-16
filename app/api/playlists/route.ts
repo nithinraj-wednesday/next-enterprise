@@ -48,13 +48,19 @@ export async function POST(request: NextRequest) {
       where: eq(playlist.id, id),
     })
 
-    const posthog = getPostHogClient()
-    posthog.capture({
-      distinctId: session.user.id,
-      event: "playlist_created",
-      properties: { playlist_id: id, playlist_name: name },
-    })
-    await posthog.shutdown()
+    try {
+      const posthog = getPostHogClient()
+      if (posthog) {
+        posthog.capture({
+          distinctId: session.user.id,
+          event: "playlist_created",
+          properties: { playlist_id: id, playlist_name: name },
+        })
+        await posthog.shutdown()
+      }
+    } catch (analyticsError) {
+      console.error("PostHog analytics error during playlist creation:", analyticsError)
+    }
 
     return NextResponse.json({ playlist: newPlaylist }, { status: 201 })
   } catch (error) {

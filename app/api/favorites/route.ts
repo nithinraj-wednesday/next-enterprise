@@ -28,17 +28,23 @@ export async function POST(request: Request) {
     const payload = favoritePayloadSchema.parse(body)
     const favorite = await createFavoriteForUser(session.user.id, payload)
 
-    const posthog = getPostHogClient()
-    posthog.capture({
-      distinctId: session.user.id,
-      event: "track_favorited",
-      properties: {
-        track_id: payload.trackId,
-        track_name: payload.trackName,
-        artist_name: payload.artistName,
-      },
-    })
-    await posthog.shutdown()
+    try {
+      const posthog = getPostHogClient()
+      if (posthog) {
+        posthog.capture({
+          distinctId: session.user.id,
+          event: "track_favorited",
+          properties: {
+            track_id: payload.trackId,
+            track_name: payload.trackName,
+            artist_name: payload.artistName,
+          },
+        })
+        posthog.shutdown().catch((err) => console.error("PostHog shutdown error:", err))
+      }
+    } catch (analyticsError) {
+      console.error("PostHog analytics error:", analyticsError)
+    }
 
     return NextResponse.json(favorite, { status: 201 })
   } catch (error) {

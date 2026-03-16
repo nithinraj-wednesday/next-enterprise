@@ -215,11 +215,6 @@ export function FavoritesPageClient({
       setPageError(null)
       setPendingFavoriteIds((current) => [...current, track.trackId])
       setFavorites((current) => current.filter((entry) => entry.trackId !== track.trackId))
-      posthog.capture("favorite_removed", {
-        track_id: track.trackId,
-        track_name: track.trackName,
-        artist_name: track.artistName,
-      })
 
       try {
         const response = await fetch(`/api/favorites/${track.trackId}`, {
@@ -229,6 +224,12 @@ export function FavoritesPageClient({
         if (!response.ok) {
           throw new Error(`Favorite delete failed: ${response.status}`)
         }
+
+        posthog.capture("favorite_removed", {
+          track_id: track.trackId,
+          track_name: track.trackName,
+          artist_name: track.artistName,
+        })
       } catch (error) {
         posthog.captureException(error)
         console.error("Failed to remove favorite:", error)
@@ -415,6 +416,7 @@ export function FavoritesPageClient({
         setPlaylistToRename(null)
         setRenamePlaylistName("")
       } catch (error) {
+        posthog.captureException(error)
         console.error("Failed to rename playlist:", error)
         setPageError("Failed to rename playlist.")
       } finally {

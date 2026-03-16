@@ -41,11 +41,16 @@ export default function SignInPage() {
           password,
         },
         {
-          onSuccess: () => {
-            posthog.identify(email, { email })
+          onSuccess: (ctx) => {
+            const user = ctx.data.user
+            if (user) {
+              posthog.identify(user.id, { email: user.email })
+              posthog.alias(email, user.id)
+            }
             posthog.capture("user_signed_in", { method: "email" })
             window.location.assign("/music")
           },
+
           onError: (ctx) => {
             setError(ctx.error.message ?? "Invalid email or password")
             setLoading(false)
@@ -63,7 +68,7 @@ export default function SignInPage() {
   async function handleGitHubSignIn() {
     setError("")
     setGithubLoading(true)
-    posthog.capture("user_signed_in_social", { provider: "github" })
+    posthog.capture("user_initiated_social_signin", { provider: "github", page: "sign-in" })
 
     try {
       await signIn.social(
@@ -73,6 +78,9 @@ export default function SignInPage() {
           errorCallbackURL: "/sign-in",
         },
         {
+          onSuccess: () => {
+            posthog.capture("user_signed_in_social", { provider: "github", status: "redirecting" })
+          },
           onError: (ctx) => {
             setError(ctx.error.message ?? "Unable to sign in with GitHub")
             setGithubLoading(false)
@@ -90,7 +98,7 @@ export default function SignInPage() {
   async function handleGoogleSignIn() {
     setError("")
     setGoogleLoading(true)
-    posthog.capture("user_signed_in_social", { provider: "google" })
+    posthog.capture("user_initiated_social_signin", { provider: "google", page: "sign-in" })
 
     try {
       await signIn.social(
@@ -100,6 +108,9 @@ export default function SignInPage() {
           errorCallbackURL: "/sign-in",
         },
         {
+          onSuccess: () => {
+            posthog.capture("user_signed_in_social", { provider: "google", status: "redirecting" })
+          },
           onError: (ctx) => {
             setError(ctx.error.message ?? "Unable to sign in with Google")
             setGoogleLoading(false)

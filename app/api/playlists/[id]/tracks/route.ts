@@ -104,18 +104,24 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       addedAt: new Date(),
     })
 
-    const posthog = getPostHogClient()
-    posthog.capture({
-      distinctId: session.user.id,
-      event: "playlist_track_added",
-      properties: {
-        playlist_id: id,
-        track_id: trackData.trackId,
-        track_name: trackData.trackName,
-        artist_name: trackData.artistName,
-      },
-    })
-    await posthog.shutdown()
+    try {
+      const posthog = getPostHogClient()
+      if (posthog) {
+        posthog.capture({
+          distinctId: session.user.id,
+          event: "playlist_track_added",
+          properties: {
+            playlist_id: id,
+            track_id: trackData.trackId,
+            track_name: trackData.trackName,
+            artist_name: trackData.artistName,
+          },
+        })
+        await posthog.shutdown()
+      }
+    } catch (analyticsError) {
+      console.error("PostHog analytics error during track addition:", analyticsError)
+    }
 
     return NextResponse.json({ success: true }, { status: 201 })
   } catch (error) {
@@ -161,13 +167,22 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     await db.delete(playlistTrack).where(and(eq(playlistTrack.playlistId, id), eq(playlistTrack.trackId, trackId)))
 
-    const posthog = getPostHogClient()
-    posthog.capture({
-      distinctId: session.user.id,
-      event: "playlist_track_removed",
-      properties: { playlist_id: id, track_id: trackId },
-    })
-    await posthog.shutdown()
+    // Fire and forget analytics
+    ;(async () => {
+      try {
+        const posthog = getPostHogClient()
+        if (posthog) {
+          posthog.capture({
+            distinctId: session.user.id,
+            event: "playlist_track_removed",
+            properties: { playlist_id: id, track_id: trackId },
+          })
+          await posthog.shutdown()
+        }
+      } catch (analyticsError) {
+        console.error("PostHog analytics error during track removal:", analyticsError)
+      }
+    })()
 
     return NextResponse.json({ success: true })
   } catch (error) {

@@ -19,13 +19,21 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ trackId
 
   const removed = await deleteFavoriteForUser(session.user.id, trackId)
 
-  const posthog = getPostHogClient()
-  posthog.capture({
-    distinctId: session.user.id,
-    event: "favorite_removed",
-    properties: { track_id: trackId },
-  })
-  await posthog.shutdown()
+  if (removed) {
+    const posthog = getPostHogClient()
+    if (posthog) {
+      posthog.capture({
+        distinctId: session.user.id,
+        event: "favorite_removed",
+        properties: { track_id: trackId },
+      })
+      try {
+        await posthog.shutdown()
+      } catch (error) {
+        console.error("PostHog shutdown error:", error)
+      }
+    }
+  }
 
   return NextResponse.json({ removed })
 }
