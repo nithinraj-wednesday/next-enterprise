@@ -268,6 +268,7 @@ export function TrackCard({
   isFavorite = false,
   isFavoritePending = false,
   index,
+  formatTime,
   optionsMenu,
 }: TrackCardProps) {
   const artworkUrl = getArtworkUrl(track.artworkUrl100, "medium")
@@ -282,7 +283,12 @@ export function TrackCard({
       style={{ animationDelay: `${index * 50}ms` }}
     >
       <div className="relative">
-        {optionsMenu ? <div className="absolute top-2 left-2 z-20">{optionsMenu}</div> : null}
+        <div className="absolute top-2 left-2 z-20 flex items-center gap-1.5">
+          {optionsMenu}
+          <div className="bg-background/80 text-muted-foreground inline-flex rounded-full border border-white/10 px-2 py-0.5 text-[10px] tabular-nums backdrop-blur-sm sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+            {formatTime(track.trackTimeMillis / 1000)}
+          </div>
+        </div>
 
         {onToggleFavorite ? (
           <div className="absolute top-2 right-2 z-20">
@@ -684,7 +690,15 @@ export function PlayerBar({
               </div>
               <div className="min-w-0">
                 <div className="text-foreground truncate text-sm font-medium">{currentTrack.trackName}</div>
-                <div className="text-muted-foreground truncate text-xs">{currentTrack.artistName}</div>
+                <div className="text-muted-foreground flex items-center gap-2 text-xs">
+                  <span className="min-w-0 flex-1 truncate">{currentTrack.artistName}</span>
+                  <span className="flex items-center gap-1.5 whitespace-nowrap opacity-60">
+                    <span className="bg-foreground/10 h-2.5 w-px" />
+                    <span className="tabular-nums">
+                      {formatTime(currentTime)} / {formatTime(duration)}
+                    </span>
+                  </span>
+                </div>
               </div>
             </div>
 

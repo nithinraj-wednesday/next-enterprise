@@ -49,6 +49,7 @@ export interface TrackCardProps {
   isFavorite?: boolean
   isFavoritePending?: boolean
   index: number
+  formatTime: (s: number) => string
   optionsMenu?: React.ReactNode
 }
 

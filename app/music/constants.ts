@@ -3,7 +3,7 @@ export type ViewMode = "grid" | "list"
 // Search API defaults
 export const SEARCH_DEFAULTS = {
   entity: "song",
-  limit: "25",
+  limit: "24",
   country: "US",
 } as const
 
