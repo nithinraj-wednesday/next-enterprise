@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { desc, eq } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
 import { requireServerSession } from "@/lib/auth-server"
 import { CACHE_TTL, getCacheKey } from "@/lib/cache"
 import { db } from "@/lib/db"
 import { playlist } from "@/lib/db-schema"
+import { listPlaylistsForUser, serializePlaylist } from "@/lib/playlists"
 import { getPostHogClient } from "@/lib/posthog-server"
 import { redis } from "@/lib/redis"
 
@@ -29,11 +30,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch playlists for the user
-    const playlists = await db
-      .select()
-      .from(playlist)
-      .where(eq(playlist.userId, session.user.id))
-      .orderBy(desc(playlist.createdAt))
+    const playlists = await listPlaylistsForUser(session.user.id)
 
     // Cache the results
     try {
@@ -75,6 +72,10 @@ export async function POST(request: NextRequest) {
       where: eq(playlist.id, id),
     })
 
+    if (!newPlaylist) {
+      throw new Error("Playlist was not returned after creation")
+    }
+
     // Invalidate cache
     const cacheKey = getCacheKey("playlists", session.user.id)
     try {
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest) {
       console.error("PostHog analytics error during playlist creation:", analyticsError)
     }
 
-    return NextResponse.json({ playlist: newPlaylist }, { status: 201 })
+    return NextResponse.json({ playlist: serializePlaylist(newPlaylist) }, { status: 201 })
   } catch (error) {
     console.error("Failed to create playlist:", error)
     return NextResponse.json({ error: "Failed to create playlist" }, { status: 500 })

@@ -1,9 +1,12 @@
 import { and, eq } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
 import { requireServerSession } from "@/lib/auth-server"
+import { getCacheKey } from "@/lib/cache"
 import { db } from "@/lib/db"
 import { playlist } from "@/lib/db-schema"
+import { serializePlaylist } from "@/lib/playlists"
 import { getPostHogClient } from "@/lib/posthog-server"
+import { redis } from "@/lib/redis"
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -35,6 +38,19 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       where: eq(playlist.id, id),
     })
 
+    if (!updatedPlaylist) {
+      throw new Error("Playlist was not returned after rename")
+    }
+
+    const cacheKey = getCacheKey("playlists", session.user.id)
+    try {
+      if (redis) {
+        await redis.del(cacheKey)
+      }
+    } catch (cacheError) {
+      console.error("Redis cache invalidation error:", cacheError)
+    }
+
     try {
       const posthog = getPostHogClient()
       if (posthog) {
@@ -52,7 +68,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       console.error("PostHog analytics error:", analyticsError)
     }
 
-    return NextResponse.json({ playlist: updatedPlaylist })
+    return NextResponse.json({ playlist: serializePlaylist(updatedPlaylist) })
   } catch (error) {
     console.error("Failed to rename playlist:", error)
     return NextResponse.json({ error: "Failed to rename playlist" }, { status: 500 })
@@ -73,6 +89,15 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     await db.delete(playlist).where(eq(playlist.id, id))
+
+    const cacheKey = getCacheKey("playlists", session.user.id)
+    try {
+      if (redis) {
+        await redis.del(cacheKey)
+      }
+    } catch (cacheError) {
+      console.error("Redis cache invalidation error:", cacheError)
+    }
 
     try {
       const posthog = getPostHogClient()

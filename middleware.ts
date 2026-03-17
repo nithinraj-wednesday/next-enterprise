@@ -17,7 +17,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/music", request.url))
   }
 
-  if (publicRoutes.includes(pathname) || authRoutes.includes(pathname)) {
+  if (publicRoutes.includes(pathname) || authRoutes.includes(pathname) || pathname.startsWith("/shared/")) {
     return NextResponse.next()
   }
 
