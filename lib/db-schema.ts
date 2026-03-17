@@ -65,6 +65,9 @@ export const favoriteSong = sqliteTable(
 export const playlist = sqliteTable("playlist", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+  isPublic: integer("is_public", { mode: "boolean" }).notNull().default(false),
+  shareToken: text("share_token").unique(),
+  sharedAt: integer("shared_at", { mode: "timestamp" }),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
@@ -82,4 +85,18 @@ export const playlistTrack = sqliteTable(
     addedAt: integer("added_at", { mode: "timestamp" }).notNull(),
   },
   (table) => [primaryKey({ columns: [table.playlistId, table.trackId] })]
+)
+
+export const savedSharedPlaylist = sqliteTable(
+  "saved_shared_playlist",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    playlistId: text("playlist_id")
+      .notNull()
+      .references(() => playlist.id, { onDelete: "cascade" }),
+    savedAt: integer("saved_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.playlistId] })]
 )

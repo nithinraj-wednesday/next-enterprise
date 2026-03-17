@@ -1,9 +1,11 @@
-import { and, desc, eq } from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
 import { requireServerSession } from "@/lib/auth-server"
 import { db } from "@/lib/db"
 import { favoriteSong, playlist, playlistTrack } from "@/lib/db-schema"
+import { getPlaylistTracksForUser } from "@/lib/playlists"
 import { getPostHogClient } from "@/lib/posthog-server"
+import { Track } from "@/lib/types"
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -18,27 +20,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: "Playlist not found or unauthorized" }, { status: 404 })
     }
 
-    const tracks = await db
-      .select({
-        trackId: favoriteSong.trackId,
-        trackName: favoriteSong.trackName,
-        artistName: favoriteSong.artistName,
-        collectionName: favoriteSong.collectionName,
-        previewUrl: favoriteSong.previewUrl,
-        artworkUrl60: favoriteSong.artworkUrl60,
-        artworkUrl100: favoriteSong.artworkUrl100,
-        trackTimeMillis: favoriteSong.trackTimeMillis,
-        primaryGenreName: favoriteSong.primaryGenreName,
-        trackViewUrl: favoriteSong.trackViewUrl,
-        addedAt: playlistTrack.addedAt,
-      })
-      .from(playlistTrack)
-      .innerJoin(
-        favoriteSong,
-        and(eq(playlistTrack.trackId, favoriteSong.trackId), eq(favoriteSong.userId, session.user.id))
-      )
-      .where(eq(playlistTrack.playlistId, id))
-      .orderBy(desc(playlistTrack.addedAt))
+    const tracks = await getPlaylistTracksForUser(session.user.id, id)
 
     return NextResponse.json({ tracks })
   } catch (error) {
@@ -46,8 +28,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "Failed to fetch playlist tracks" }, { status: 500 })
   }
 }
-
-import { Track } from "@/lib/types"
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {

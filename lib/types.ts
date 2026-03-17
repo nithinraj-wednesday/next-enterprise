@@ -88,6 +88,12 @@ export interface Playlist {
   id: string
   name: string
   userId: string
+  isPublic: boolean
+  shareUrl?: string
+  sharedAt?: string
+  ownerName?: string
+  savedAt?: string
+  isSavedShared?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -106,4 +112,27 @@ export interface PlaylistResponse {
 
 export interface PlaylistTracksResponse {
   tracks: PlaylistTrack[]
+}
+
+export interface SharedPlaylist {
+  id: string
+  name: string
+  ownerId: string
+  ownerName?: string
+  isPublic: boolean
+  shareUrl?: string
+  sharedAt?: string
+  isSavedByViewer: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface SharedPlaylistView {
+  playlist: SharedPlaylist
+  tracks: PlaylistTrack[]
+}
+
+export interface SharedPlaylistSaveResponse {
+  playlist: Playlist
+  alreadySaved: boolean
 }

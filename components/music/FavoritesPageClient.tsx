@@ -1,9 +1,10 @@
 "use client"
 
-import { EllipsisVertical, Loader2, PencilLine, Plus, Trash2 } from "lucide-react"
+import { Copy, EllipsisVertical, Globe2, Loader2, PencilLine, Plus, Share2, Trash2 } from "lucide-react"
 import Link from "next/link"
 import posthog from "posthog-js"
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react"
+import { toast } from "sonner"
 import { MusicAppHeader, PlayerBar, SearchBar, TrackRow } from "@/components/music/MusicComponents"
 import { PlaylistDropdown } from "@/components/music/PlaylistDropdown"
 import {
@@ -44,6 +45,7 @@ import { cn } from "@/lib/utils"
 interface FavoritesPageClientProps {
   initialFavorites: FavoriteSong[]
   initialPlaylists?: Playlist[]
+  initialOwnedPlaylistIds?: string[]
   initialPlaylistTracksMap?: Record<string, number[]>
   userName?: string
 }
@@ -55,11 +57,13 @@ const EMPTY_TRACKS: Track[] = []
 export function FavoritesPageClient({
   initialFavorites,
   initialPlaylists = [],
+  initialOwnedPlaylistIds = [],
   initialPlaylistTracksMap = {},
   userName,
 }: FavoritesPageClientProps) {
   const [favorites, setFavorites] = useState(initialFavorites)
   const [playlists, setPlaylists] = useState<Playlist[]>(initialPlaylists)
+  const [ownedPlaylistIds, setOwnedPlaylistIds] = useState(initialOwnedPlaylistIds)
   const [playlistTracks, setPlaylistTracks] = useState<Record<string, Track[]>>({})
 
   const [playlistTracksMap, setPlaylistTracksMap] = useState<Record<string, Set<number>>>(() => {
@@ -83,6 +87,9 @@ export function FavoritesPageClient({
   const [playlistToRename, setPlaylistToRename] = useState<Playlist | null>(null)
   const [renamePlaylistName, setRenamePlaylistName] = useState("")
   const [isRenamingPlaylist, setIsRenamingPlaylist] = useState(false)
+
+  const [playlistToShare, setPlaylistToShare] = useState<Playlist | null>(null)
+  const [isUpdatingShare, setIsUpdatingShare] = useState(false)
 
   const [playlistToDelete, setPlaylistToDelete] = useState<Playlist | null>(null)
   const [isDeletingPlaylist, setIsDeletingPlaylist] = useState(false)
@@ -122,10 +129,19 @@ export function FavoritesPageClient({
     [favorites]
   )
 
-  const selectedPlaylistName =
+  const ownedPlaylistIdSet = useMemo(() => new Set(ownedPlaylistIds), [ownedPlaylistIds])
+  const editablePlaylists = useMemo(
+    () => playlists.filter((playlist) => ownedPlaylistIdSet.has(playlist.id)),
+    [ownedPlaylistIdSet, playlists]
+  )
+  const selectedPlaylist =
     selectedPlaylistId === LIKED_PLAYLIST_ID
-      ? LIKED_PLAYLIST_NAME
-      : playlists.find((playlist) => playlist.id === selectedPlaylistId)?.name || "Playlist"
+      ? null
+      : playlists.find((playlist) => playlist.id === selectedPlaylistId) || null
+  const selectedPlaylistIsEditable = selectedPlaylist ? ownedPlaylistIdSet.has(selectedPlaylist.id) : false
+
+  const selectedPlaylistName =
+    selectedPlaylistId === LIKED_PLAYLIST_ID ? LIKED_PLAYLIST_NAME : selectedPlaylist?.name || "Playlist"
 
   const selectedPlaylistTrackCount =
     selectedPlaylistId === LIKED_PLAYLIST_ID
@@ -194,7 +210,7 @@ export function FavoritesPageClient({
       setPageError(null)
 
       try {
-        const response = await fetch(`/api/playlists/${playlistId}/tracks`, {
+        const response = await fetch(`/api/library-playlists/${playlistId}/tracks`, {
           cache: "no-store",
         })
 
@@ -387,6 +403,7 @@ export function FavoritesPageClient({
 
         posthog.capture("playlist_created", { playlist_id: data.playlist.id, playlist_name: data.playlist.name })
         setPlaylists((current) => [data.playlist, ...current])
+        setOwnedPlaylistIds((current) => [data.playlist.id, ...current])
         setCreatePlaylistName("")
         setIsCreateDialogOpen(false)
       } catch (error) {
@@ -473,6 +490,7 @@ export function FavoritesPageClient({
       posthog.capture("playlist_deleted", { playlist_id: deletedPlaylistId, playlist_name: playlistToDelete.name })
 
       setPlaylists((current) => current.filter((playlist) => playlist.id !== deletedPlaylistId))
+      setOwnedPlaylistIds((current) => current.filter((playlistId) => playlistId !== deletedPlaylistId))
       setPlaylistTracksMap((current) => {
         const next = { ...current }
         delete next[deletedPlaylistId]
@@ -488,6 +506,10 @@ export function FavoritesPageClient({
         setSelectedPlaylistId(LIKED_PLAYLIST_ID)
       }
 
+      if (playlistToShare?.id === deletedPlaylistId) {
+        setPlaylistToShare(null)
+      }
+
       setPlaylistToDelete(null)
     } catch (error) {
       posthog.captureException(error)
@@ -496,11 +518,76 @@ export function FavoritesPageClient({
     } finally {
       setIsDeletingPlaylist(false)
     }
-  }, [playlistToDelete, selectedPlaylistId])
+  }, [playlistToDelete, playlistToShare, selectedPlaylistId])
 
   const handleSearch = useCallback((query: string) => {
     setSearchTerm(query)
   }, [])
+
+  const handleCopyShareLink = useCallback(async (playlist: Playlist) => {
+    if (!playlist.shareUrl) {
+      setPageError("This playlist is private. Publish it before copying the link.")
+      return
+    }
+
+    try {
+      const absoluteUrl = new URL(playlist.shareUrl, window.location.origin).toString()
+      await navigator.clipboard.writeText(absoluteUrl)
+      toast.success("Share link copied.")
+    } catch (error) {
+      posthog.captureException(error)
+      console.error("Failed to copy share link:", error)
+      setPageError("Could not copy the share link right now.")
+    }
+  }, [])
+
+  const handleShareAction = useCallback(async () => {
+    if (!playlistToShare) {
+      return
+    }
+
+    setIsUpdatingShare(true)
+    setPageError(null)
+
+    try {
+      const response = await fetch(`/api/playlists/${playlistToShare.id}/share`, {
+        method: "POST",
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to update playlist share state: ${response.status}`)
+      }
+
+      const data = (await response.json()) as PlaylistResponse
+
+      if (!data.playlist) {
+        throw new Error("Updated playlist was not returned by the API")
+      }
+
+      setPlaylists((current) =>
+        current.map((playlist) => (playlist.id === data.playlist.id ? data.playlist : playlist))
+      )
+      setPlaylistToShare(data.playlist)
+
+      if (playlistToRename?.id === data.playlist.id) {
+        setPlaylistToRename(data.playlist)
+      }
+
+      posthog.capture("playlist_share_enabled", {
+        playlist_id: data.playlist.id,
+        playlist_name: data.playlist.name,
+        is_public: data.playlist.isPublic,
+      })
+
+      toast.success(data.playlist.shareUrl ? "Share link ready." : "Playlist published.")
+    } catch (error) {
+      posthog.captureException(error)
+      console.error("Failed to update playlist share state:", error)
+      setPageError("Failed to update playlist sharing.")
+    } finally {
+      setIsUpdatingShare(false)
+    }
+  }, [playlistToRename, playlistToShare])
 
   return (
     <div className="bg-background relative min-h-screen">
@@ -526,8 +613,10 @@ export function FavoritesPageClient({
 
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-col gap-1">
-            <h2 className="font-display text-foreground text-2xl font-semibold">Your Playlists</h2>
-            <p className="text-muted-foreground text-sm">My Liked Songs comes first, then your custom playlists.</p>
+            <h2 className="font-display text-foreground text-2xl font-semibold">Your Library</h2>
+            <p className="text-muted-foreground text-sm">
+              My Liked Songs comes first, followed by your playlists and anything shared with you.
+            </p>
           </div>
 
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -627,44 +716,76 @@ export function FavoritesPageClient({
               >
                 <CardHeader className="flex items-start justify-between gap-3">
                   <div className="flex flex-col gap-1">
-                    <CardTitle className="font-display truncate">{playlist.name}</CardTitle>
-                    <CardDescription>{playlistTracksMap[playlist.id]?.size ?? 0} tracks</CardDescription>
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="font-display truncate">{playlist.name}</CardTitle>
+                      {playlist.isSavedShared ? (
+                        <span className="border-border/60 bg-secondary/55 text-muted-foreground inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] tracking-[0.18em] uppercase">
+                          Shared
+                        </span>
+                      ) : playlist.isPublic ? (
+                        <span className="border-gold/30 bg-gold/10 text-gold inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] tracking-[0.18em] uppercase">
+                          Public
+                        </span>
+                      ) : null}
+                    </div>
+                    <CardDescription>
+                      {playlist.isSavedShared
+                        ? `Shared by ${playlist.ownerName ?? "Unknown"}`
+                        : `${playlistTracksMap[playlist.id]?.size ?? 0} tracks`}
+                    </CardDescription>
+                    {playlist.isSavedShared ? (
+                      <p className="text-muted-foreground text-sm">
+                        {playlistTracksMap[playlist.id]?.size ?? 0} tracks
+                      </p>
+                    ) : null}
                   </div>
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={(event) => event.stopPropagation()}
-                        aria-label={`Manage ${playlist.name}`}
-                      >
-                        <EllipsisVertical />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
-                      <DropdownMenuGroup>
-                        <DropdownMenuItem
-                          onSelect={() => {
-                            setPlaylistToRename(playlist)
-                            setRenamePlaylistName(playlist.name)
-                          }}
+                  {ownedPlaylistIdSet.has(playlist.id) ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={(event) => event.stopPropagation()}
+                          aria-label={`Manage ${playlist.name}`}
                         >
-                          <PencilLine data-icon="inline-start" />
-                          Rename
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          variant="destructive"
-                          onSelect={() => {
-                            setPlaylistToDelete(playlist)
-                          }}
-                        >
-                          <Trash2 data-icon="inline-start" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuGroup>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                          <EllipsisVertical />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
+                        <DropdownMenuGroup>
+                          <DropdownMenuItem
+                            onSelect={() => {
+                              requestAnimationFrame(() => setPlaylistToShare(playlist))
+                            }}
+                          >
+                            <Share2 data-icon="inline-start" />
+                            Share
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={() => {
+                              requestAnimationFrame(() => {
+                                setPlaylistToRename(playlist)
+                                setRenamePlaylistName(playlist.name)
+                              })
+                            }}
+                          >
+                            <PencilLine data-icon="inline-start" />
+                            Rename
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onSelect={() => {
+                              requestAnimationFrame(() => setPlaylistToDelete(playlist))
+                            }}
+                          >
+                            <Trash2 data-icon="inline-start" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : null}
                 </CardHeader>
               </Card>
             ))}
@@ -674,9 +795,20 @@ export function FavoritesPageClient({
 
         <Card className="glass-card border-border/30 overflow-hidden rounded-[2rem] border">
           <CardHeader className="border-border/50 border-b">
-            <CardTitle className="font-display text-foreground text-2xl font-semibold">
-              {selectedPlaylistName}
-            </CardTitle>
+            <div className="flex flex-wrap items-center gap-3">
+              <CardTitle className="font-display text-foreground text-2xl font-semibold">
+                {selectedPlaylistName}
+              </CardTitle>
+              {selectedPlaylist?.isSavedShared ? (
+                <span className="border-border/60 bg-secondary/55 text-muted-foreground inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] tracking-[0.18em] uppercase">
+                  Shared by {selectedPlaylist.ownerName ?? "Unknown"}
+                </span>
+              ) : selectedPlaylistId !== LIKED_PLAYLIST_ID && selectedPlaylist?.isPublic ? (
+                <span className="border-gold/30 bg-gold/10 text-gold inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] tracking-[0.18em] uppercase">
+                  Public
+                </span>
+              ) : null}
+            </div>
             <div className="flex items-center gap-2">
               <CardDescription>{selectedPlaylistTrackCount} tracks</CardDescription>
               {searchTerm && (
@@ -732,32 +864,36 @@ export function FavoritesPageClient({
                       index={index}
                       formatTime={formatTime}
                       optionsMenu={
-                        <div className="flex items-center gap-1">
-                          <PlaylistDropdown
-                            track={track}
-                            playlists={playlists}
-                            playlistTracksMap={playlistTracksMap}
-                            onAddToPlaylist={handleAddToPlaylist}
-                            onRemoveFromPlaylist={handleRemoveFromPlaylist}
-                            trigger={
-                              <Button variant="ghost" size="icon-sm" aria-label="Manage playlist membership">
-                                <Plus />
-                              </Button>
-                            }
-                          />
+                        editablePlaylists.length > 0 || selectedPlaylistIsEditable ? (
+                          <div className="flex items-center gap-1">
+                            {editablePlaylists.length > 0 ? (
+                              <PlaylistDropdown
+                                track={track}
+                                playlists={editablePlaylists}
+                                playlistTracksMap={playlistTracksMap}
+                                onAddToPlaylist={handleAddToPlaylist}
+                                onRemoveFromPlaylist={handleRemoveFromPlaylist}
+                                trigger={
+                                  <Button variant="ghost" size="icon-sm" aria-label="Manage playlist membership">
+                                    <Plus />
+                                  </Button>
+                                }
+                              />
+                            ) : null}
 
-                          {selectedPlaylistId !== LIKED_PLAYLIST_ID ? (
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              onClick={() => void handleRemoveFromPlaylist(selectedPlaylistId, track.trackId)}
-                              className="text-destructive hover:text-destructive"
-                              aria-label="Remove from this playlist"
-                            >
-                              <Trash2 />
-                            </Button>
-                          ) : null}
-                        </div>
+                            {selectedPlaylistIsEditable ? (
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                onClick={() => void handleRemoveFromPlaylist(selectedPlaylistId, track.trackId)}
+                                className="text-destructive hover:text-destructive"
+                                aria-label="Remove from this playlist"
+                              >
+                                <Trash2 />
+                              </Button>
+                            ) : null}
+                          </div>
+                        ) : undefined
                       }
                     />
                   ))}
@@ -767,6 +903,95 @@ export function FavoritesPageClient({
           </CardContent>
         </Card>
       </main>
+
+      <Dialog
+        open={playlistToShare !== null}
+        onOpenChange={(open) => {
+          if (!open && !isUpdatingShare) {
+            setPlaylistToShare(null)
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Share playlist</DialogTitle>
+            <DialogDescription>
+              {playlistToShare?.isPublic
+                ? "This playlist has a stable public link. Anyone with the link can save it into their own library."
+                : "Publish this playlist to create a public, read-only link anyone can open."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-4">
+            <div className="bg-secondary/40 border-border/50 flex items-start justify-between rounded-xl border p-4">
+              <div className="space-y-1">
+                <p className="text-foreground font-medium">{playlistToShare?.name ?? "Playlist"}</p>
+                <p className="text-muted-foreground text-sm">
+                  {playlistToShare?.isPublic
+                    ? "Anyone with the link can preview tracks and save this playlist to their own library."
+                    : "Only you can see this playlist right now."}
+                </p>
+              </div>
+
+              <span
+                className={cn(
+                  "inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] tracking-[0.18em] uppercase",
+                  playlistToShare?.isPublic
+                    ? "border-gold/30 bg-gold/10 text-gold"
+                    : "border-border/60 bg-secondary/55 text-muted-foreground"
+                )}
+              >
+                {playlistToShare?.isPublic ? "Public" : "Private"}
+              </span>
+            </div>
+
+            {playlistToShare?.isPublic && playlistToShare.shareUrl ? (
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="share-playlist-link">Share link</Label>
+                <div className="flex gap-2">
+                  <Input id="share-playlist-link" value={playlistToShare.shareUrl} readOnly />
+                  <Button type="button" variant="outline" onClick={() => void handleCopyShareLink(playlistToShare)}>
+                    <Copy data-icon="inline-start" />
+                    Copy
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+
+            <div className="flex flex-wrap items-center gap-3">
+              {playlistToShare?.isPublic ? (
+                <Button type="button" variant="outline" onClick={() => void handleCopyShareLink(playlistToShare)}>
+                  <Copy data-icon="inline-start" />
+                  Copy Link
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  onClick={() => void handleShareAction()}
+                  disabled={isUpdatingShare}
+                  className="border-gold/30 bg-gold/10 text-gold hover:bg-gold/15"
+                >
+                  {isUpdatingShare ? (
+                    <>
+                      <Loader2 data-icon="inline-start" className="animate-spin" />
+                      Publishing...
+                    </>
+                  ) : (
+                    <>
+                      <Globe2 data-icon="inline-start" />
+                      Publish Playlist
+                    </>
+                  )}
+                </Button>
+              )}
+
+              <Button type="button" variant="ghost" onClick={() => setPlaylistToShare(null)} disabled={isUpdatingShare}>
+                Close
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={playlistToRename !== null}

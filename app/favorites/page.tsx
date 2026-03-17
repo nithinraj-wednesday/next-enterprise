@@ -1,21 +1,16 @@
-import { desc, eq } from "drizzle-orm"
 import { FavoritesPageClient } from "@/components/music/FavoritesPageClient"
 import { requireServerSession } from "@/lib/auth-server"
 import { db } from "@/lib/db"
-import { playlist } from "@/lib/db-schema"
 import { listFavoritesForUser } from "@/lib/favorites-db"
-import { Playlist } from "@/lib/types"
+import { listPlaylistsForUser, listSavedSharedPlaylistsForUser } from "@/lib/playlists"
 
 export default async function FavoritesPage() {
   const session = await requireServerSession()
   const favorites = await listFavoritesForUser(session.user.id)
 
-  // Fetch user playlists
-  const playlists = await db
-    .select()
-    .from(playlist)
-    .where(eq(playlist.userId, session.user.id))
-    .orderBy(desc(playlist.createdAt))
+  const ownedPlaylists = await listPlaylistsForUser(session.user.id)
+  const savedSharedPlaylists = await listSavedSharedPlaylistsForUser(session.user.id)
+  const playlists = [...ownedPlaylists, ...savedSharedPlaylists]
 
   // Build a map of playlist ID to a set of track IDs
   const playlistTracksMap: Record<string, number[]> = {}
@@ -37,7 +32,8 @@ export default async function FavoritesPage() {
   return (
     <FavoritesPageClient
       initialFavorites={favorites}
-      initialPlaylists={JSON.parse(JSON.stringify(playlists)) as Playlist[]}
+      initialPlaylists={playlists}
+      initialOwnedPlaylistIds={ownedPlaylists.map((playlist) => playlist.id)}
       initialPlaylistTracksMap={playlistTracksMap}
       userName={session.user.name}
     />
