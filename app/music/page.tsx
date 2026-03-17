@@ -73,7 +73,6 @@ export default function MusicPage() {
   const [hasSearched, setHasSearched] = useState(false)
 
   const [favorites, setFavorites] = useState<FavoriteSong[]>([])
-  const [favoritesLoading, setFavoritesLoading] = useState(true)
   const [favoriteError, setFavoriteError] = useState<string | null>(null)
   const [pendingFavoriteIds, setPendingFavoriteIds] = useState<number[]>([])
 
@@ -114,7 +113,6 @@ export default function MusicPage() {
     let cancelled = false
 
     const loadFavorites = async () => {
-      setFavoritesLoading(true)
       try {
         const response = await fetch("/api/favorites", { cache: "no-store" })
 
@@ -129,10 +127,6 @@ export default function MusicPage() {
         }
       } catch (error) {
         console.error("Failed to load favorites:", error)
-      } finally {
-        if (!cancelled) {
-          setFavoritesLoading(false)
-        }
       }
     }
 
@@ -330,15 +324,25 @@ export default function MusicPage() {
 
   const handlePlayTrack = useCallback(
     (track: Track) => {
-      playTrack(track)
-      posthog.capture("track_played", {
-        track_id: track.trackId,
-        track_name: track.trackName,
-        artist_name: track.artistName,
-        genre: track.primaryGenreName,
-      })
+      const isDifferentTrack = currentTrack?.trackId !== track.trackId
+      const isResuming = currentTrack?.trackId === track.trackId && !isPlaying
+
+      if (currentTrack?.trackId === track.trackId) {
+        togglePlayPause()
+      } else {
+        playTrack(track)
+      }
+
+      if (isDifferentTrack || isResuming) {
+        posthog.capture("track_played", {
+          track_id: track.trackId,
+          track_name: track.trackName,
+          artist_name: track.artistName,
+          genre: track.primaryGenreName,
+        })
+      }
     },
-    [playTrack]
+    [playTrack, currentTrack, togglePlayPause, isPlaying]
   )
 
   const handleToggleFavorite = useCallback(
@@ -569,11 +573,11 @@ export default function MusicPage() {
             size="icon-sm"
             onClick={(event) => event.stopPropagation()}
             onMouseDown={(event) => event.stopPropagation()}
-            className="bg-background/75 hover:bg-secondary/80"
+            className="text-muted-foreground hover:text-foreground"
             disabled={playlistsLoading}
             aria-label="Track playlist actions"
           >
-            <EllipsisVertical />
+            <EllipsisVertical className="size-4" />
           </Button>
         }
       />
@@ -589,7 +593,7 @@ export default function MusicPage() {
         <div className="relative z-30 mx-auto max-w-screen-xl px-4 sm:px-6">
           <MusicAppHeader
             activeRoute="music"
-            favoriteCount={favorites.length}
+            playlistCount={playlists.length + 1}
             userName={sessionData?.user?.name}
             searchBar={<SearchBar onSearch={handleSearch} loading={loading} className="!px-4 !py-2" />}
           />
@@ -624,7 +628,7 @@ export default function MusicPage() {
 
         <div className="animate-fade-up mb-6 flex items-center justify-between gap-3">
           <div className="text-muted-foreground text-xs tracking-[0.15em] uppercase">
-            {playlistsLoading ? "Loading playlists..." : `${playlists.length} playlists available`}
+            {playlistsLoading ? "Loading playlists..." : `${playlists.length + 1} playlists available`}
           </div>
 
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -688,13 +692,6 @@ export default function MusicPage() {
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="glass-card flex items-center gap-2 rounded-full px-4 py-2 text-xs tracking-[0.18em] uppercase">
-                  <span className="text-gold">
-                    {favoritesLoading ? "..." : String(favorites.length).padStart(2, "0")}
-                  </span>
-                  <span className="text-muted-foreground">Saved tracks</span>
-                </div>
-
                 <div className="bg-secondary/60 border-border/50 flex items-center gap-1 rounded-lg border p-1">
                   <button
                     onClick={() => {
