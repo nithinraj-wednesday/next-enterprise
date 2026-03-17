@@ -91,6 +91,7 @@ export async function getPlaylistTracksForUser(userId: string, playlistId: strin
       addedAt: playlistTrack.addedAt,
     })
     .from(playlistTrack)
+    .innerJoin(playlist, and(eq(playlist.id, playlistTrack.playlistId), eq(playlist.userId, userId)))
     .innerJoin(favoriteSong, and(eq(playlistTrack.trackId, favoriteSong.trackId), eq(favoriteSong.userId, userId)))
     .where(eq(playlistTrack.playlistId, playlistId))
     .orderBy(desc(playlistTrack.addedAt))

@@ -756,7 +756,7 @@ export function FavoritesPageClient({
                         <DropdownMenuGroup>
                           <DropdownMenuItem
                             onSelect={() => {
-                              setPlaylistToShare(playlist)
+                              requestAnimationFrame(() => setPlaylistToShare(playlist))
                             }}
                           >
                             <Share2 data-icon="inline-start" />
@@ -764,8 +764,10 @@ export function FavoritesPageClient({
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onSelect={() => {
-                              setPlaylistToRename(playlist)
-                              setRenamePlaylistName(playlist.name)
+                              requestAnimationFrame(() => {
+                                setPlaylistToRename(playlist)
+                                setRenamePlaylistName(playlist.name)
+                              })
                             }}
                           >
                             <PencilLine data-icon="inline-start" />
@@ -774,7 +776,7 @@ export function FavoritesPageClient({
                           <DropdownMenuItem
                             variant="destructive"
                             onSelect={() => {
-                              setPlaylistToDelete(playlist)
+                              requestAnimationFrame(() => setPlaylistToDelete(playlist))
                             }}
                           >
                             <Trash2 data-icon="inline-start" />
