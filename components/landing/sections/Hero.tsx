@@ -1,7 +1,22 @@
+"use client"
+
 import Link from "next/link"
+import { useFeatureFlagEnabled, useFeatureFlagPayload } from "posthog-js/react"
+import { cn } from "@/lib/utils"
 import { ScrollReveal } from "../ScrollReveal"
 
+interface CtaPayload {
+  text?: string
+  style?: "diamond" | "emerald" | "gold"
+}
+
 export function Hero() {
+  const isCtaVariantEnabled = useFeatureFlagEnabled("cta-variant")
+  const ctaPayload = useFeatureFlagPayload("cta-variant") as CtaPayload | undefined
+
+  const buttonText = ctaPayload?.text || (isCtaVariantEnabled ? "Discover Premium Music" : "Start Listening — Free")
+  const buttonStyle = ctaPayload?.style || (isCtaVariantEnabled ? "diamond" : "gold")
+
   return (
     <section className="relative flex min-h-screen items-center justify-center overflow-hidden pt-20">
       {/* Background effects */}
@@ -62,9 +77,19 @@ export function Hero() {
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link
               href="/music"
-              className="bg-gold text-primary-foreground font-body rounded-full px-8 py-3.5 text-sm font-semibold transition-all hover:scale-105 hover:shadow-[0_0_30px_-5px_var(--gold-glow)] hover:brightness-110 active:scale-[0.98]"
+              className={cn(
+                "font-body relative rounded-full px-8 py-3.5 text-sm font-semibold transition-all duration-300 hover:scale-105 active:scale-[0.98]",
+                buttonStyle === "emerald" &&
+                  "bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:bg-emerald-400 hover:shadow-[0_0_35px_rgba(16,185,129,0.5)]",
+                buttonStyle === "diamond" &&
+                  "bg-sky-400 text-white shadow-[0_0_20px_rgba(56,189,248,0.3)] hover:bg-sky-300 hover:shadow-[0_0_35px_rgba(56,189,248,0.5)]",
+                buttonStyle === "gold" &&
+                  "bg-gold text-primary-foreground hover:shadow-[0_0_30px_-5px_var(--gold-glow)] hover:brightness-110",
+                isCtaVariantEnabled &&
+                  "overflow-hidden before:absolute before:inset-0 before:rounded-full before:bg-white/10 before:opacity-0 hover:before:opacity-100"
+              )}
             >
-              Start Listening — Free
+              {buttonText}
             </Link>
             <a
               href="#how-it-works"
