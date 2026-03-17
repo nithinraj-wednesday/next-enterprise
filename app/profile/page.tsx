@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm"
+import { eq, inArray, sql } from "drizzle-orm"
 import { Music, User } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -50,7 +50,7 @@ export default async function ProfilePage() {
     const songsResult = await db
       .select({ count: sql<number>`count(*)` })
       .from(playlistTrack)
-      .where(sql`${playlistTrack.playlistId} IN ${playlistIds}`)
+      .where(inArray(playlistTrack.playlistId, playlistIds))
     totalSongsInPlaylists = songsResult[0]?.count ?? 0
   }
 

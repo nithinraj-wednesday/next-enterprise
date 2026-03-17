@@ -324,20 +324,25 @@ export default function MusicPage() {
 
   const handlePlayTrack = useCallback(
     (track: Track) => {
+      const isDifferentTrack = currentTrack?.trackId !== track.trackId
+      const isResuming = currentTrack?.trackId === track.trackId && !isPlaying
+
       if (currentTrack?.trackId === track.trackId) {
         togglePlayPause()
       } else {
         playTrack(track)
       }
 
-      posthog.capture("track_played", {
-        track_id: track.trackId,
-        track_name: track.trackName,
-        artist_name: track.artistName,
-        genre: track.primaryGenreName,
-      })
+      if (isDifferentTrack || isResuming) {
+        posthog.capture("track_played", {
+          track_id: track.trackId,
+          track_name: track.trackName,
+          artist_name: track.artistName,
+          genre: track.primaryGenreName,
+        })
+      }
     },
-    [playTrack, currentTrack, togglePlayPause]
+    [playTrack, currentTrack, togglePlayPause, isPlaying]
   )
 
   const handleToggleFavorite = useCallback(
