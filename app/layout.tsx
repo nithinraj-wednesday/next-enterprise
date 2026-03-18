@@ -4,6 +4,7 @@ import { DM_Sans, Syne } from "next/font/google"
 import { Toaster } from "sonner"
 import { PostHogProvider } from "@/components/providers/PostHogProvider"
 import { ThemeProvider } from "@/components/ThemeProvider"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
 const syne = Syne({
@@ -33,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-body antialiased">
         <PostHogProvider>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange={false}>
-            {children}
+            <TooltipProvider>{children}</TooltipProvider>
             <Toaster position="top-right" richColors />
           </ThemeProvider>
         </PostHogProvider>

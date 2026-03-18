@@ -21,11 +21,11 @@ import { useEffect, useRef, useState } from "react"
 import { getArtworkUrl } from "@/app/music/constants"
 import { ProfileDropdown } from "@/components/ProfileDropdown"
 import { ThemeToggle } from "@/components/ThemeToggle"
+import { SidebarTrigger } from "@/components/ui/sidebar"
 import { PlayerBarProps, SearchBarProps, TrackCardProps, TrackRowProps } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 interface MusicAppHeaderProps {
-  activeRoute: "music" | "favorites"
   playlistCount: number
   userName?: string
   searchBar?: React.ReactNode
@@ -77,25 +77,28 @@ export function FavoriteButton({ isFavorite, isPending, onClick }: FavoriteButto
   )
 }
 
-export function MusicAppHeader({ activeRoute, playlistCount, userName: _userName, searchBar }: MusicAppHeaderProps) {
+export function MusicAppHeader({ playlistCount: _playlistCount, userName: _userName, searchBar }: MusicAppHeaderProps) {
   return (
     <div className="mb-8 flex flex-col gap-4 sm:mb-12">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <Link href="/" className="flex shrink-0 items-center gap-3" aria-label="Go to home page">
-          <div className="relative size-9">
-            <div className="from-gold/80 to-gold/40 absolute inset-0 rounded-full bg-gradient-to-br">
-              <div className="bg-background absolute inset-[35%] rounded-full" />
+        <div className="flex items-center gap-3">
+          <SidebarTrigger className="md:hidden" />
+          <Link href="/" className="flex shrink-0 items-center gap-3" aria-label="Go to home page">
+            <div className="relative size-9">
+              <div className="from-gold/80 to-gold/40 absolute inset-0 rounded-full bg-gradient-to-br">
+                <div className="bg-background absolute inset-[35%] rounded-full" />
+              </div>
             </div>
-          </div>
-          <div>
-            <h1 className="font-display text-foreground text-xl leading-none font-bold tracking-tight">
-              Obsidian<span className="text-gold">Sound</span>
-            </h1>
-            <p className="text-muted-foreground font-body mt-0.5 text-[10px] tracking-[0.2em] uppercase">
-              Music Discovery
-            </p>
-          </div>
-        </Link>
+            <div>
+              <h1 className="font-display text-foreground text-xl leading-none font-bold tracking-tight">
+                Obsidian<span className="text-gold">Sound</span>
+              </h1>
+              <p className="text-muted-foreground font-body mt-0.5 text-[10px] tracking-[0.2em] uppercase">
+                Music Discovery
+              </p>
+            </div>
+          </Link>
+        </div>
 
         {searchBar ? (
           <div className="order-3 w-full flex-1 md:order-none md:w-auto md:max-w-md">{searchBar}</div>
@@ -106,35 +109,6 @@ export function MusicAppHeader({ activeRoute, playlistCount, userName: _userName
           <ProfileDropdown />
         </div>
       </div>
-
-      <nav className="flex flex-wrap items-center gap-2">
-        <Link
-          href="/music"
-          className={cn(
-            "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-all duration-200",
-            activeRoute === "music"
-              ? "border-gold/40 bg-gold/10 text-gold"
-              : "border-border/60 bg-secondary/55 text-muted-foreground hover:text-foreground"
-          )}
-        >
-          Discover
-          <span className="bg-foreground/10 rounded-full px-2 py-0.5 text-[10px] tracking-[0.18em] uppercase">
-            Live
-          </span>
-        </Link>
-        <Link
-          href="/favorites"
-          className={cn(
-            "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-all duration-200",
-            activeRoute === "favorites"
-              ? "border-gold/40 bg-gold/10 text-gold"
-              : "border-border/60 bg-secondary/55 text-muted-foreground hover:text-foreground"
-          )}
-        >
-          Playlists
-          <span className="bg-foreground/10 rounded-full px-2 py-0.5 text-[10px] tabular-nums">{playlistCount}</span>
-        </Link>
-      </nav>
     </div>
   )
 }
@@ -483,6 +457,7 @@ export function PlayerBar({
   const collapsedProgressBarRef = useRef<HTMLDivElement>(null)
   const expandedProgressBarRef = useRef<HTMLDivElement>(null)
   const volumeBarRef = useRef<HTMLDivElement>(null)
+  const collapsedVolumeBarRef = useRef<HTMLDivElement>(null)
   const [isExpanded, setIsExpanded] = useState(false)
 
   useEffect(() => {
@@ -504,9 +479,10 @@ export function PlayerBar({
     onSeek(Math.max(0, Math.min(100, pct)))
   }
 
-  const handleVolumeClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!volumeBarRef.current) return
-    const rect = volumeBarRef.current.getBoundingClientRect()
+  const handleVolumeClick = (e: React.MouseEvent<HTMLDivElement>, barRef: React.RefObject<HTMLDivElement | null>) => {
+    e.stopPropagation()
+    if (!barRef.current) return
+    const rect = barRef.current.getBoundingClientRect()
     const vol = (e.clientX - rect.left) / rect.width
     onVolumeChange(Math.max(0, Math.min(1, vol)))
   }
@@ -651,7 +627,7 @@ export function PlayerBar({
 
                 <div
                   ref={volumeBarRef}
-                  onClick={handleVolumeClick}
+                  onClick={(e) => handleVolumeClick(e, volumeBarRef)}
                   className="bg-border/50 group relative h-1.5 w-36 cursor-pointer rounded-full"
                 >
                   <div className="bg-foreground/75 h-full rounded-full" style={{ width: `${volume * 100}%` }} />
@@ -681,9 +657,9 @@ export function PlayerBar({
               style={{ left: `${progress}%` }}
             />
           </div>
-
-          <div className="mx-auto flex max-w-screen-2xl items-center gap-4 px-4 py-2.5 sm:px-6">
-            <div className="flex max-w-xs min-w-0 flex-1 items-center gap-3">
+          <div className="mx-auto grid max-w-screen-2xl grid-cols-2 items-center gap-4 px-4 py-2.5 sm:grid-cols-3 sm:px-6">
+            {/* Left: Track info */}
+            <div className="flex min-w-0 items-center gap-3">
               <div className="relative size-12 shrink-0 overflow-hidden rounded-lg shadow-lg ring-1 ring-white/5">
                 {artworkUrl ? (
                   <Image src={artworkUrl} alt={currentTrack.trackName} className="object-cover" fill sizes="48px" />
@@ -697,7 +673,7 @@ export function PlayerBar({
                   <span className="min-w-0 flex-1 truncate">{currentTrack.artistName}</span>
                   <span className="flex items-center gap-1.5 whitespace-nowrap opacity-60">
                     <span className="bg-foreground/10 h-2.5 w-px" />
-                    <span className="tabular-nums">
+                    <span className="font-mono tabular-nums">
                       {formatTime(currentTime)} / {formatTime(duration)}
                     </span>
                   </span>
@@ -705,16 +681,34 @@ export function PlayerBar({
               </div>
             </div>
 
-            <div className="ml-auto flex items-center gap-1 sm:gap-2">
+            {/* Center: Playback controls */}
+            <div className="hidden items-center justify-center gap-1 sm:flex sm:gap-4">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onShuffle()
+                }}
+                className={cn(
+                  "p-2 transition-all hover:scale-110",
+                  isShuffled
+                    ? "text-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                aria-label={isShuffled ? "Shuffle on" : "Shuffle off"}
+                aria-pressed={isShuffled}
+              >
+                <HugeiconsIcon icon={ShuffleIcon} className="size-4.5" strokeWidth={2.5} />
+              </button>
+
               <button
                 onClick={(e) => {
                   e.stopPropagation()
                   onPrevious()
                 }}
-                className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+                className="text-muted-foreground hover:text-foreground p-2 transition-all hover:scale-110"
                 aria-label="Previous"
               >
-                <HugeiconsIcon icon={PreviousIcon} className="size-5" fill="currentColor" />
+                <HugeiconsIcon icon={PreviousIcon} className="size-6" fill="currentColor" />
               </button>
 
               <button
@@ -722,7 +716,7 @@ export function PlayerBar({
                   e.stopPropagation()
                   onTogglePlay()
                 }}
-                className="bg-foreground text-background flex size-9 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95"
+                className="bg-foreground text-background hover:shadow-gold/20 flex size-10 items-center justify-center rounded-full shadow-lg transition-all hover:scale-110 active:scale-95"
                 aria-label={isPlaying ? "Pause" : "Play"}
                 id="player-play-pause"
               >
@@ -738,22 +732,125 @@ export function PlayerBar({
                   e.stopPropagation()
                   onNext()
                 }}
+                className="text-muted-foreground hover:text-foreground p-2 transition-all hover:scale-110"
+                aria-label="Next"
+              >
+                <HugeiconsIcon icon={NextIcon} className="size-6" fill="currentColor" />
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onRepeat()
+                }}
+                className={cn(
+                  "p-2 transition-all hover:scale-110",
+                  repeatMode !== "off"
+                    ? "text-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                aria-label={`Repeat ${repeatMode}`}
+                aria-pressed={repeatMode !== "off"}
+              >
+                <HugeiconsIcon icon={RepeatIcon} className="size-4.5" strokeWidth={2.5} />
+              </button>
+            </div>
+
+            {/* Simplified controls for smaller screens (below sm) */}
+            <div className="flex items-center gap-1 sm:hidden">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onPrevious()
+                }}
+                className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+                aria-label="Previous"
+              >
+                <HugeiconsIcon icon={PreviousIcon} className="size-5" fill="currentColor" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onTogglePlay()
+                }}
+                className="bg-foreground text-background flex size-9 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95"
+                aria-label={isPlaying ? "Pause" : "Play"}
+              >
+                {isPlaying ? (
+                  <HugeiconsIcon icon={PauseIcon} className="size-5" fill="currentColor" />
+                ) : (
+                  <HugeiconsIcon icon={PlayIcon} className="ml-0.5 size-5" fill="currentColor" />
+                )}
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onNext()
+                }}
                 className="text-muted-foreground hover:text-foreground p-1 transition-colors"
                 aria-label="Next"
               >
                 <HugeiconsIcon icon={NextIcon} className="size-5" fill="currentColor" />
               </button>
+            </div>
+
+            {/* Right: Volume + Expand */}
+            <div className="hidden items-center justify-end gap-3 sm:flex">
+              <div className="flex items-center gap-2 pr-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onVolumeChange(volume > 0 ? 0 : 0.7)
+                  }}
+                  className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+                  aria-label="Volume"
+                >
+                  {volume === 0 ? (
+                    <HugeiconsIcon icon={VolumeMute01Icon} className="size-4" strokeWidth={2} />
+                  ) : (
+                    <HugeiconsIcon icon={VolumeHighIcon} className="size-4" strokeWidth={2} />
+                  )}
+                </button>
+                <div
+                  ref={collapsedVolumeBarRef}
+                  onClick={(e) => handleVolumeClick(e, collapsedVolumeBarRef)}
+                  className="bg-border/50 group relative h-1.5 w-24 cursor-pointer rounded-full transition-all hover:h-2"
+                >
+                  <div
+                    className="bg-foreground/80 h-full rounded-full transition-all"
+                    style={{ width: `${volume * 100}%` }}
+                  />
+                  <div
+                    className="bg-foreground absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0 shadow-lg ring-2 ring-white/10 transition-opacity group-hover:opacity-100"
+                    style={{ left: `${volume * 100}%` }}
+                  />
+                </div>
+              </div>
 
               <button
                 type="button"
-                onClick={() => setIsExpanded(true)}
-                className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center rounded-full border border-transparent transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setIsExpanded(true)
+                }}
+                className="bg-secondary/60 text-muted-foreground hover:text-foreground hover:bg-secondary flex size-9 items-center justify-center rounded-full border border-white/5 shadow-sm transition-all"
                 aria-label="Expand player"
                 aria-expanded={isExpanded}
               >
                 <ChevronUp className="size-4" />
               </button>
             </div>
+
+            {/* Expand button for small screens */}
+            <button
+              type="button"
+              onClick={() => setIsExpanded(true)}
+              className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center rounded-full transition-colors sm:hidden"
+              aria-label="Expand player"
+              aria-expanded={isExpanded}
+            >
+              <ChevronUp className="size-4" />
+            </button>
           </div>
         </div>
       )}
