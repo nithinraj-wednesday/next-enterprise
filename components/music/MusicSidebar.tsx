@@ -299,7 +299,7 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
               </SidebarGroupLabel>
               <Link
                 href="/music/electronic"
-                className="text-muted-foreground hover:gold text-[10px] font-medium transition-colors"
+                className="text-muted-foreground hover:text-gold text-[10px] font-medium transition-colors"
               >
                 View All
               </Link>
