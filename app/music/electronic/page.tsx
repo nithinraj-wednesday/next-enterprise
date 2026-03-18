@@ -2,6 +2,7 @@
 
 import { EllipsisVertical } from "lucide-react"
 import { Suspense, useCallback, useEffect, useState } from "react"
+import { useFeatureFlagEnabled } from "posthog-js/react"
 import { MusicAppHeader, PlayerBar, TrackGridSkeleton } from "@/components/music/MusicComponents"
 import { MusicSidebarLayout } from "@/components/music/MusicSidebar"
 import { PlaylistDropdown } from "@/components/music/PlaylistDropdown"
@@ -10,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { useMusic } from "@/hooks/use-music"
 import { useMusicManagement } from "@/hooks/use-music-management"
 import { useSession } from "@/lib/auth-client"
-import { Track } from "@/lib/types"
+import { SearchResponse, Track } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 function ElectronicContent() {
@@ -48,11 +49,34 @@ function ElectronicContent() {
   } = useMusicManagement()
 
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [popularViewMode, setPopularViewMode] = useState<"grid" | "list">("grid")
+
+  const showPopular = useFeatureFlagEnabled("music-variants")
+  const [popularTracks, setPopularTracks] = useState<Track[]>([])
+  const [popularLoading, setPopularLoading] = useState(false)
 
   useEffect(() => {
     // Search for electronic music by default
     searchMusic("electronic")
   }, [searchMusic])
+
+  useEffect(() => {
+    if (!showPopular) return
+    async function fetchPopular() {
+      setPopularLoading(true)
+      try {
+        const res = await fetch(`/api/music/search?term=${encodeURIComponent("popular")}&entity=song&limit=25`)
+        const data = (await res.json()) as SearchResponse
+        setPopularTracks(data.results.filter((t) => t.previewUrl))
+      } catch (err) {
+        console.error("Popular search failed:", err)
+        setPopularTracks([])
+      } finally {
+        setPopularLoading(false)
+      }
+    }
+    fetchPopular()
+  }, [showPopular])
 
   const handlePlayTrack = useCallback(
     (track: Track) => {
@@ -119,6 +143,26 @@ function ElectronicContent() {
             viewMode={viewMode}
             onViewModeChange={setViewMode}
           />
+
+          {showPopular && (
+            <TrackListLayout
+              title="Most Searched"
+              subtitle="Popular tracks people are searching for right now."
+              tracks={popularTracks}
+              loading={popularLoading}
+              currentTrack={currentTrack}
+              isPlaying={isPlaying}
+              onPlay={handlePlayTrack}
+              onToggleFavorite={handleToggleFavorite}
+              favoriteIds={favoriteIds}
+              pendingFavoriteIds={pendingFavoriteIds}
+              formatTime={formatTime}
+              renderPlaylistMenu={renderPlaylistMenu}
+              viewMode={popularViewMode}
+              onViewModeChange={setPopularViewMode}
+              className="mt-12"
+            />
+          )}
         </main>
 
         <PlayerBar
