@@ -355,19 +355,20 @@ export function TrackCard({
               </div>
             ) : null}
           </div>
-
-          <div className="flex min-w-0 flex-col gap-0.5 px-0.5">
-            <div className="flex items-start justify-between gap-2">
+        </button>
+        <div className="flex min-w-0 items-start gap-2 px-0.5">
+          <button type="button" onClick={() => onPlay(track)} className="min-w-0 flex-1 cursor-pointer text-left">
+            <div className="flex flex-col gap-0.5">
               <span
                 className={cn("truncate text-sm leading-tight font-medium", isActive ? "text-gold" : "text-foreground")}
               >
                 {track.trackName}
               </span>
-              {optionsMenu && <div className="-mt-1.5 -mr-1.5 shrink-0">{optionsMenu}</div>}
+              <span className="text-muted-foreground truncate text-xs">{track.artistName}</span>
             </div>
-            <span className="text-muted-foreground truncate text-xs">{track.artistName}</span>
-          </div>
-        </button>
+          </button>
+          {optionsMenu && <div className="-mt-1.5 -mr-1.5 shrink-0">{optionsMenu}</div>}
+        </div>
       </div>
     </div>
   )

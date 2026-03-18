@@ -1,6 +1,6 @@
 import { and, desc, eq } from "drizzle-orm"
 import { db } from "./db"
-import { favoriteSong, playlist, playlistTrack, savedSharedPlaylist, user } from "./db-schema"
+import { favoriteSong, playlist, playlistTrack, user } from "./db-schema"
 import { Playlist, PlaylistTrack, SharedPlaylistView } from "./types"
 
 export function serializePlaylist(row: typeof playlist.$inferSelect): Playlist {
@@ -11,22 +11,11 @@ export function serializePlaylist(row: typeof playlist.$inferSelect): Playlist {
     isPublic: row.isPublic,
     shareUrl: row.isPublic && row.shareToken ? `/shared/${row.shareToken}` : undefined,
     sharedAt: row.sharedAt ? row.sharedAt.toISOString() : undefined,
+    ownerName: row.isSavedShared ? row.sourceOwnerName ?? undefined : undefined,
+    savedAt: row.isSavedShared ? row.createdAt.toISOString() : undefined,
+    isSavedShared: row.isSavedShared || undefined,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
-  }
-}
-
-function serializeSavedSharedPlaylist(
-  row: typeof playlist.$inferSelect & {
-    ownerName: string
-    savedAt: Date
-  }
-): Playlist {
-  return {
-    ...serializePlaylist(row),
-    ownerName: row.ownerName,
-    savedAt: row.savedAt.toISOString(),
-    isSavedShared: true,
   }
 }
 
@@ -47,32 +36,20 @@ export async function listPlaylistsForUser(userId: string) {
   const playlists = await db
     .select()
     .from(playlist)
-    .where(eq(playlist.userId, userId))
+    .where(and(eq(playlist.userId, userId), eq(playlist.isSavedShared, false)))
     .orderBy(desc(playlist.createdAt))
+
   return playlists.map(serializePlaylist)
 }
 
 export async function listSavedSharedPlaylistsForUser(userId: string) {
-  const rows = await db
-    .select({
-      id: playlist.id,
-      name: playlist.name,
-      isPublic: playlist.isPublic,
-      shareToken: playlist.shareToken,
-      sharedAt: playlist.sharedAt,
-      userId: playlist.userId,
-      createdAt: playlist.createdAt,
-      updatedAt: playlist.updatedAt,
-      ownerName: user.name,
-      savedAt: savedSharedPlaylist.savedAt,
-    })
-    .from(savedSharedPlaylist)
-    .innerJoin(playlist, eq(savedSharedPlaylist.playlistId, playlist.id))
-    .innerJoin(user, eq(playlist.userId, user.id))
-    .where(and(eq(savedSharedPlaylist.userId, userId), eq(playlist.isPublic, true)))
-    .orderBy(desc(savedSharedPlaylist.savedAt))
+  const playlists = await db
+    .select()
+    .from(playlist)
+    .where(and(eq(playlist.userId, userId), eq(playlist.isSavedShared, true)))
+    .orderBy(desc(playlist.createdAt))
 
-  return rows.map(serializeSavedSharedPlaylist)
+  return playlists.map(serializePlaylist)
 }
 
 export async function getPlaylistTracksForUser(userId: string, playlistId: string) {
@@ -100,51 +77,17 @@ export async function getPlaylistTracksForUser(userId: string, playlistId: strin
 }
 
 async function getAccessiblePlaylistRecordForUser(userId: string, playlistId: string) {
-  const ownedPlaylist = await db.query.playlist.findFirst({
+  const targetPlaylist = await db.query.playlist.findFirst({
     where: and(eq(playlist.id, playlistId), eq(playlist.userId, userId)),
   })
 
-  if (ownedPlaylist) {
-    return {
-      ownerId: ownedPlaylist.userId,
-      playlist: serializePlaylist(ownedPlaylist),
-    }
-  }
-
-  const rows = await db
-    .select({
-      id: playlist.id,
-      name: playlist.name,
-      isPublic: playlist.isPublic,
-      shareToken: playlist.shareToken,
-      sharedAt: playlist.sharedAt,
-      userId: playlist.userId,
-      createdAt: playlist.createdAt,
-      updatedAt: playlist.updatedAt,
-      ownerName: user.name,
-      savedAt: savedSharedPlaylist.savedAt,
-    })
-    .from(savedSharedPlaylist)
-    .innerJoin(playlist, eq(savedSharedPlaylist.playlistId, playlist.id))
-    .innerJoin(user, eq(playlist.userId, user.id))
-    .where(
-      and(
-        eq(savedSharedPlaylist.userId, userId),
-        eq(savedSharedPlaylist.playlistId, playlistId),
-        eq(playlist.isPublic, true)
-      )
-    )
-    .limit(1)
-
-  const savedPlaylist = rows[0]
-
-  if (!savedPlaylist) {
+  if (!targetPlaylist) {
     return null
   }
 
   return {
-    ownerId: savedPlaylist.userId,
-    playlist: serializeSavedSharedPlaylist(savedPlaylist),
+    ownerId: targetPlaylist.userId,
+    playlist: serializePlaylist(targetPlaylist),
   }
 }
 
@@ -179,37 +122,45 @@ export async function getSharedPlaylistByToken(
       isPublic: playlist.isPublic,
       shareToken: playlist.shareToken,
       sharedAt: playlist.sharedAt,
+      isSavedShared: playlist.isSavedShared,
+      sourcePlaylistId: playlist.sourcePlaylistId,
+      sourceOwnerId: playlist.sourceOwnerId,
+      sourceOwnerName: playlist.sourceOwnerName,
       createdAt: playlist.createdAt,
       updatedAt: playlist.updatedAt,
       ownerName: user.name,
     })
     .from(playlist)
     .innerJoin(user, eq(playlist.userId, user.id))
-    .where(and(eq(playlist.shareToken, token), eq(playlist.isPublic, true)))
+    .where(and(eq(playlist.shareToken, token), eq(playlist.isPublic, true), eq(playlist.isSavedShared, false)))
     .limit(1)
 
-  const targetPlaylist = rows[0]
+  const sourcePlaylist = rows[0]
 
-  if (!targetPlaylist) {
+  if (!sourcePlaylist) {
     return null
   }
 
-  const tracks = await getPlaylistTracksForUser(targetPlaylist.userId, targetPlaylist.id)
+  const tracks = await getPlaylistTracksForUser(sourcePlaylist.userId, sourcePlaylist.id)
   let isSavedByViewer = false
 
-  if (viewerUserId && viewerUserId !== targetPlaylist.userId) {
-    const existingSave = await db.query.savedSharedPlaylist.findFirst({
-      where: and(eq(savedSharedPlaylist.userId, viewerUserId), eq(savedSharedPlaylist.playlistId, targetPlaylist.id)),
+  if (viewerUserId && viewerUserId !== sourcePlaylist.userId) {
+    const existingSnapshot = await db.query.playlist.findFirst({
+      where: and(
+        eq(playlist.userId, viewerUserId),
+        eq(playlist.isSavedShared, true),
+        eq(playlist.sourcePlaylistId, sourcePlaylist.id)
+      ),
     })
 
-    isSavedByViewer = Boolean(existingSave)
+    isSavedByViewer = Boolean(existingSnapshot)
   }
 
   return {
     playlist: {
-      ...serializePlaylist(targetPlaylist),
-      ownerId: targetPlaylist.userId,
-      ownerName: targetPlaylist.ownerName,
+      ...serializePlaylist(sourcePlaylist),
+      ownerId: sourcePlaylist.userId,
+      ownerName: sourcePlaylist.ownerName,
       isSavedByViewer,
     },
     tracks,
@@ -224,6 +175,10 @@ export async function saveSharedPlaylistForUser(userId: string, token: string) {
       isPublic: playlist.isPublic,
       shareToken: playlist.shareToken,
       sharedAt: playlist.sharedAt,
+      isSavedShared: playlist.isSavedShared,
+      sourcePlaylistId: playlist.sourcePlaylistId,
+      sourceOwnerId: playlist.sourceOwnerId,
+      sourceOwnerName: playlist.sourceOwnerName,
       userId: playlist.userId,
       createdAt: playlist.createdAt,
       updatedAt: playlist.updatedAt,
@@ -231,97 +186,111 @@ export async function saveSharedPlaylistForUser(userId: string, token: string) {
     })
     .from(playlist)
     .innerJoin(user, eq(playlist.userId, user.id))
-    .where(and(eq(playlist.shareToken, token), eq(playlist.isPublic, true)))
+    .where(and(eq(playlist.shareToken, token), eq(playlist.isPublic, true), eq(playlist.isSavedShared, false)))
     .limit(1)
 
-  const targetPlaylist = rows[0]
+  const sourcePlaylist = rows[0]
 
-  if (!targetPlaylist) {
+  if (!sourcePlaylist) {
     return null
   }
 
-  if (targetPlaylist.userId === userId) {
+  if (sourcePlaylist.userId === userId) {
     return {
-      playlist: serializePlaylist(targetPlaylist),
+      playlist: serializePlaylist(sourcePlaylist),
       alreadySaved: true,
     }
   }
 
-  const existingSave = await db.query.savedSharedPlaylist.findFirst({
-    where: and(eq(savedSharedPlaylist.userId, userId), eq(savedSharedPlaylist.playlistId, targetPlaylist.id)),
+  const existingSnapshot = await db.query.playlist.findFirst({
+    where: and(
+      eq(playlist.userId, userId),
+      eq(playlist.isSavedShared, true),
+      eq(playlist.sourcePlaylistId, sourcePlaylist.id)
+    ),
   })
 
-  if (existingSave) {
-    const savedRows = await db
-      .select({
-        id: playlist.id,
-        name: playlist.name,
-        isPublic: playlist.isPublic,
-        shareToken: playlist.shareToken,
-        sharedAt: playlist.sharedAt,
-        userId: playlist.userId,
-        createdAt: playlist.createdAt,
-        updatedAt: playlist.updatedAt,
-        ownerName: user.name,
-        savedAt: savedSharedPlaylist.savedAt,
-      })
-      .from(savedSharedPlaylist)
-      .innerJoin(playlist, eq(savedSharedPlaylist.playlistId, playlist.id))
-      .innerJoin(user, eq(playlist.userId, user.id))
-      .where(and(eq(savedSharedPlaylist.userId, userId), eq(savedSharedPlaylist.playlistId, targetPlaylist.id)))
-      .limit(1)
-
-    const savedPlaylist = savedRows[0]
-
+  if (existingSnapshot) {
     return {
-      playlist: savedPlaylist ? serializeSavedSharedPlaylist(savedPlaylist) : serializePlaylist(targetPlaylist),
+      playlist: serializePlaylist(existingSnapshot),
       alreadySaved: true,
     }
   }
 
+  const sourceTracks = await getPlaylistTracksForUser(sourcePlaylist.userId, sourcePlaylist.id)
+  const snapshotId = crypto.randomUUID()
   const now = new Date()
 
-  await db
-    .insert(savedSharedPlaylist)
-    .values({
+  const persistedSnapshot = await db.transaction(async (tx) => {
+    await tx.insert(playlist).values({
+      id: snapshotId,
+      name: sourcePlaylist.name,
+      isPublic: false,
+      shareToken: null,
+      sharedAt: null,
+      isSavedShared: true,
+      sourcePlaylistId: sourcePlaylist.id,
+      sourceOwnerId: sourcePlaylist.userId,
+      sourceOwnerName: sourcePlaylist.ownerName,
       userId,
-      playlistId: targetPlaylist.id,
-      savedAt: now,
-    })
-    .onConflictDoNothing({
-      target: [savedSharedPlaylist.userId, savedSharedPlaylist.playlistId],
+      createdAt: now,
+      updatedAt: now,
     })
 
-  const savedRows = await db
-    .select({
-      id: playlist.id,
-      name: playlist.name,
-      isPublic: playlist.isPublic,
-      shareToken: playlist.shareToken,
-      sharedAt: playlist.sharedAt,
-      userId: playlist.userId,
-      createdAt: playlist.createdAt,
-      updatedAt: playlist.updatedAt,
-      ownerName: user.name,
-      savedAt: savedSharedPlaylist.savedAt,
+    const snapshot = await tx.query.playlist.findFirst({
+      where: and(
+        eq(playlist.userId, userId),
+        eq(playlist.isSavedShared, true),
+        eq(playlist.sourcePlaylistId, sourcePlaylist.id)
+      ),
     })
-    .from(savedSharedPlaylist)
-    .innerJoin(playlist, eq(savedSharedPlaylist.playlistId, playlist.id))
-    .innerJoin(user, eq(playlist.userId, user.id))
-    .where(and(eq(savedSharedPlaylist.userId, userId), eq(savedSharedPlaylist.playlistId, targetPlaylist.id)))
-    .limit(1)
 
-  const savedPlaylist = savedRows[0]
-
-  if (!savedPlaylist) {
-    return {
-      playlist: serializePlaylist(targetPlaylist),
-      alreadySaved: false,
+    if (!snapshot) {
+      throw new Error("Saved shared playlist snapshot was not persisted")
     }
-  }
+
+    if (sourceTracks.length > 0) {
+      await tx
+        .insert(favoriteSong)
+        .values(
+          sourceTracks.map((track) => ({
+            userId,
+            trackId: track.trackId,
+            trackName: track.trackName,
+            artistName: track.artistName,
+            collectionName: track.collectionName,
+            previewUrl: track.previewUrl,
+            artworkUrl60: track.artworkUrl60,
+            artworkUrl100: track.artworkUrl100,
+            trackTimeMillis: track.trackTimeMillis,
+            primaryGenreName: track.primaryGenreName,
+            trackViewUrl: track.trackViewUrl ?? null,
+            createdAt: now,
+          }))
+        )
+        .onConflictDoNothing({
+          target: [favoriteSong.userId, favoriteSong.trackId],
+        })
+
+      await tx
+        .insert(playlistTrack)
+        .values(
+          sourceTracks.map((track) => ({
+            playlistId: snapshot.id,
+            trackId: track.trackId,
+            addedAt: new Date(track.addedAt),
+          }))
+        )
+        .onConflictDoNothing({
+          target: [playlistTrack.playlistId, playlistTrack.trackId],
+        })
+    }
+
+    return snapshot
+  })
 
   return {
-    playlist: serializeSavedSharedPlaylist(savedPlaylist),
+    playlist: serializePlaylist(persistedSnapshot),
     alreadySaved: false,
   }
 }
