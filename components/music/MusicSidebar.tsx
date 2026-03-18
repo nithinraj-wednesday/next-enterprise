@@ -212,19 +212,23 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
                 ) : (
                   recentlyPlayed.slice(0, 5).map((track) => (
                     <SidebarMenuItem key={`recent-${track.trackId}`}>
-                      <SidebarMenuButton asChild tooltip={`${track.trackName} — ${track.artistName}`}>
-                        <Link href={`/music?search=${encodeURIComponent(track.trackName)}`} className="flex gap-2">
-                          <div className="relative size-6 shrink-0 overflow-hidden rounded shadow-sm">
-                            <Image
-                              src={getArtworkUrl(track.artworkUrl100, "small")}
-                              alt={track.trackName}
-                              className="object-cover"
-                              fill
-                              sizes="24px"
-                            />
-                          </div>
-                          <span className="truncate">{track.trackName}</span>
-                        </Link>
+                      <SidebarMenuButton
+                        tooltip={`${track.trackName} — ${track.artistName}`}
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent("play-track", { detail: track }))
+                        }}
+                        className="flex gap-2"
+                      >
+                        <div className="relative size-6 shrink-0 overflow-hidden rounded shadow-sm">
+                          <Image
+                            src={getArtworkUrl(track.artworkUrl100, "small")}
+                            alt={track.trackName}
+                            className="object-cover"
+                            fill
+                            sizes="24px"
+                          />
+                        </div>
+                        <span className="truncate">{track.trackName}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))

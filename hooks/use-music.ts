@@ -136,6 +136,16 @@ export function useMusic() {
     [volume]
   )
 
+  // Listen for play-track events from sidebar
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const track = (e as CustomEvent<Track>).detail
+      if (track?.previewUrl) playTrack(track)
+    }
+    window.addEventListener("play-track", handler)
+    return () => window.removeEventListener("play-track", handler)
+  }, [playTrack])
+
   const togglePlayPause = useCallback(() => {
     if (!audioRef.current) return
     if (isPlaying) {
