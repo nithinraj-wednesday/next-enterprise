@@ -1,8 +1,8 @@
 "use client"
 
 import { EllipsisVertical } from "lucide-react"
-import { Suspense, useCallback, useEffect, useState } from "react"
 import { useFeatureFlagEnabled } from "posthog-js/react"
+import { Suspense, useCallback, useEffect, useState } from "react"
 import { MusicAppHeader, PlayerBar, TrackGridSkeleton } from "@/components/music/MusicComponents"
 import { MusicSidebarLayout } from "@/components/music/MusicSidebar"
 import { PlaylistDropdown } from "@/components/music/PlaylistDropdown"
