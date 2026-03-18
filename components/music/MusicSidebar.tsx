@@ -148,18 +148,21 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
     <SidebarProvider>
       <Sidebar variant="sidebar" collapsible="offcanvas" className="border-sidebar-border border-r">
         <SidebarHeader className="px-3 py-4">
-          <Link href="/" className="flex items-center gap-2.5" aria-label="Go to home page">
-            <div className="relative size-8">
-              <div className="from-gold/80 to-gold/40 absolute inset-0 rounded-full bg-gradient-to-br">
-                <div className="bg-sidebar absolute inset-[35%] rounded-full" />
+          <div className="flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-2.5" aria-label="Go to home page">
+              <div className="relative size-8">
+                <div className="from-gold/80 to-gold/40 absolute inset-0 rounded-full bg-gradient-to-br">
+                  <div className="bg-sidebar absolute inset-[35%] rounded-full" />
+                </div>
               </div>
-            </div>
-            <div>
-              <span className="font-display text-sidebar-foreground text-base leading-none font-bold tracking-tight">
-                Obsidian<span className="text-sidebar-primary">Sound</span>
-              </span>
-            </div>
-          </Link>
+              <div>
+                <span className="font-display text-sidebar-foreground text-base leading-none font-bold tracking-tight">
+                  Obsidian<span className="text-sidebar-primary">Sound</span>
+                </span>
+              </div>
+            </Link>
+            <SidebarTrigger className="text-sidebar-foreground/60 hover:text-sidebar-foreground" />
+          </div>
         </SidebarHeader>
 
         <SidebarContent>

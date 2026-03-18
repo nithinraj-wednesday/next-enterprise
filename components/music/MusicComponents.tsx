@@ -21,7 +21,7 @@ import { useEffect, useRef, useState } from "react"
 import { getArtworkUrl } from "@/app/music/constants"
 import { ProfileDropdown } from "@/components/ProfileDropdown"
 import { ThemeToggle } from "@/components/ThemeToggle"
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar"
 import { PlayerBarProps, SearchBarProps, TrackCardProps, TrackRowProps } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -78,11 +78,13 @@ export function FavoriteButton({ isFavorite, isPending, onClick }: FavoriteButto
 }
 
 export function MusicAppHeader({ playlistCount: _playlistCount, userName: _userName, searchBar }: MusicAppHeaderProps) {
+  const { open } = useSidebar()
+
   return (
     <div className="mb-8 flex flex-col gap-4 sm:mb-12">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <SidebarTrigger className="md:hidden" />
+          {!open && <SidebarTrigger />}
           <Link href="/" className="flex shrink-0 items-center gap-3" aria-label="Go to home page">
             <div className="relative size-9">
               <div className="from-gold/80 to-gold/40 absolute inset-0 rounded-full bg-gradient-to-br">
@@ -657,7 +659,7 @@ export function PlayerBar({
               style={{ left: `${progress}%` }}
             />
           </div>
-          <div className="mx-auto grid max-w-screen-2xl grid-cols-2 items-center gap-4 px-4 py-2.5 sm:grid-cols-3 sm:px-6">
+          <div className="mx-auto grid max-w-screen-2xl grid-cols-[1fr_auto_auto] items-center gap-2 px-4 py-2.5 sm:grid-cols-[1fr_auto_1fr] sm:gap-4 sm:px-6">
             {/* Left: Track info */}
             <div className="flex min-w-0 items-center gap-3">
               <div className="relative size-12 shrink-0 overflow-hidden rounded-lg shadow-lg ring-1 ring-white/5">
@@ -757,13 +759,27 @@ export function PlayerBar({
             </div>
 
             {/* Simplified controls for smaller screens (below sm) */}
-            <div className="flex items-center gap-1 sm:hidden">
+            <div className="flex items-center justify-center gap-1 sm:hidden">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onShuffle()
+                }}
+                className={cn(
+                  "p-1.5 transition-colors",
+                  isShuffled ? "text-gold" : "text-muted-foreground hover:text-foreground"
+                )}
+                aria-label={isShuffled ? "Shuffle on" : "Shuffle off"}
+                aria-pressed={isShuffled}
+              >
+                <HugeiconsIcon icon={ShuffleIcon} className="size-4" strokeWidth={2.5} />
+              </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation()
                   onPrevious()
                 }}
-                className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+                className="text-muted-foreground hover:text-foreground p-1.5 transition-colors"
                 aria-label="Previous"
               >
                 <HugeiconsIcon icon={PreviousIcon} className="size-5" fill="currentColor" />
@@ -787,10 +803,24 @@ export function PlayerBar({
                   e.stopPropagation()
                   onNext()
                 }}
-                className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+                className="text-muted-foreground hover:text-foreground p-1.5 transition-colors"
                 aria-label="Next"
               >
                 <HugeiconsIcon icon={NextIcon} className="size-5" fill="currentColor" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onRepeat()
+                }}
+                className={cn(
+                  "p-1.5 transition-colors",
+                  repeatMode !== "off" ? "text-gold" : "text-muted-foreground hover:text-foreground"
+                )}
+                aria-label={`Repeat ${repeatMode}`}
+                aria-pressed={repeatMode !== "off"}
+              >
+                <HugeiconsIcon icon={RepeatIcon} className="size-4" strokeWidth={2.5} />
               </button>
             </div>
 
@@ -844,7 +874,10 @@ export function PlayerBar({
             {/* Expand button for small screens */}
             <button
               type="button"
-              onClick={() => setIsExpanded(true)}
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsExpanded(true)
+              }}
               className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center rounded-full transition-colors sm:hidden"
               aria-label="Expand player"
               aria-expanded={isExpanded}
