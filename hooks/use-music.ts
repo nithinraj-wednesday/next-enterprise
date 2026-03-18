@@ -60,6 +60,17 @@ export function useMusic() {
     (track: Track) => {
       if (!track.previewUrl) return
 
+      // Save to Recently Played
+      try {
+        const stored = localStorage.getItem("recently-played")
+        const recentlyPlayed: Track[] = stored ? (JSON.parse(stored) as Track[]) : []
+        const updated = [track, ...recentlyPlayed.filter((t: Track) => t.trackId !== track.trackId)].slice(0, 50)
+        localStorage.setItem("recently-played", JSON.stringify(updated))
+        window.dispatchEvent(new Event("recently-played-updated"))
+      } catch (e) {
+        console.warn("Failed to update recently played:", e)
+      }
+
       if (audioRef.current) {
         audioRef.current.pause()
         if (endedHandlerRef.current) {

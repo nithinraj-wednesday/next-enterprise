@@ -6,6 +6,7 @@ import posthog from "posthog-js"
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { MusicAppHeader, PlayerBar, SearchBar, TrackRow } from "@/components/music/MusicComponents"
+import { MusicSidebarLayout } from "@/components/music/MusicSidebar"
 import { PlaylistDropdown } from "@/components/music/PlaylistDropdown"
 import {
   AlertDialog,
@@ -590,516 +591,524 @@ export function FavoritesPageClient({
   }, [playlistToRename, playlistToShare])
 
   return (
-    <div className="bg-background relative min-h-screen">
-      <div className="noise-overlay" />
+    <MusicSidebarLayout>
+      <div className="bg-background relative min-h-screen">
+        <div className="noise-overlay" />
 
-      <header className="relative pt-8 pb-4 sm:pt-12 sm:pb-6">
-        <div className="relative z-30 mx-auto max-w-screen-xl px-4 sm:px-6">
-          <MusicAppHeader
-            activeRoute="favorites"
-            playlistCount={playlists.length + 1}
-            userName={userName}
-            searchBar={<SearchBar onSearch={handleSearch} loading={false} className="!px-4 !py-2" />}
-          />
-        </div>
-      </header>
-
-      <main className={cn("relative z-10 mx-auto max-w-screen-xl px-4 py-6 sm:px-6 sm:py-10", currentTrack && "pb-28")}>
-        {pageError ? (
-          <div className="animate-fade-up mb-6 rounded-2xl border border-red-400/20 bg-red-500/8 px-4 py-3 text-sm text-red-100">
-            {pageError}
+        <header className="relative pt-8 pb-4 sm:pt-12 sm:pb-6">
+          <div className="relative z-30 mx-auto max-w-screen-xl px-4 sm:px-6">
+            <MusicAppHeader
+              playlistCount={playlists.length + 1}
+              userName={userName}
+              searchBar={<SearchBar onSearch={handleSearch} loading={false} className="!px-4 !py-2" />}
+            />
           </div>
-        ) : null}
+        </header>
 
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            <h2 className="font-display text-foreground text-2xl font-semibold">Your Library</h2>
-            <p className="text-muted-foreground text-sm">
-              My Liked Songs comes first, followed by your playlists and anything shared with you.
-            </p>
+        <main
+          className={cn("relative z-10 mx-auto max-w-screen-xl px-4 py-6 sm:px-6 sm:py-10", currentTrack && "pb-28")}
+        >
+          {pageError ? (
+            <div className="animate-fade-up mb-6 rounded-2xl border border-red-400/20 bg-red-500/8 px-4 py-3 text-sm text-red-100">
+              {pageError}
+            </div>
+          ) : null}
+
+          <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-col gap-1">
+              <h2 className="font-display text-foreground text-2xl font-semibold">Your Library</h2>
+              <p className="text-muted-foreground text-sm">
+                My Liked Songs comes first, followed by your playlists and anything shared with you.
+              </p>
+            </div>
+
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <Button
+                type="button"
+                onClick={() => setIsCreateDialogOpen(true)}
+                className="border-gold/30 bg-gold/10 text-gold hover:bg-gold/15"
+              >
+                <Plus data-icon="inline-start" />
+                Create Playlist
+              </Button>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create playlist</DialogTitle>
+                  <DialogDescription>Give your new playlist a name.</DialogDescription>
+                </DialogHeader>
+
+                <form onSubmit={handleCreatePlaylist} className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="create-playlist-name">Playlist name</Label>
+                    <Input
+                      id="create-playlist-name"
+                      autoFocus
+                      value={createPlaylistName}
+                      onChange={(event) => setCreatePlaylistName(event.target.value)}
+                      placeholder="Night Drive, Focus Mix..."
+                      maxLength={64}
+                    />
+                  </div>
+
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={isCreatingPlaylist}>
+                      {isCreatingPlaylist ? (
+                        <>
+                          <Loader2 data-icon="inline-start" className="animate-spin" />
+                          Creating...
+                        </>
+                      ) : (
+                        "Create"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
 
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <Button
-              type="button"
-              onClick={() => setIsCreateDialogOpen(true)}
-              className="border-gold/30 bg-gold/10 text-gold hover:bg-gold/15"
-            >
-              <Plus data-icon="inline-start" />
-              Create Playlist
-            </Button>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create playlist</DialogTitle>
-                <DialogDescription>Give your new playlist a name.</DialogDescription>
-              </DialogHeader>
-
-              <form onSubmit={handleCreatePlaylist} className="flex flex-col gap-4">
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="create-playlist-name">Playlist name</Label>
-                  <Input
-                    id="create-playlist-name"
-                    autoFocus
-                    value={createPlaylistName}
-                    onChange={(event) => setCreatePlaylistName(event.target.value)}
-                    placeholder="Night Drive, Focus Mix..."
-                    maxLength={64}
-                  />
-                </div>
-
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={isCreatingPlaylist}>
-                    {isCreatingPlaylist ? (
-                      <>
-                        <Loader2 data-icon="inline-start" className="animate-spin" />
-                        Creating...
-                      </>
-                    ) : (
-                      "Create"
-                    )}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        <ScrollArea className="w-full pb-4 whitespace-nowrap">
-          <div className="flex w-max gap-3 px-1 pt-2 pb-2">
-            <Card
-              role="button"
-              tabIndex={0}
-              onClick={() => setSelectedPlaylistId(LIKED_PLAYLIST_ID)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault()
-                  setSelectedPlaylistId(LIKED_PLAYLIST_ID)
-                }
-              }}
-              className={cn(
-                "w-[min(85vw,20rem)] shrink-0 cursor-pointer snap-start transition-all hover:-translate-y-0.5",
-                selectedPlaylistId === LIKED_PLAYLIST_ID
-                  ? "ring-gold/40 bg-gold/8 ring-2"
-                  : "ring-border/40 hover:ring-border"
-              )}
-            >
-              <CardHeader>
-                <CardTitle className="font-display">{LIKED_PLAYLIST_NAME}</CardTitle>
-                <CardDescription>Pinned playlist</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <p className="text-muted-foreground text-sm">{favorites.length} tracks</p>
-              </CardContent>
-            </Card>
-
-            {playlists.map((playlist) => (
+          <ScrollArea className="mb-6 w-full pb-4 whitespace-nowrap">
+            <div className="flex w-max gap-3 px-1 pt-2 pb-2">
               <Card
-                key={playlist.id}
                 role="button"
                 tabIndex={0}
-                onClick={() => setSelectedPlaylistId(playlist.id)}
+                onClick={() => setSelectedPlaylistId(LIKED_PLAYLIST_ID)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault()
-                    setSelectedPlaylistId(playlist.id)
+                    setSelectedPlaylistId(LIKED_PLAYLIST_ID)
                   }
                 }}
                 className={cn(
                   "w-[min(85vw,20rem)] shrink-0 cursor-pointer snap-start transition-all hover:-translate-y-0.5",
-                  selectedPlaylistId === playlist.id
+                  selectedPlaylistId === LIKED_PLAYLIST_ID
                     ? "ring-gold/40 bg-gold/8 ring-2"
                     : "ring-border/40 hover:ring-border"
                 )}
               >
-                <CardHeader className="flex items-start justify-between gap-3">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
-                      <CardTitle className="font-display truncate">{playlist.name}</CardTitle>
+                <CardHeader>
+                  <CardTitle className="font-display">{LIKED_PLAYLIST_NAME}</CardTitle>
+                  <CardDescription>Pinned playlist</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <p className="text-muted-foreground text-sm">{favorites.length} tracks</p>
+                </CardContent>
+              </Card>
+
+              {playlists.map((playlist) => (
+                <Card
+                  key={playlist.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setSelectedPlaylistId(playlist.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault()
+                      setSelectedPlaylistId(playlist.id)
+                    }
+                  }}
+                  className={cn(
+                    "w-[min(85vw,20rem)] shrink-0 cursor-pointer snap-start transition-all hover:-translate-y-0.5",
+                    selectedPlaylistId === playlist.id
+                      ? "ring-gold/40 bg-gold/8 ring-2"
+                      : "ring-border/40 hover:ring-border"
+                  )}
+                >
+                  <CardHeader className="flex items-start justify-between gap-3">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="font-display truncate">{playlist.name}</CardTitle>
+                        {playlist.isSavedShared ? (
+                          <span className="border-border/60 bg-secondary/55 text-muted-foreground inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] tracking-[0.18em] uppercase">
+                            Shared
+                          </span>
+                        ) : playlist.isPublic ? (
+                          <span className="border-gold/30 bg-gold/10 text-gold inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] tracking-[0.18em] uppercase">
+                            Public
+                          </span>
+                        ) : null}
+                      </div>
+                      <CardDescription>
+                        {playlist.isSavedShared
+                          ? `Shared by ${playlist.ownerName ?? "Unknown"}`
+                          : `${playlistTracksMap[playlist.id]?.size ?? 0} tracks`}
+                      </CardDescription>
                       {playlist.isSavedShared ? (
-                        <span className="border-border/60 bg-secondary/55 text-muted-foreground inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] tracking-[0.18em] uppercase">
-                          Shared
-                        </span>
-                      ) : playlist.isPublic ? (
-                        <span className="border-gold/30 bg-gold/10 text-gold inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] tracking-[0.18em] uppercase">
-                          Public
-                        </span>
+                        <p className="text-muted-foreground text-sm">
+                          {playlistTracksMap[playlist.id]?.size ?? 0} tracks
+                        </p>
                       ) : null}
                     </div>
-                    <CardDescription>
-                      {playlist.isSavedShared
-                        ? `Shared by ${playlist.ownerName ?? "Unknown"}`
-                        : `${playlistTracksMap[playlist.id]?.size ?? 0} tracks`}
-                    </CardDescription>
-                    {playlist.isSavedShared ? (
-                      <p className="text-muted-foreground text-sm">
-                        {playlistTracksMap[playlist.id]?.size ?? 0} tracks
-                      </p>
+
+                    {ownedPlaylistIdSet.has(playlist.id) ? (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={(event) => event.stopPropagation()}
+                            aria-label={`Manage ${playlist.name}`}
+                          >
+                            <EllipsisVertical />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
+                          <DropdownMenuGroup>
+                            <DropdownMenuItem
+                              onSelect={() => {
+                                requestAnimationFrame(() => setPlaylistToShare(playlist))
+                              }}
+                            >
+                              <Share2 data-icon="inline-start" />
+                              Share
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onSelect={() => {
+                                requestAnimationFrame(() => {
+                                  setPlaylistToRename(playlist)
+                                  setRenamePlaylistName(playlist.name)
+                                })
+                              }}
+                            >
+                              <PencilLine data-icon="inline-start" />
+                              Rename
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              variant="destructive"
+                              onSelect={() => {
+                                requestAnimationFrame(() => setPlaylistToDelete(playlist))
+                              }}
+                            >
+                              <Trash2 data-icon="inline-start" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     ) : null}
-                  </div>
-
-                  {ownedPlaylistIdSet.has(playlist.id) ? (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          onClick={(event) => event.stopPropagation()}
-                          aria-label={`Manage ${playlist.name}`}
-                        >
-                          <EllipsisVertical />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
-                        <DropdownMenuGroup>
-                          <DropdownMenuItem
-                            onSelect={() => {
-                              requestAnimationFrame(() => setPlaylistToShare(playlist))
-                            }}
-                          >
-                            <Share2 data-icon="inline-start" />
-                            Share
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onSelect={() => {
-                              requestAnimationFrame(() => {
-                                setPlaylistToRename(playlist)
-                                setRenamePlaylistName(playlist.name)
-                              })
-                            }}
-                          >
-                            <PencilLine data-icon="inline-start" />
-                            Rename
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            variant="destructive"
-                            onSelect={() => {
-                              requestAnimationFrame(() => setPlaylistToDelete(playlist))
-                            }}
-                          >
-                            <Trash2 data-icon="inline-start" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuGroup>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  ) : null}
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
-
-        <Card className="glass-card border-border/30 overflow-hidden rounded-[2rem] border">
-          <CardHeader className="border-border/50 border-b">
-            <div className="flex flex-wrap items-center gap-3">
-              <CardTitle className="font-display text-foreground text-2xl font-semibold">
-                {selectedPlaylistName}
-              </CardTitle>
-              {selectedPlaylist?.isSavedShared ? (
-                <span className="border-border/60 bg-secondary/55 text-muted-foreground inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] tracking-[0.18em] uppercase">
-                  Shared by {selectedPlaylist.ownerName ?? "Unknown"}
-                </span>
-              ) : selectedPlaylistId !== LIKED_PLAYLIST_ID && selectedPlaylist?.isPublic ? (
-                <span className="border-gold/30 bg-gold/10 text-gold inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] tracking-[0.18em] uppercase">
-                  Public
-                </span>
-              ) : null}
+                  </CardHeader>
+                </Card>
+              ))}
             </div>
-            <div className="flex items-center gap-2">
-              <CardDescription>{selectedPlaylistTrackCount} tracks</CardDescription>
-              {searchTerm && (
-                <span className="text-muted-foreground/60 text-xs">
-                  · {filteredTracks.length} found for &quot;{searchTerm}&quot;
-                </span>
-              )}
-            </div>
-          </CardHeader>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
 
-          <CardContent className="px-0">
-            {isActivePlaylistLoading ? (
-              <div className="text-muted-foreground flex items-center justify-center gap-2 px-4 py-10 text-sm">
-                <Loader2 className="size-4 animate-spin" />
-                Loading playlist tracks...
-              </div>
-            ) : filteredTracks.length === 0 ? (
-              <div className="flex flex-col items-center gap-4 px-4 py-12 text-center">
-                <p className="text-muted-foreground text-sm">
-                  {searchTerm
-                    ? `No matches found for "${searchTerm}" in this playlist.`
-                    : selectedPlaylistId === LIKED_PLAYLIST_ID
-                    ? "No liked songs yet. Add songs from Discover to fill this playlist."
-                    : "No songs in this playlist yet."}
-                </p>
-                {selectedPlaylistId === LIKED_PLAYLIST_ID ? (
-                  <Button asChild variant="outline">
-                    <Link href="/music">Browse songs</Link>
-                  </Button>
+          <Card className="glass-card border-border/30 overflow-hidden rounded-[2rem] border">
+            <CardHeader className="border-border/50 border-b">
+              <div className="flex flex-wrap items-center gap-3">
+                <CardTitle className="font-display text-foreground text-2xl font-semibold">
+                  {selectedPlaylistName}
+                </CardTitle>
+                {selectedPlaylist?.isSavedShared ? (
+                  <span className="border-border/60 bg-secondary/55 text-muted-foreground inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] tracking-[0.18em] uppercase">
+                    Shared by {selectedPlaylist.ownerName ?? "Unknown"}
+                  </span>
+                ) : selectedPlaylistId !== LIKED_PLAYLIST_ID && selectedPlaylist?.isPublic ? (
+                  <span className="border-gold/30 bg-gold/10 text-gold inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] tracking-[0.18em] uppercase">
+                    Public
+                  </span>
                 ) : null}
               </div>
-            ) : (
-              <>
-                <div className="text-muted-foreground border-border/50 mb-2 flex items-center gap-4 border-b px-3 py-3 text-xs tracking-[0.18em] uppercase">
-                  <span className="w-8 text-center">#</span>
-                  <span className="size-10 shrink-0" />
-                  <span className="flex-1">Track</span>
-                  <span className="hidden md:inline-flex">Genre</span>
-                  <span className="ml-4 shrink-0">Duration</span>
+              <div className="flex items-center gap-2">
+                <CardDescription>{selectedPlaylistTrackCount} tracks</CardDescription>
+                {searchTerm && (
+                  <span className="text-muted-foreground/60 text-xs">
+                    · {filteredTracks.length} found for &quot;{searchTerm}&quot;
+                  </span>
+                )}
+              </div>
+            </CardHeader>
+
+            <CardContent className="px-0">
+              {isActivePlaylistLoading ? (
+                <div className="text-muted-foreground flex items-center justify-center gap-2 px-4 py-10 text-sm">
+                  <Loader2 className="size-4 animate-spin" />
+                  Loading playlist tracks...
+                </div>
+              ) : filteredTracks.length === 0 ? (
+                <div className="flex flex-col items-center gap-4 px-4 py-12 text-center">
+                  <p className="text-muted-foreground text-sm">
+                    {searchTerm
+                      ? `No matches found for "${searchTerm}" in this playlist.`
+                      : selectedPlaylistId === LIKED_PLAYLIST_ID
+                      ? "No liked songs yet. Add songs from Discover to fill this playlist."
+                      : "No songs in this playlist yet."}
+                  </p>
+                  {selectedPlaylistId === LIKED_PLAYLIST_ID ? (
+                    <Button asChild variant="outline">
+                      <Link href="/music">Browse songs</Link>
+                    </Button>
+                  ) : null}
+                </div>
+              ) : (
+                <>
+                  <div className="text-muted-foreground border-border/50 mb-2 flex items-center gap-4 border-b px-3 py-3 text-xs tracking-[0.18em] uppercase">
+                    <span className="w-8 text-center">#</span>
+                    <span className="size-10 shrink-0" />
+                    <span className="flex-1">Track</span>
+                    <span className="hidden md:inline-flex">Genre</span>
+                    <span className="ml-4 shrink-0">Duration</span>
+                  </div>
+
+                  <div className="flex flex-col gap-1 px-3 pb-3">
+                    {filteredTracks.map((track, index) => (
+                      <TrackRow
+                        key={`${selectedPlaylistId}-${track.trackId}`}
+                        track={track}
+                        isActive={currentTrack?.trackId === track.trackId}
+                        isPlaying={isPlaying}
+                        onPlay={handlePlayTrack}
+                        onToggleFavorite={selectedPlaylistId === LIKED_PLAYLIST_ID ? handleToggleFavorite : undefined}
+                        isFavorite={selectedPlaylistId === LIKED_PLAYLIST_ID}
+                        isFavoritePending={pendingFavoriteIds.includes(track.trackId)}
+                        index={index}
+                        formatTime={formatTime}
+                        optionsMenu={
+                          editablePlaylists.length > 0 || selectedPlaylistIsEditable ? (
+                            <div className="flex items-center gap-1">
+                              {editablePlaylists.length > 0 ? (
+                                <PlaylistDropdown
+                                  track={track}
+                                  playlists={editablePlaylists}
+                                  playlistTracksMap={playlistTracksMap}
+                                  onAddToPlaylist={handleAddToPlaylist}
+                                  onRemoveFromPlaylist={handleRemoveFromPlaylist}
+                                  trigger={
+                                    <Button variant="ghost" size="icon-sm" aria-label="Manage playlist membership">
+                                      <Plus />
+                                    </Button>
+                                  }
+                                />
+                              ) : null}
+
+                              {selectedPlaylistIsEditable ? (
+                                <Button
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  onClick={() => void handleRemoveFromPlaylist(selectedPlaylistId, track.trackId)}
+                                  className="text-destructive hover:text-destructive"
+                                  aria-label="Remove from this playlist"
+                                >
+                                  <Trash2 />
+                                </Button>
+                              ) : null}
+                            </div>
+                          ) : undefined
+                        }
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </main>
+
+        <Dialog
+          open={playlistToShare !== null}
+          onOpenChange={(open) => {
+            if (!open && !isUpdatingShare) {
+              setPlaylistToShare(null)
+            }
+          }}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Share playlist</DialogTitle>
+              <DialogDescription>
+                {playlistToShare?.isPublic
+                  ? "This playlist has a stable public link. Anyone with the link can save it into their own library."
+                  : "Publish this playlist to create a public, read-only link anyone can open."}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="flex flex-col gap-4">
+              <div className="bg-secondary/40 border-border/50 flex items-start justify-between rounded-xl border p-4">
+                <div className="space-y-1">
+                  <p className="text-foreground font-medium">{playlistToShare?.name ?? "Playlist"}</p>
+                  <p className="text-muted-foreground text-sm">
+                    {playlistToShare?.isPublic
+                      ? "Anyone with the link can preview tracks and save this playlist to their own library."
+                      : "Only you can see this playlist right now."}
+                  </p>
                 </div>
 
-                <div className="flex flex-col gap-1 px-3 pb-3">
-                  {filteredTracks.map((track, index) => (
-                    <TrackRow
-                      key={`${selectedPlaylistId}-${track.trackId}`}
-                      track={track}
-                      isActive={currentTrack?.trackId === track.trackId}
-                      isPlaying={isPlaying}
-                      onPlay={handlePlayTrack}
-                      onToggleFavorite={selectedPlaylistId === LIKED_PLAYLIST_ID ? handleToggleFavorite : undefined}
-                      isFavorite={selectedPlaylistId === LIKED_PLAYLIST_ID}
-                      isFavoritePending={pendingFavoriteIds.includes(track.trackId)}
-                      index={index}
-                      formatTime={formatTime}
-                      optionsMenu={
-                        editablePlaylists.length > 0 || selectedPlaylistIsEditable ? (
-                          <div className="flex items-center gap-1">
-                            {editablePlaylists.length > 0 ? (
-                              <PlaylistDropdown
-                                track={track}
-                                playlists={editablePlaylists}
-                                playlistTracksMap={playlistTracksMap}
-                                onAddToPlaylist={handleAddToPlaylist}
-                                onRemoveFromPlaylist={handleRemoveFromPlaylist}
-                                trigger={
-                                  <Button variant="ghost" size="icon-sm" aria-label="Manage playlist membership">
-                                    <Plus />
-                                  </Button>
-                                }
-                              />
-                            ) : null}
-
-                            {selectedPlaylistIsEditable ? (
-                              <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                onClick={() => void handleRemoveFromPlaylist(selectedPlaylistId, track.trackId)}
-                                className="text-destructive hover:text-destructive"
-                                aria-label="Remove from this playlist"
-                              >
-                                <Trash2 />
-                              </Button>
-                            ) : null}
-                          </div>
-                        ) : undefined
-                      }
-                    />
-                  ))}
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </main>
-
-      <Dialog
-        open={playlistToShare !== null}
-        onOpenChange={(open) => {
-          if (!open && !isUpdatingShare) {
-            setPlaylistToShare(null)
-          }
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Share playlist</DialogTitle>
-            <DialogDescription>
-              {playlistToShare?.isPublic
-                ? "This playlist has a stable public link. Anyone with the link can save it into their own library."
-                : "Publish this playlist to create a public, read-only link anyone can open."}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex flex-col gap-4">
-            <div className="bg-secondary/40 border-border/50 flex items-start justify-between rounded-xl border p-4">
-              <div className="space-y-1">
-                <p className="text-foreground font-medium">{playlistToShare?.name ?? "Playlist"}</p>
-                <p className="text-muted-foreground text-sm">
-                  {playlistToShare?.isPublic
-                    ? "Anyone with the link can preview tracks and save this playlist to their own library."
-                    : "Only you can see this playlist right now."}
-                </p>
+                <span
+                  className={cn(
+                    "inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] tracking-[0.18em] uppercase",
+                    playlistToShare?.isPublic
+                      ? "border-gold/30 bg-gold/10 text-gold"
+                      : "border-border/60 bg-secondary/55 text-muted-foreground"
+                  )}
+                >
+                  {playlistToShare?.isPublic ? "Public" : "Private"}
+                </span>
               </div>
 
-              <span
-                className={cn(
-                  "inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] tracking-[0.18em] uppercase",
-                  playlistToShare?.isPublic
-                    ? "border-gold/30 bg-gold/10 text-gold"
-                    : "border-border/60 bg-secondary/55 text-muted-foreground"
-                )}
-              >
-                {playlistToShare?.isPublic ? "Public" : "Private"}
-              </span>
-            </div>
+              {playlistToShare?.isPublic && playlistToShare.shareUrl ? (
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="share-playlist-link">Share link</Label>
+                  <div className="flex gap-2">
+                    <Input id="share-playlist-link" value={playlistToShare.shareUrl} readOnly />
+                    <Button type="button" variant="outline" onClick={() => void handleCopyShareLink(playlistToShare)}>
+                      <Copy data-icon="inline-start" />
+                      Copy
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
 
-            {playlistToShare?.isPublic && playlistToShare.shareUrl ? (
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="share-playlist-link">Share link</Label>
-                <div className="flex gap-2">
-                  <Input id="share-playlist-link" value={playlistToShare.shareUrl} readOnly />
+              <div className="flex flex-wrap items-center gap-3">
+                {playlistToShare?.isPublic ? (
                   <Button type="button" variant="outline" onClick={() => void handleCopyShareLink(playlistToShare)}>
                     <Copy data-icon="inline-start" />
-                    Copy
+                    Copy Link
                   </Button>
-                </div>
-              </div>
-            ) : null}
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={() => void handleShareAction()}
+                    disabled={isUpdatingShare}
+                    className="border-gold/30 bg-gold/10 text-gold hover:bg-gold/15"
+                  >
+                    {isUpdatingShare ? (
+                      <>
+                        <Loader2 data-icon="inline-start" className="animate-spin" />
+                        Publishing...
+                      </>
+                    ) : (
+                      <>
+                        <Globe2 data-icon="inline-start" />
+                        Publish Playlist
+                      </>
+                    )}
+                  </Button>
+                )}
 
-            <div className="flex flex-wrap items-center gap-3">
-              {playlistToShare?.isPublic ? (
-                <Button type="button" variant="outline" onClick={() => void handleCopyShareLink(playlistToShare)}>
-                  <Copy data-icon="inline-start" />
-                  Copy Link
-                </Button>
-              ) : (
                 <Button
                   type="button"
-                  onClick={() => void handleShareAction()}
+                  variant="ghost"
+                  onClick={() => setPlaylistToShare(null)}
                   disabled={isUpdatingShare}
-                  className="border-gold/30 bg-gold/10 text-gold hover:bg-gold/15"
                 >
-                  {isUpdatingShare ? (
+                  Close
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={playlistToRename !== null}
+          onOpenChange={(open) => {
+            if (!open) {
+              setPlaylistToRename(null)
+              setRenamePlaylistName("")
+            }
+          }}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Rename playlist</DialogTitle>
+              <DialogDescription>Update the playlist name shown in your library.</DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleRenamePlaylist} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="rename-playlist-name">Playlist name</Label>
+                <Input
+                  id="rename-playlist-name"
+                  value={renamePlaylistName}
+                  onChange={(event) => setRenamePlaylistName(event.target.value)}
+                  maxLength={64}
+                  autoFocus
+                />
+              </div>
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setPlaylistToRename(null)
+                    setRenamePlaylistName("")
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isRenamingPlaylist}>
+                  {isRenamingPlaylist ? (
                     <>
                       <Loader2 data-icon="inline-start" className="animate-spin" />
-                      Publishing...
+                      Saving...
                     </>
                   ) : (
-                    <>
-                      <Globe2 data-icon="inline-start" />
-                      Publish Playlist
-                    </>
+                    "Save"
                   )}
                 </Button>
-              )}
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
 
-              <Button type="button" variant="ghost" onClick={() => setPlaylistToShare(null)} disabled={isUpdatingShare}>
-                Close
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={playlistToRename !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setPlaylistToRename(null)
-            setRenamePlaylistName("")
-          }
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Rename playlist</DialogTitle>
-            <DialogDescription>Update the playlist name shown in your library.</DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleRenamePlaylist} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="rename-playlist-name">Playlist name</Label>
-              <Input
-                id="rename-playlist-name"
-                value={renamePlaylistName}
-                onChange={(event) => setRenamePlaylistName(event.target.value)}
-                maxLength={64}
-                autoFocus
-              />
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setPlaylistToRename(null)
-                  setRenamePlaylistName("")
-                }}
+        <AlertDialog
+          open={playlistToDelete !== null}
+          onOpenChange={(open) => {
+            if (!open && !isDeletingPlaylist) {
+              setPlaylistToDelete(null)
+            }
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete playlist?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete{" "}
+                <span className="text-foreground font-medium">{playlistToDelete?.name ?? "this playlist"}</span> and
+                remove all track links inside it.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeletingPlaylist}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                disabled={isDeletingPlaylist}
+                onClick={() => void handleDeletePlaylist()}
               >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isRenamingPlaylist}>
-                {isRenamingPlaylist ? (
+                {isDeletingPlaylist ? (
                   <>
                     <Loader2 data-icon="inline-start" className="animate-spin" />
-                    Saving...
+                    Deleting...
                   </>
                 ) : (
-                  "Save"
+                  "Delete"
                 )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
-      <AlertDialog
-        open={playlistToDelete !== null}
-        onOpenChange={(open) => {
-          if (!open && !isDeletingPlaylist) {
-            setPlaylistToDelete(null)
-          }
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete playlist?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete{" "}
-              <span className="text-foreground font-medium">{playlistToDelete?.name ?? "this playlist"}</span> and
-              remove all track links inside it.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeletingPlaylist}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              disabled={isDeletingPlaylist}
-              onClick={() => void handleDeletePlaylist()}
-            >
-              {isDeletingPlaylist ? (
-                <>
-                  <Loader2 data-icon="inline-start" className="animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                "Delete"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <PlayerBar
-        currentTrack={currentTrack}
-        isPlaying={isPlaying}
-        progress={progress}
-        duration={duration}
-        volume={volume}
-        onTogglePlay={togglePlayPause}
-        onSeek={seekTo}
-        onVolumeChange={setVolumeLevel}
-        onShuffle={toggleShuffle}
-        onPrevious={playPrevious}
-        onNext={playNext}
-        onRepeat={toggleRepeat}
-        isShuffled={isShuffled}
-        repeatMode={repeatMode}
-        formatTime={formatTime}
-      />
-    </div>
+        <PlayerBar
+          currentTrack={currentTrack}
+          isPlaying={isPlaying}
+          progress={progress}
+          duration={duration}
+          volume={volume}
+          onTogglePlay={togglePlayPause}
+          onSeek={seekTo}
+          onVolumeChange={setVolumeLevel}
+          onShuffle={toggleShuffle}
+          onPrevious={playPrevious}
+          onNext={playNext}
+          onRepeat={toggleRepeat}
+          isShuffled={isShuffled}
+          repeatMode={repeatMode}
+          formatTime={formatTime}
+        />
+      </div>
+    </MusicSidebarLayout>
   )
 }
