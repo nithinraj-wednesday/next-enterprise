@@ -5,7 +5,7 @@ import { requireServerSession } from "@/lib/auth-server"
 import { CACHE_TTL, getCacheKey } from "@/lib/cache"
 import { db } from "@/lib/db"
 import { playlist } from "@/lib/db-schema"
-import { listPlaylistsForUser, serializePlaylist } from "@/lib/playlists"
+import { listPlaylistsForUser, listSavedSharedPlaylistsForUser, serializePlaylist } from "@/lib/playlists"
 import { getPostHogClient } from "@/lib/posthog-server"
 import { redis } from "@/lib/redis"
 
@@ -29,8 +29,12 @@ export async function GET(request: NextRequest) {
       console.error("Redis cache read error:", cacheError)
     }
 
-    // Fetch playlists for the user
-    const playlists = await listPlaylistsForUser(session.user.id)
+    // Fetch owned + saved shared playlists for the user
+    const [owned, savedShared] = await Promise.all([
+      listPlaylistsForUser(session.user.id),
+      listSavedSharedPlaylistsForUser(session.user.id),
+    ])
+    const playlists = [...owned, ...savedShared]
 
     // Cache the results
     try {

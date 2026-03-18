@@ -68,6 +68,10 @@ export const playlist = sqliteTable("playlist", {
   isPublic: integer("is_public", { mode: "boolean" }).notNull().default(false),
   shareToken: text("share_token").unique(),
   sharedAt: integer("shared_at", { mode: "timestamp" }),
+  isSavedShared: integer("is_saved_shared", { mode: "boolean" }).notNull().default(false),
+  sourcePlaylistId: text("source_playlist_id"),
+  sourceOwnerId: text("source_owner_id"),
+  sourceOwnerName: text("source_owner_name"),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
