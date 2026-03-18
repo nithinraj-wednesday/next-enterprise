@@ -115,7 +115,7 @@ function RecentlyPlayedContent() {
         >
           <TrackListLayout
             title="Recently Played"
-            subtitle="Your latest listening history. Stored locally on this device."
+            subtitle="Your latest listening history."
             tracks={tracks}
             loading={false}
             currentTrack={currentTrack}

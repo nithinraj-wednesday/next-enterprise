@@ -84,11 +84,15 @@ export function useMusicManagement() {
       }
 
       try {
-        const res = await fetch(`/api/favorites/${track.trackId}`, {
-          method: isFavorite ? "DELETE" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: isFavorite ? undefined : JSON.stringify(trackToFavoritePayload(track)),
-        })
+        const res = isFavorite
+          ? await fetch(`/api/favorites/${track.trackId}`, {
+              method: "DELETE",
+            })
+          : await fetch("/api/favorites", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(trackToFavoritePayload(track)),
+            })
 
         if (!res.ok) throw new Error("Failed to update favorite")
 

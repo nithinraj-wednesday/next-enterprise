@@ -295,7 +295,7 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
             <div className="flex items-center justify-between px-2 pr-4">
               <SidebarGroupLabel className="px-0">
                 <HugeiconsIcon icon={MusicNote01Icon} strokeWidth={2} className="mr-1.5" />
-                Songs · Electronic
+                Songs
               </SidebarGroupLabel>
               <Link
                 href="/music/electronic"
