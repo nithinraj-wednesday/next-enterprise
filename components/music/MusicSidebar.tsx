@@ -215,9 +215,7 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
                       <SidebarMenuButton
                         tooltip={`${track.trackName} — ${track.artistName}`}
                         onClick={() => {
-                          window.dispatchEvent(
-                            new CustomEvent("play-track", { detail: track })
-                          )
+                          window.dispatchEvent(new CustomEvent("play-track", { detail: track }))
                         }}
                         className="flex gap-2"
                       >
