@@ -1,7 +1,7 @@
 "use client"
 
 import { EllipsisVertical } from "lucide-react"
-import { useFeatureFlagEnabled } from "posthog-js/react"
+import { useFeatureFlagEnabled, useFeatureFlagVariantKey } from "posthog-js/react"
 import { Suspense, useCallback, useEffect, useState } from "react"
 import { MusicAppHeader, PlayerBar, TrackGridSkeleton } from "@/components/music/MusicComponents"
 import { MusicSidebarLayout } from "@/components/music/MusicSidebar"
@@ -55,6 +55,11 @@ function ElectronicContent() {
   const [popularTracks, setPopularTracks] = useState<Track[]>([])
   const [popularLoading, setPopularLoading] = useState(false)
 
+  const newMusicVariant = useFeatureFlagVariantKey("new-music-feature")
+  const [newMusicTracks, setNewMusicTracks] = useState<Track[]>([])
+  const [newMusicLoading, setNewMusicLoading] = useState(false)
+  const [newMusicViewMode, setNewMusicViewMode] = useState<"grid" | "list">("grid")
+
   useEffect(() => {
     // Search for electronic music by default
     searchMusic("electronic")
@@ -77,6 +82,24 @@ function ElectronicContent() {
     }
     fetchPopular()
   }, [showPopular])
+
+  useEffect(() => {
+    if (newMusicVariant !== "test") return
+    async function fetchNewMusic() {
+      setNewMusicLoading(true)
+      try {
+        const res = await fetch(`/api/music/search?term=${encodeURIComponent("new music")}&entity=song&limit=25`)
+        const data = (await res.json()) as SearchResponse
+        setNewMusicTracks(data.results.filter((t) => t.previewUrl))
+      } catch (err) {
+        console.error("New music search failed:", err)
+        setNewMusicTracks([])
+      } finally {
+        setNewMusicLoading(false)
+      }
+    }
+    fetchNewMusic()
+  }, [newMusicVariant])
 
   const handlePlayTrack = useCallback(
     (track: Track) => {
@@ -160,6 +183,26 @@ function ElectronicContent() {
               renderPlaylistMenu={renderPlaylistMenu}
               viewMode={popularViewMode}
               onViewModeChange={setPopularViewMode}
+              className="mt-12"
+            />
+          )}
+
+          {newMusicVariant === "test" && (
+            <TrackListLayout
+              title="New Music"
+              subtitle="Fresh tracks and latest hits to discover."
+              tracks={newMusicTracks}
+              loading={newMusicLoading}
+              currentTrack={currentTrack}
+              isPlaying={isPlaying}
+              onPlay={handlePlayTrack}
+              onToggleFavorite={handleToggleFavorite}
+              favoriteIds={favoriteIds}
+              pendingFavoriteIds={pendingFavoriteIds}
+              formatTime={formatTime}
+              renderPlaylistMenu={renderPlaylistMenu}
+              viewMode={newMusicViewMode}
+              onViewModeChange={setNewMusicViewMode}
               className="mt-12"
             />
           )}
