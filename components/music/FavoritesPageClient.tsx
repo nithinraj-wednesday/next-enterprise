@@ -7,7 +7,7 @@ import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react
 import { toast } from "sonner"
 import { MusicAppHeader, PlayerBar, SearchBar, TrackRow } from "@/components/music/MusicComponents"
 import { MusicSidebarLayout } from "@/components/music/MusicSidebar"
-import { PlaylistDropdown } from "@/components/music/PlaylistDropdown"
+import { TrackOptionsMenu } from "@/components/music/TrackOptionsMenu"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -114,6 +114,7 @@ export function FavoritesPageClient({
     playNext,
     toggleRepeat,
     setTrackList,
+    addToQueue,
     formatTime,
   } = useMusic()
 
@@ -868,34 +869,25 @@ export function FavoritesPageClient({
                         formatTime={formatTime}
                         optionsMenu={
                           editablePlaylists.length > 0 || selectedPlaylistIsEditable ? (
-                            <div className="flex items-center gap-1">
-                              {editablePlaylists.length > 0 ? (
-                                <PlaylistDropdown
-                                  track={track}
-                                  playlists={editablePlaylists}
-                                  playlistTracksMap={playlistTracksMap}
-                                  onAddToPlaylist={handleAddToPlaylist}
-                                  onRemoveFromPlaylist={handleRemoveFromPlaylist}
-                                  trigger={
-                                    <Button variant="ghost" size="icon-sm" aria-label="Manage playlist membership">
-                                      <Plus />
-                                    </Button>
-                                  }
-                                />
-                              ) : null}
-
-                              {selectedPlaylistIsEditable ? (
+                            <TrackOptionsMenu
+                              track={track}
+                              playlists={editablePlaylists}
+                              playlistTracksMap={playlistTracksMap}
+                              onAddToPlaylist={handleAddToPlaylist}
+                              onRemoveFromPlaylist={handleRemoveFromPlaylist}
+                              onAddToQueue={addToQueue}
+                              trigger={
                                 <Button
                                   variant="ghost"
                                   size="icon-sm"
-                                  onClick={() => void handleRemoveFromPlaylist(selectedPlaylistId, track.trackId)}
-                                  className="text-destructive hover:text-destructive"
-                                  aria-label="Remove from this playlist"
+                                  onClick={(event) => event.stopPropagation()}
+                                  onMouseDown={(event) => event.stopPropagation()}
+                                  className="text-muted-foreground hover:text-foreground"
                                 >
-                                  <Trash2 />
+                                  <EllipsisVertical className="size-4" />
                                 </Button>
-                              ) : null}
-                            </div>
+                              }
+                            />
                           ) : undefined
                         }
                       />

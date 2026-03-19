@@ -5,8 +5,8 @@ import { useFeatureFlagVariantKey } from "posthog-js/react"
 import { Suspense, useCallback, useEffect, useState } from "react"
 import { MusicAppHeader, PlayerBar, TrackGridSkeleton } from "@/components/music/MusicComponents"
 import { MusicSidebarLayout } from "@/components/music/MusicSidebar"
-import { PlaylistDropdown } from "@/components/music/PlaylistDropdown"
 import { TrackListLayout } from "@/components/music/TrackListLayout"
+import { TrackOptionsMenu } from "@/components/music/TrackOptionsMenu"
 import { Button } from "@/components/ui/button"
 import { useMusic } from "@/hooks/use-music"
 import { useMusicManagement } from "@/hooks/use-music-management"
@@ -35,6 +35,7 @@ function ElectronicContent() {
     playPrevious,
     playNext,
     toggleRepeat,
+    addToQueue,
     formatTime,
   } = useMusic()
 
@@ -114,12 +115,13 @@ function ElectronicContent() {
 
   const renderPlaylistMenu = useCallback(
     (track: Track) => (
-      <PlaylistDropdown
+      <TrackOptionsMenu
         track={track}
         playlists={playlists}
         playlistTracksMap={playlistTracksMap}
         onAddToPlaylist={handleAddToPlaylist}
         onRemoveFromPlaylist={handleRemoveFromPlaylist}
+        onAddToQueue={addToQueue}
         trigger={
           <Button
             variant="ghost"
@@ -133,7 +135,7 @@ function ElectronicContent() {
         }
       />
     ),
-    [playlists, handleAddToPlaylist, handleRemoveFromPlaylist, playlistTracksMap]
+    [playlists, handleAddToPlaylist, handleRemoveFromPlaylist, playlistTracksMap, addToQueue]
   )
 
   return (
