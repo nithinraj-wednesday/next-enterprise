@@ -7,8 +7,8 @@ import { type FormEvent, Suspense, useCallback, useEffect, useRef, useState } fr
 import { toast } from "sonner"
 import { EmptyState, MusicAppHeader, PlayerBar, SearchBar, TrackGridSkeleton } from "@/components/music/MusicComponents"
 import { MusicSidebarLayout } from "@/components/music/MusicSidebar"
-import { PlaylistDropdown } from "@/components/music/PlaylistDropdown"
 import { TrackListLayout } from "@/components/music/TrackListLayout"
+import { TrackOptionsMenu } from "@/components/music/TrackOptionsMenu"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -50,6 +50,7 @@ function MusicPageContent() {
     playPrevious,
     playNext,
     toggleRepeat,
+    addToQueue,
     formatTime,
   } = useMusic()
 
@@ -207,6 +208,17 @@ function MusicPageContent() {
 
   const handleSearch = useCallback(
     (query?: string) => {
+      // Clear search when query is explicitly empty (e.g. clear button)
+      if (query !== undefined && !query.trim()) {
+        setSearchTerm("trending")
+        setHasSearched(false)
+        searchMusic("trending")
+        const params = new URLSearchParams(searchParams.toString())
+        params.delete("search")
+        window.history.pushState(null, "", params.toString() ? `?${params.toString()}` : window.location.pathname)
+        return
+      }
+
       const term = query || searchTerm
       if (!term.trim()) return
 
@@ -251,12 +263,13 @@ function MusicPageContent() {
 
   const renderPlaylistMenu = useCallback(
     (track: Track) => (
-      <PlaylistDropdown
+      <TrackOptionsMenu
         track={track}
         playlists={playlists}
         playlistTracksMap={playlistTracksMap}
         onAddToPlaylist={handleAddToPlaylist}
         onRemoveFromPlaylist={handleRemoveFromPlaylist}
+        onAddToQueue={addToQueue}
         trigger={
           <Button
             variant="ghost"
@@ -270,7 +283,7 @@ function MusicPageContent() {
         }
       />
     ),
-    [playlists, handleAddToPlaylist, playlistTracksMap]
+    [playlists, handleAddToPlaylist, playlistTracksMap, addToQueue]
   )
 
   return (

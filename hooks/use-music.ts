@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback, useRef, useEffect } from "react"
+import { toast } from "sonner"
 import { Track, SearchResponse } from "@/lib/types"
 import { SEARCH_DEFAULTS, PLAYBACK_INTERVAL_MS } from "@/app/music/constants"
 
@@ -18,6 +19,7 @@ export function useMusic() {
   const progressInterval = useRef<NodeJS.Timeout | null>(null)
   const endedHandlerRef = useRef<(() => void) | null>(null)
   const originalTracksRef = useRef<Track[]>([])
+  const queueRef = useRef<Track[]>([])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -96,6 +98,12 @@ export function useMusic() {
             audioRef.current.currentTime = 0
             audioRef.current.play().catch(console.error)
           }
+          return
+        }
+
+        if (queueRef.current.length > 0) {
+          const nextFromQueue = queueRef.current.shift()!
+          playTrack(nextFromQueue)
           return
         }
         if (repeatMode === "all") {
@@ -206,6 +214,11 @@ export function useMusic() {
   }, [tracks, currentTrack, playTrack])
 
   const playNext = useCallback(() => {
+    if (queueRef.current.length > 0) {
+      const nextFromQueue = queueRef.current.shift()!
+      playTrack(nextFromQueue)
+      return
+    }
     if (tracks.length === 0) return
     const currentIndex = tracks.findIndex((t) => t.trackId === currentTrack?.trackId)
     const nextIndex = currentIndex < tracks.length - 1 ? currentIndex + 1 : 0
@@ -224,6 +237,11 @@ export function useMusic() {
   const setTrackList = useCallback((nextTracks: Track[]) => {
     setTracks(nextTracks)
     originalTracksRef.current = nextTracks
+  }, [])
+
+  const addToQueue = useCallback((track: Track) => {
+    queueRef.current.push(track)
+    toast.success(`Added "${track.trackName}" to queue`)
   }, [])
 
   return {
@@ -246,6 +264,7 @@ export function useMusic() {
     playNext,
     toggleRepeat,
     setTrackList,
+    addToQueue,
     formatTime,
   }
 }
