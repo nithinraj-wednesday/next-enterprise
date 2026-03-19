@@ -39,6 +39,7 @@ export function TrackOptionsMenu({
   trigger,
 }: TrackOptionsMenuProps) {
   const [loadingPlaylists, setLoadingPlaylists] = useState<Set<string>>(new Set())
+  const [open, setOpen] = useState(false)
   const router = useRouter()
 
   const handleTogglePlaylist = async (playlistId: string, isInPlaylist: boolean) => {
@@ -50,6 +51,7 @@ export function TrackOptionsMenu({
       } else {
         await onAddToPlaylist(playlistId, track)
       }
+      setOpen(false)
     } finally {
       setLoadingPlaylists((prev) => {
         const next = new Set(prev)
@@ -74,7 +76,7 @@ export function TrackOptionsMenu({
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
       <DropdownMenuContent
         className="bg-secondary/95 border-border/60 text-foreground w-56 rounded-xl p-2 backdrop-blur-md"
@@ -83,7 +85,7 @@ export function TrackOptionsMenu({
       >
         {/* Add to Playlist submenu */}
         <DropdownMenuSub>
-          <DropdownMenuSubTrigger className="focus:bg-gold/10 focus:text-gold data-open:bg-gold/10 data-open:text-gold rounded-lg px-2 py-2 transition-colors">
+          <DropdownMenuSubTrigger className="focus:bg-gold/10 focus:text-gold! focus:**:text-gold! data-open:bg-gold/10 data-open:text-gold! data-open:**:text-gold! rounded-lg px-2 py-2 transition-colors">
             <ListPlus className="mr-2 size-4" />
             Add to Playlist
           </DropdownMenuSubTrigger>
@@ -110,7 +112,7 @@ export function TrackOptionsMenu({
                     return (
                       <DropdownMenuItem
                         key={playlist.id}
-                        className="focus:bg-gold/10 focus:text-gold flex cursor-pointer items-center justify-between rounded-lg px-2 py-2 transition-colors"
+                        className="focus:bg-gold/10 focus:text-gold! focus:**:text-gold! flex cursor-pointer items-center justify-between rounded-lg px-2 py-2 transition-colors"
                         onSelect={(e) => {
                           e.preventDefault()
                           if (!isLoading) {
@@ -137,7 +139,7 @@ export function TrackOptionsMenu({
 
         {/* Add to Queue */}
         <DropdownMenuItem
-          className="focus:bg-gold/10 focus:text-gold cursor-pointer rounded-lg px-2 py-2 transition-colors"
+          className="focus:bg-gold/10 focus:text-gold! focus:**:text-gold! cursor-pointer rounded-lg px-2 py-2 transition-colors"
           onSelect={() => onAddToQueue(track)}
         >
           <ListMusic className="mr-2 size-4" />
@@ -148,7 +150,7 @@ export function TrackOptionsMenu({
 
         {/* Go to Artist */}
         <DropdownMenuItem
-          className="focus:bg-gold/10 focus:text-gold cursor-pointer rounded-lg px-2 py-2 transition-colors"
+          className="focus:bg-gold/10 focus:text-gold! focus:**:text-gold! cursor-pointer rounded-lg px-2 py-2 transition-colors"
           onSelect={handleGoToArtist}
         >
           <User className="mr-2 size-4" />
@@ -160,7 +162,7 @@ export function TrackOptionsMenu({
           <>
             <DropdownMenuSeparator className="bg-border/40 my-1" />
             <DropdownMenuItem
-              className="focus:bg-gold/10 focus:text-gold cursor-pointer rounded-lg px-2 py-2 transition-colors"
+              className="focus:bg-gold/10 focus:text-gold! focus:**:text-gold! cursor-pointer rounded-lg px-2 py-2 transition-colors"
               onSelect={handleShare}
             >
               <Share2 className="mr-2 size-4" />

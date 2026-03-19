@@ -10,7 +10,7 @@ import { Track } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 interface TrackListLayoutProps {
-  title: string
+  title: React.ReactNode
   subtitle?: string
   tracks: Track[]
   loading: boolean
@@ -105,7 +105,7 @@ export function TrackListLayout({
           </div>
           <h3 className="text-foreground text-lg font-medium">No tracks found</h3>
           <p className="text-muted-foreground mt-1 max-w-[250px] text-sm">
-            {subtitle ? `We couldn't find any tracks in ${title.toLowerCase()}.` : "Start discovering new music."}
+            {subtitle ? "We couldn't find any tracks in this category." : "Start discovering new music."}
           </p>
         </div>
       ) : (

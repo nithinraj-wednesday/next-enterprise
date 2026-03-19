@@ -1,5 +1,6 @@
 "use client"
 
+import { HugeiconsIcon } from "@hugeicons/react"
 import { EllipsisVertical, Loader2, Plus } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import posthog from "posthog-js"
@@ -288,7 +289,7 @@ function MusicPageContent() {
 
   return (
     <MusicSidebarLayout>
-      <div className="bg-background relative min-h-screen">
+      <div className="bg-background relative min-h-screen overflow-hidden">
         <div className="noise-overlay" />
 
         <header className="hero-gradient relative pt-8 pb-6 sm:pt-12 sm:pb-8">
@@ -428,7 +429,12 @@ function MusicPageContent() {
               {FEATURED_SEARCHES.map((category) => (
                 <TrackListLayout
                   key={category.query}
-                  title={`${category.emoji} ${category.label}`}
+                  title={
+                    <span className="flex items-center gap-2">
+                      <HugeiconsIcon icon={category.icon} strokeWidth={2} className="text-gold size-6" />
+                      {category.label}
+                    </span>
+                  }
                   tracks={categoryTracks[category.query] ?? []}
                   loading={categoryLoadingMap[category.query] ?? false}
                   currentTrack={currentTrack}

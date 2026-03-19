@@ -96,6 +96,10 @@ export function useMusicManagement() {
 
         if (!res.ok) throw new Error("Failed to update favorite")
 
+        toast.success(
+          isFavorite ? `Removed "${track.trackName}" from favorites` : `Added "${track.trackName}" to favorites`
+        )
+
         posthog.capture(isFavorite ? "favorite_removed" : "favorite_added", {
           track_id: track.trackId,
           track_name: track.trackName,
