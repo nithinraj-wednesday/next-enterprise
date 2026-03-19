@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useMusic } from "@/hooks/use-music"
 import { useMusicManagement } from "@/hooks/use-music-management"
+import { useRecentlySearched } from "@/hooks/use-recently-searched"
 import { useSession } from "@/lib/auth-client"
 import { PlaylistResponse, SearchResponse, Track } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -62,6 +63,8 @@ function MusicPageContent() {
     handleRemoveFromPlaylist,
     refreshPlaylists,
   } = useMusicManagement()
+
+  const { recentlySearched, addRecentlySearched, removeRecentlySearched, clearRecentlySearched } = useRecentlySearched()
 
   const searchParams = useSearchParams()
   const querySearch = searchParams.get("search")
@@ -216,16 +219,26 @@ function MusicPageContent() {
       setHasSearched(true)
       setResultsExpanded(false)
 
-      if (resultsSectionRef.current) {
-        resultsSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
-      }
-
       posthog.capture("music_search", { term })
     },
     [searchTerm, searchMusic, searchParams]
   )
 
   const handlePlayTrack = useCallback(
+    (track: Track) => {
+      if (currentTrack?.trackId === track.trackId) {
+        togglePlayPause()
+      } else {
+        playTrack(track)
+      }
+      if (hasSearched && tracks.length > 0) {
+        addRecentlySearched(track)
+      }
+    },
+    [currentTrack, playTrack, togglePlayPause, hasSearched, tracks, addRecentlySearched]
+  )
+
+  const handleSelectRecentTrack = useCallback(
     (track: Track) => {
       if (currentTrack?.trackId === track.trackId) {
         togglePlayPause()
@@ -270,7 +283,17 @@ function MusicPageContent() {
             <MusicAppHeader
               playlistCount={playlists.length + 1}
               userName={sessionData?.user?.name || undefined}
-              searchBar={<SearchBar onSearch={handleSearch} loading={loading} className="!px-4 !py-2" />}
+              searchBar={
+                <SearchBar
+                  onSearch={handleSearch}
+                  loading={loading}
+                  className="!px-4 !py-2"
+                  recentlySearched={recentlySearched}
+                  onSelectRecentTrack={handleSelectRecentTrack}
+                  onRemoveRecentTrack={removeRecentlySearched}
+                  onClearRecentSearches={clearRecentlySearched}
+                />
+              }
             />
           </div>
         </header>

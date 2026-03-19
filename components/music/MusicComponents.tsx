@@ -17,11 +17,11 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { ChevronDown, ChevronUp, X } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { getArtworkUrl } from "@/app/music/constants"
+import { RecentlySearchedDropdown } from "@/components/music/RecentlySearchedDropdown"
 import { ProfileDropdown } from "@/components/ProfileDropdown"
 import { ThemeToggle } from "@/components/ThemeToggle"
-import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar"
 import { PlayerBarProps, SearchBarProps, TrackCardProps, TrackRowProps } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -78,13 +78,10 @@ export function FavoriteButton({ isFavorite, isPending, onClick }: FavoriteButto
 }
 
 export function MusicAppHeader({ playlistCount: _playlistCount, userName: _userName, searchBar }: MusicAppHeaderProps) {
-  const { open } = useSidebar()
-
   return (
     <div className="mb-8 flex flex-col gap-4 sm:mb-12">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          {!open && <SidebarTrigger />}
           <Link href="/" className="flex shrink-0 items-center gap-3" aria-label="Go to home page">
             <div className="relative size-9">
               <div className="from-gold/80 to-gold/40 absolute inset-0 rounded-full bg-gradient-to-br">
@@ -115,16 +112,21 @@ export function MusicAppHeader({ playlistCount: _playlistCount, userName: _userN
   )
 }
 
-export function SearchBar({ onSearch, loading, className }: SearchBarProps) {
+export function SearchBar({
+  onSearch,
+  loading,
+  className,
+  recentlySearched,
+  onSelectRecentTrack,
+  onRemoveRecentTrack,
+  onClearRecentSearches,
+}: SearchBarProps) {
   const [query, setQuery] = useState("")
   const [focused, setFocused] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const lastSearchedRef = useRef("")
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
-
-  useEffect(() => {
-    inputRef.current?.focus()
-  }, [])
 
   useEffect(() => {
     const trimmedQuery = query.trim()
@@ -171,67 +173,110 @@ export function SearchBar({ onSearch, loading, className }: SearchBarProps) {
     inputRef.current?.focus()
   }
 
+  // Click-outside to dismiss dropdown
+  useEffect(() => {
+    const handleMouseDown = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setFocused(false)
+        inputRef.current?.blur()
+      }
+    }
+    document.addEventListener("mousedown", handleMouseDown)
+    return () => document.removeEventListener("mousedown", handleMouseDown)
+  }, [])
+
+  // Keyboard shortcuts: "/" to focus, Escape to dismiss
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "/" && !focused) {
         e.preventDefault()
         inputRef.current?.focus()
       }
+      if (e.key === "Escape" && focused) {
+        setFocused(false)
+        inputRef.current?.blur()
+      }
     }
     window.addEventListener("keydown", handleKey)
     return () => window.removeEventListener("keydown", handleKey)
   }, [focused])
 
+  const showDropdown = focused && !query.trim() && recentlySearched && recentlySearched.length > 0
+
+  const handleSelectRecent = useCallback(
+    (track: import("@/lib/types").Track) => {
+      onSelectRecentTrack?.(track)
+      setFocused(false)
+      inputRef.current?.blur()
+    },
+    [onSelectRecentTrack]
+  )
+
+  const handleClearRecent = useCallback(() => {
+    onClearRecentSearches?.()
+    inputRef.current?.focus()
+  }, [onClearRecentSearches])
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className={cn(
-        "relative mx-auto flex w-full max-w-2xl items-center gap-3 rounded-2xl px-5 py-3 transition-all duration-300",
-        "bg-secondary/80 border-border border",
-        focused && "border-gold/40 ring-gold-glow shadow-[0_0_30px_-5px_var(--gold-glow)] ring-2",
-        className
-      )}
-    >
-      <HugeiconsIcon
-        icon={Search01Icon}
+    <div ref={containerRef} className="relative">
+      <form
+        onSubmit={handleSubmit}
         className={cn(
-          "size-5 shrink-0 transition-colors duration-200",
-          focused ? "text-gold" : "text-muted-foreground"
+          "relative mx-auto flex w-full max-w-2xl items-center gap-3 rounded-2xl px-5 py-3 transition-all duration-300",
+          "bg-secondary/80 border-border border",
+          focused && "border-gold/40 ring-gold-glow shadow-[0_0_30px_-5px_var(--gold-glow)] ring-2",
+          className
         )}
-        strokeWidth={2}
-      />
+      >
+        <HugeiconsIcon
+          icon={Search01Icon}
+          className={cn(
+            "size-5 shrink-0 transition-colors duration-200",
+            focused ? "text-gold" : "text-muted-foreground"
+          )}
+          strokeWidth={2}
+        />
 
-      <input
-        ref={inputRef}
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        placeholder="Search artists, songs, albums..."
-        className="text-foreground placeholder:text-muted-foreground font-body flex-1 bg-transparent text-base outline-none"
-        id="music-search-input"
-      />
+        <input
+          ref={inputRef}
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => setFocused(true)}
+          placeholder="Search artists, songs, albums..."
+          className="text-foreground placeholder:text-muted-foreground font-body flex-1 bg-transparent text-base outline-none"
+          id="music-search-input"
+        />
 
-      {query && (
-        <button
-          type="button"
-          onClick={handleClear}
-          className="text-muted-foreground hover:text-foreground animate-in fade-in zoom-in p-1 transition-all duration-200"
-          aria-label="Clear search"
-        >
-          <X className="size-4" strokeWidth={2.5} />
-        </button>
+        {query && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="text-muted-foreground hover:text-foreground animate-in fade-in zoom-in p-1 transition-all duration-200"
+            aria-label="Clear search"
+          >
+            <X className="size-4" strokeWidth={2.5} />
+          </button>
+        )}
+
+        {loading ? (
+          <div className="border-gold/30 border-t-gold size-5 animate-spin rounded-full border-2" />
+        ) : (
+          <kbd className="bg-muted text-muted-foreground hidden items-center gap-1 rounded-md px-2 py-0.5 font-mono text-[11px] sm:inline-flex">
+            /
+          </kbd>
+        )}
+      </form>
+
+      {showDropdown && (
+        <RecentlySearchedDropdown
+          tracks={recentlySearched}
+          onSelect={handleSelectRecent}
+          onRemove={(trackId) => onRemoveRecentTrack?.(trackId)}
+          onClear={handleClearRecent}
+        />
       )}
-
-      {loading ? (
-        <div className="border-gold/30 border-t-gold size-5 animate-spin rounded-full border-2" />
-      ) : (
-        <kbd className="bg-muted text-muted-foreground hidden items-center gap-1 rounded-md px-2 py-0.5 font-mono text-[11px] sm:inline-flex">
-          /
-        </kbd>
-      )}
-    </form>
+    </div>
   )
 }
 

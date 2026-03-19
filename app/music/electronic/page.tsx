@@ -1,7 +1,7 @@
 "use client"
 
 import { EllipsisVertical } from "lucide-react"
-import { useFeatureFlagEnabled, useFeatureFlagVariantKey } from "posthog-js/react"
+import { useFeatureFlagVariantKey } from "posthog-js/react"
 import { Suspense, useCallback, useEffect, useState } from "react"
 import { MusicAppHeader, PlayerBar, TrackGridSkeleton } from "@/components/music/MusicComponents"
 import { MusicSidebarLayout } from "@/components/music/MusicSidebar"
@@ -51,11 +51,11 @@ function ElectronicContent() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [popularViewMode, setPopularViewMode] = useState<"grid" | "list">("grid")
 
-  const showPopular = useFeatureFlagEnabled("music-variants")
+  const newMusicVariant = useFeatureFlagVariantKey("new-music-feature")
+  const showExtraSections = newMusicVariant === "test"
+
   const [popularTracks, setPopularTracks] = useState<Track[]>([])
   const [popularLoading, setPopularLoading] = useState(false)
-
-  const newMusicVariant = useFeatureFlagVariantKey("new-music-feature")
   const [newMusicTracks, setNewMusicTracks] = useState<Track[]>([])
   const [newMusicLoading, setNewMusicLoading] = useState(false)
   const [newMusicViewMode, setNewMusicViewMode] = useState<"grid" | "list">("grid")
@@ -66,7 +66,7 @@ function ElectronicContent() {
   }, [searchMusic])
 
   useEffect(() => {
-    if (!showPopular) return
+    if (!showExtraSections) return
     async function fetchPopular() {
       setPopularLoading(true)
       try {
@@ -81,10 +81,10 @@ function ElectronicContent() {
       }
     }
     fetchPopular()
-  }, [showPopular])
+  }, [showExtraSections])
 
   useEffect(() => {
-    if (newMusicVariant !== "test") return
+    if (!showExtraSections) return
     async function fetchNewMusic() {
       setNewMusicLoading(true)
       try {
@@ -167,7 +167,7 @@ function ElectronicContent() {
             onViewModeChange={setViewMode}
           />
 
-          {showPopular && (
+          {showExtraSections && (
             <TrackListLayout
               title="Most Searched"
               subtitle="Popular tracks people are searching for right now."
@@ -187,7 +187,7 @@ function ElectronicContent() {
             />
           )}
 
-          {newMusicVariant === "test" && (
+          {showExtraSections && (
             <TrackListLayout
               title="New Music"
               subtitle="Fresh tracks and latest hits to discover."
