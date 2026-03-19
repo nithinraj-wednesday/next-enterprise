@@ -249,7 +249,7 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
                   <SidebarMenuItem key={genre.query}>
                     <SidebarMenuButton asChild tooltip={genre.label}>
                       <Link href={`/music?search=${encodeURIComponent(genre.query)}`}>
-                        <span className="text-sm">{genre.emoji}</span>
+                        <HugeiconsIcon icon={genre.icon} strokeWidth={2} className="text-gold size-4" />
                         <span>{genre.label}</span>
                       </Link>
                     </SidebarMenuButton>

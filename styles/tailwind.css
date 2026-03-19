@@ -541,6 +541,23 @@ body {
 }
 
 /* ============================================
+   Sonner toast overrides
+   ============================================ */
+
+[data-sonner-toaster] [data-sonner-toast] {
+  --border-radius: var(--radius-xl);
+  font-family: "DM Sans", sans-serif;
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-type="success"] {
+  box-shadow: 0 4px 24px -4px oklch(0.78 0.145 75 / 15%);
+}
+
+.dark [data-sonner-toaster] [data-sonner-toast][data-type="success"] {
+  box-shadow: 0 4px 24px -4px oklch(0.78 0.145 75 / 20%);
+}
+
+/* ============================================
    Accordion animations
    ============================================ */
 

@@ -15,15 +15,32 @@ export const ARTWORK_SIZES = {
   large: "600x600",
 } as const
 
-export const FEATURED_SEARCHES = [
-  { label: "Classical", query: "classical piano", emoji: "🎹" },
-  { label: "Chill Vibes", query: "chill lofi", emoji: "🌊" },
-  { label: "Hip Hop", query: "hip hop 2025", emoji: "🎤" },
-  { label: "Indie", query: "indie rock", emoji: "🎸" },
-  { label: "Electronic", query: "electronic dance", emoji: "⚡" },
-  { label: "R&B Soul", query: "rnb soul", emoji: "💜" },
-  { label: "Pop", query: "pop hits", emoji: "✨" },
-  { label: "Top Hits", query: "top hits 2025", emoji: "🔥" },
+import {
+  AudioWave01Icon,
+  CrownIcon,
+  FavouriteCircleIcon,
+  HeadphonesIcon,
+  Mic01Icon,
+  MusicNote01Icon,
+  MusicNote02Icon,
+  SparklesIcon,
+  // @ts-expect-error - hugeicons moduleResolution mismatch
+} from "@hugeicons/core-free-icons"
+import type { IconSvgElement } from "@hugeicons/react"
+
+export const FEATURED_SEARCHES: {
+  label: string
+  query: string
+  icon: IconSvgElement
+}[] = [
+  { label: "Classical", query: "classical piano", icon: MusicNote01Icon },
+  { label: "Chill Vibes", query: "chill lofi", icon: HeadphonesIcon },
+  { label: "Hip Hop", query: "hip hop 2025", icon: Mic01Icon },
+  { label: "Indie", query: "indie rock", icon: MusicNote02Icon },
+  { label: "Electronic", query: "electronic dance", icon: AudioWave01Icon },
+  { label: "R&B Soul", query: "rnb soul", icon: FavouriteCircleIcon },
+  { label: "Pop", query: "pop hits", icon: SparklesIcon },
+  { label: "Top Hits", query: "top hits 2025", icon: CrownIcon },
 ]
 
 export function getArtworkUrl(url: string | undefined, size: keyof typeof ARTWORK_SIZES = "medium"): string {

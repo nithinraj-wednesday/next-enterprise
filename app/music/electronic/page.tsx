@@ -140,7 +140,7 @@ function ElectronicContent() {
 
   return (
     <MusicSidebarLayout>
-      <div className="bg-background relative min-h-screen">
+      <div className="bg-background relative min-h-screen overflow-hidden">
         <div className="noise-overlay" />
 
         <header className="relative pt-8 pb-4 sm:pt-12 sm:pb-6">

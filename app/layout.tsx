@@ -35,7 +35,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PostHogProvider>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange={false}>
             <TooltipProvider>{children}</TooltipProvider>
-            <Toaster position="top-right" richColors />
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                classNames: {
+                  toast: "!bg-card !border-border !shadow-lg !shadow-gold-glow/10 !rounded-xl !font-body",
+                  title: "!text-foreground !font-medium",
+                  description: "!text-muted-foreground",
+                  success: "!border-gold/30 [&>svg]:!text-gold",
+                  error: "!border-destructive/30 [&>svg]:!text-destructive",
+                  actionButton: "!bg-gold !text-background !font-medium",
+                  closeButton: "!text-muted-foreground hover:!text-foreground !border-border",
+                },
+              }}
+            />
           </ThemeProvider>
         </PostHogProvider>
       </body>

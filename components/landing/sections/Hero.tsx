@@ -18,7 +18,7 @@ export function Hero() {
   const buttonStyle = ctaPayload?.style || (isCtaVariantEnabled ? "diamond" : "gold")
 
   return (
-    <section className="relative flex min-h-screen items-center justify-center overflow-hidden pt-20">
+    <section className="relative min-h-screen overflow-hidden">
       {/* Background effects */}
       <div className="landing-hero-gradient absolute inset-0" />
       <div className="noise-overlay" />
@@ -46,75 +46,81 @@ export function Hero() {
         }}
       />
 
-      <div className="relative z-10 mx-auto max-w-screen-xl px-4 text-center sm:px-6">
-        {/* Badge */}
-        <ScrollReveal>
-          <div className="border-gold/20 bg-gold/[0.05] mb-8 inline-flex items-center gap-2 rounded-full border px-4 py-1.5">
-            <div className="bg-gold size-1.5 animate-pulse rounded-full" />
-            <span className="font-body text-gold text-xs tracking-wide">Now streaming · 10M+ songs</span>
-          </div>
-        </ScrollReveal>
-
-        {/* Headline */}
-        <ScrollReveal delay={100}>
-          <h1 className="font-display text-foreground text-5xl leading-[0.95] font-bold tracking-tight sm:text-7xl lg:text-[5.5rem]">
-            The future of
-            <br />
-            music <span className="text-gold-gradient italic">discovery</span>
-          </h1>
-        </ScrollReveal>
-
-        {/* Subtext */}
-        <ScrollReveal delay={200}>
-          <p className="font-body text-muted-foreground mx-auto mt-6 max-w-xl text-base leading-relaxed sm:text-lg">
-            Explore millions of songs with instant 30-second previews. Search artists, albums, and tracks — all in one
-            beautifully crafted experience.
-          </p>
-        </ScrollReveal>
-
-        {/* CTAs */}
-        <ScrollReveal delay={300}>
-          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link
-              href="/music"
-              className={cn(
-                "font-body relative rounded-full px-8 py-3.5 text-sm font-semibold transition-all duration-300 hover:scale-105 active:scale-[0.98]",
-                buttonStyle === "emerald" &&
-                  "bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:bg-emerald-400 hover:shadow-[0_0_35px_rgba(16,185,129,0.5)]",
-                buttonStyle === "diamond" &&
-                  "bg-sky-400 text-white shadow-[0_0_20px_rgba(56,189,248,0.3)] hover:bg-sky-300 hover:shadow-[0_0_35px_rgba(56,189,248,0.5)]",
-                buttonStyle === "gold" &&
-                  "bg-gold text-primary-foreground hover:shadow-[0_0_30px_-5px_var(--gold-glow)] hover:brightness-110",
-                isCtaVariantEnabled &&
-                  "overflow-hidden before:absolute before:inset-0 before:rounded-full before:bg-white/10 before:opacity-0 hover:before:opacity-100"
-              )}
-            >
-              {buttonText}
-            </Link>
-            <a
-              href="#how-it-works"
-              className="font-body text-muted-foreground hover:text-foreground hover:border-gold/30 border-border rounded-full border px-8 py-3.5 text-sm font-medium transition-all"
-            >
-              See How It Works
-            </a>
-          </div>
-        </ScrollReveal>
-
-        {/* Stats */}
-        <ScrollReveal delay={400}>
-          <div className="mt-16 flex items-center justify-center gap-8 sm:gap-12">
-            {[
-              { value: "10M+", label: "Songs" },
-              { value: "30s", label: "Previews" },
-              { value: "100%", label: "Free" },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="font-display text-foreground text-2xl font-bold sm:text-3xl">{stat.value}</div>
-                <div className="font-body text-muted-foreground mt-1 text-xs tracking-wide uppercase">{stat.label}</div>
+      <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-screen-xl grid-rows-[5.5rem_1fr_3rem] px-4 text-center sm:grid-rows-[6rem_1fr_4rem] sm:px-6">
+        <div className="row-start-2 flex items-center justify-center">
+          <div className="mx-auto w-full max-w-5xl">
+            {/* Badge */}
+            <ScrollReveal>
+              <div className="border-gold/20 bg-gold/[0.05] mb-8 inline-flex items-center gap-2 rounded-full border px-4 py-1.5">
+                <div className="bg-gold size-1.5 animate-pulse rounded-full" />
+                <span className="font-body text-gold text-xs tracking-wide">Now streaming · 10M+ songs</span>
               </div>
-            ))}
+            </ScrollReveal>
+
+            {/* Headline */}
+            <ScrollReveal delay={100}>
+              <h1 className="font-display text-foreground text-5xl leading-[0.95] font-bold tracking-tight sm:text-7xl lg:text-[5.5rem]">
+                The future of
+                <br />
+                music <span className="text-gold-gradient italic">discovery</span>
+              </h1>
+            </ScrollReveal>
+
+            {/* Subtext */}
+            <ScrollReveal delay={200}>
+              <p className="font-body text-muted-foreground mx-auto mt-6 max-w-xl text-base leading-relaxed sm:text-lg">
+                Explore millions of songs with instant 30-second previews. Search artists, albums, and tracks — all in
+                one beautifully crafted experience.
+              </p>
+            </ScrollReveal>
+
+            {/* CTAs */}
+            <ScrollReveal delay={300}>
+              <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                <Link
+                  href="/music"
+                  className={cn(
+                    "font-body relative rounded-full px-8 py-3.5 text-sm font-semibold transition-all duration-300 hover:scale-105 active:scale-[0.98]",
+                    buttonStyle === "emerald" &&
+                      "bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:bg-emerald-400 hover:shadow-[0_0_35px_rgba(16,185,129,0.5)]",
+                    buttonStyle === "diamond" &&
+                      "bg-sky-400 text-white shadow-[0_0_20px_rgba(56,189,248,0.3)] hover:bg-sky-300 hover:shadow-[0_0_35px_rgba(56,189,248,0.5)]",
+                    buttonStyle === "gold" &&
+                      "bg-gold text-primary-foreground hover:shadow-[0_0_30px_-5px_var(--gold-glow)] hover:brightness-110",
+                    isCtaVariantEnabled &&
+                      "overflow-hidden before:absolute before:inset-0 before:rounded-full before:bg-white/10 before:opacity-0 hover:before:opacity-100"
+                  )}
+                >
+                  {buttonText}
+                </Link>
+                <a
+                  href="#how-it-works"
+                  className="font-body text-muted-foreground hover:text-foreground hover:border-gold/30 border-border rounded-full border px-8 py-3.5 text-sm font-medium transition-all"
+                >
+                  See How It Works
+                </a>
+              </div>
+            </ScrollReveal>
+
+            {/* Stats */}
+            <ScrollReveal delay={400}>
+              <div className="mt-16 flex items-center justify-center gap-8 sm:gap-12">
+                {[
+                  { value: "10M+", label: "Songs" },
+                  { value: "30s", label: "Previews" },
+                  { value: "100%", label: "Free" },
+                ].map((stat) => (
+                  <div key={stat.label} className="text-center">
+                    <div className="font-display text-foreground text-2xl font-bold sm:text-3xl">{stat.value}</div>
+                    <div className="font-body text-muted-foreground mt-1 text-xs tracking-wide uppercase">
+                      {stat.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollReveal>
           </div>
-        </ScrollReveal>
+        </div>
       </div>
 
       {/* Bottom fade */}
