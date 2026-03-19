@@ -38,6 +38,10 @@ export interface SearchBarProps {
   onSearch: (query: string, options?: { shouldScroll?: boolean }) => void
   loading: boolean
   className?: string
+  recentlySearched?: Track[]
+  onSelectRecentTrack?: (track: Track) => void
+  onRemoveRecentTrack?: (trackId: number) => void
+  onClearRecentSearches?: () => void
 }
 
 export interface TrackCardProps {

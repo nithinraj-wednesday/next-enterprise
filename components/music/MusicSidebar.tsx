@@ -146,10 +146,14 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
 
   return (
     <SidebarProvider>
-      <Sidebar variant="sidebar" collapsible="offcanvas" className="border-sidebar-border border-r">
+      <Sidebar variant="sidebar" collapsible="icon" className="border-sidebar-border border-r">
         <SidebarHeader className="px-3 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2.5" aria-label="Go to home page">
+          <div className="flex items-center justify-between group-data-[collapsible=icon]:justify-center">
+            <Link
+              href="/"
+              className="flex items-center gap-2.5 group-data-[collapsible=icon]:hidden"
+              aria-label="Go to home page"
+            >
               <div className="relative size-8">
                 <div className="from-gold/80 to-gold/40 absolute inset-0 rounded-full bg-gradient-to-br">
                   <div className="bg-sidebar absolute inset-[35%] rounded-full" />
@@ -187,15 +191,19 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
 
           {/* Recently Played */}
           <SidebarGroup>
-            <div className="flex items-center justify-between px-2 pr-4">
+            <div className="flex items-center justify-between px-2 pr-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
               <SidebarGroupLabel className="px-0">
-                <HugeiconsIcon icon={Clock04Icon} strokeWidth={2} className="mr-1.5" />
-                Recently Played
+                <HugeiconsIcon
+                  icon={Clock04Icon}
+                  strokeWidth={2}
+                  className="mr-1.5 group-data-[collapsible=icon]:mr-0"
+                />
+                <span className="group-data-[collapsible=icon]:hidden">Recently Played</span>
               </SidebarGroupLabel>
               {recentlyPlayed.length > 0 && (
                 <Link
                   href="/music/recently-played"
-                  className="text-muted-foreground hover:text-gold text-[10px] font-medium transition-colors"
+                  className="text-muted-foreground hover:text-gold text-[10px] font-medium transition-colors group-data-[collapsible=icon]:hidden"
                 >
                   View All
                 </Link>
@@ -238,7 +246,7 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
           </SidebarGroup>
 
           {/* Genre */}
-          <SidebarGroup>
+          <SidebarGroup className="group-data-[collapsible=icon]:hidden">
             <SidebarGroupLabel>Genre</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
@@ -257,7 +265,7 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
           </SidebarGroup>
 
           {/* Artists */}
-          <SidebarGroup>
+          <SidebarGroup className="group-data-[collapsible=icon]:hidden">
             <SidebarGroupLabel>
               <HugeiconsIcon icon={UserMultiple02Icon} strokeWidth={2} className="mr-1.5" />
               Artists
@@ -295,7 +303,7 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
           </SidebarGroup>
 
           {/* Songs (Electronic) */}
-          <SidebarGroup>
+          <SidebarGroup className="group-data-[collapsible=icon]:hidden">
             <div className="flex items-center justify-between px-2 pr-4">
               <SidebarGroupLabel className="px-0">
                 <HugeiconsIcon icon={MusicNote01Icon} strokeWidth={2} className="mr-1.5" />
