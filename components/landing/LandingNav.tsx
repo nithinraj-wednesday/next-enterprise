@@ -1,6 +1,14 @@
 "use client"
 
-import { animate, AnimatePresence, motion, useMotionValue, useSpring, useTransform } from "framer-motion"
+import {
+  animate,
+  AnimatePresence,
+  type AnimationPlaybackControls,
+  motion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+} from "framer-motion"
 import Link from "next/link"
 import { type MouseEvent, useCallback, useEffect, useRef, useState } from "react"
 import { ThemeToggle } from "@/components/ThemeToggle"
@@ -94,6 +102,14 @@ export function LandingNav() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [activeSection, setActiveSection] = useState("")
   const isScrollingTo = useRef(false)
+  const scrollAnimRef = useRef<AnimationPlaybackControls | null>(null)
+
+  // Clean up scroll animation on unmount
+  useEffect(() => {
+    return () => {
+      scrollAnimRef.current?.stop()
+    }
+  }, [])
 
   // Scroll progress bar value (0–1)
   const scrollProgress = useMotionValue(0)
@@ -132,24 +148,33 @@ export function LandingNav() {
 
   // Custom smooth scroll with framer-motion animate + arrival glow
   const scrollToSection = useCallback((href: string, e: MouseEvent) => {
-    e.preventDefault()
     const id = href.replace("#", "")
     const target = document.getElementById(id)
+    // If target section doesn't exist, let the browser handle native anchor behavior
     if (!target) return
+
+    e.preventDefault()
+
+    // Stop any in-flight scroll animation to prevent overlapping scrolls
+    scrollAnimRef.current?.stop()
+    isScrollingTo.current = true
 
     // Immediately set active for instant feedback
     setActiveSection(href)
-    isScrollingTo.current = true
 
     const targetY = target.getBoundingClientRect().top + window.scrollY - 80
 
     // Animate the scroll
-    animate(window.scrollY, targetY, {
+    scrollAnimRef.current = animate(window.scrollY, targetY, {
       duration: SCROLL_DURATION,
       ease: SCROLL_EASE,
       onUpdate: (v) => window.scrollTo(0, v),
       onComplete: () => {
         isScrollingTo.current = false
+        scrollAnimRef.current = null
+
+        // // Update URL hash for deep-linking and browser history
+        history.pushState(null, "", `#${id}`)
 
         // Arrival glow effect on the target section
         target.style.transition = "none"
@@ -174,7 +199,7 @@ export function LandingNav() {
     >
       {/* Scroll progress bar */}
       <motion.div
-        className="absolute bottom-0 left-0 h-[2px] origin-left"
+        className="absolute right-0 bottom-0 left-0 h-[2px] origin-left"
         style={{
           scaleX,
           opacity: progressOpacity,
