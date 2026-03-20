@@ -121,6 +121,7 @@ export function LandingNav() {
       const docHeight = document.documentElement.scrollHeight - window.innerHeight
       if (docHeight > 0) scrollProgress.set(window.scrollY / docHeight)
     }
+    onScroll()
     window.addEventListener("scroll", onScroll, { passive: true })
     return () => window.removeEventListener("scroll", onScroll)
   }, [scrollProgress])
