@@ -43,7 +43,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   title: "!text-foreground !font-medium",
                   description: "!text-muted-foreground",
                   success: "!border-gold/30 [&_[data-icon]_svg]:!text-gold [&_[data-icon]_svg]:!fill-gold",
-                  error: "!border-destructive/30 [&_[data-icon]_svg]:!text-destructive [&_[data-icon]_svg]:!fill-destructive",
+                  error:
+                    "!border-destructive/30 [&_[data-icon]_svg]:!text-destructive [&_[data-icon]_svg]:!fill-destructive",
                   actionButton: "!bg-gold !text-background !font-medium",
                   closeButton: "!text-muted-foreground hover:!text-foreground !border-border",
                 },
