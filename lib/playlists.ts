@@ -5,6 +5,83 @@ import { favoriteSong, playlist, playlistTrack, user } from "./db-schema"
 import { redis } from "./redis"
 import { Playlist, PlaylistTrack, SharedPlaylistView } from "./types"
 
+type CachedSharedPlaylist = {
+  playlist: Omit<SharedPlaylistView["playlist"], "isSavedByViewer">
+  tracks: PlaylistTrack[]
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null
+}
+
+function isOptionalString(value: unknown): value is string | undefined {
+  return value === undefined || typeof value === "string"
+}
+
+function isPlaylistTrack(value: unknown): value is PlaylistTrack {
+  if (!isRecord(value)) {
+    return false
+  }
+
+  return (
+    typeof value.trackId === "number" &&
+    typeof value.artistName === "string" &&
+    typeof value.collectionName === "string" &&
+    typeof value.trackName === "string" &&
+    typeof value.previewUrl === "string" &&
+    typeof value.artworkUrl60 === "string" &&
+    typeof value.artworkUrl100 === "string" &&
+    typeof value.trackTimeMillis === "number" &&
+    typeof value.primaryGenreName === "string" &&
+    isOptionalString(value.trackViewUrl) &&
+    isOptionalString(value.releaseDate) &&
+    typeof value.addedAt === "string"
+  )
+}
+
+function isCachedSharedPlaylist(value: unknown): value is CachedSharedPlaylist {
+  if (!isRecord(value)) {
+    return false
+  }
+
+  const cachedPlaylist = value.playlist
+  const cachedTracks = value.tracks
+
+  if (!isRecord(cachedPlaylist) || !Array.isArray(cachedTracks)) {
+    return false
+  }
+
+  return (
+    typeof cachedPlaylist.id === "string" &&
+    typeof cachedPlaylist.name === "string" &&
+    typeof cachedPlaylist.ownerId === "string" &&
+    typeof cachedPlaylist.isPublic === "boolean" &&
+    isOptionalString(cachedPlaylist.ownerName) &&
+    isOptionalString(cachedPlaylist.shareUrl) &&
+    isOptionalString(cachedPlaylist.sharedAt) &&
+    typeof cachedPlaylist.createdAt === "string" &&
+    typeof cachedPlaylist.updatedAt === "string" &&
+    cachedTracks.every(isPlaylistTrack)
+  )
+}
+
+function parseCachedSharedPlaylist(value: unknown): CachedSharedPlaylist | null {
+  if (!value) {
+    return null
+  }
+
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value)
+      return isCachedSharedPlaylist(parsed) ? parsed : null
+    } catch {
+      return null
+    }
+  }
+
+  return isCachedSharedPlaylist(value) ? value : null
+}
+
 export function serializePlaylist(row: typeof playlist.$inferSelect): Playlist {
   return {
     id: row.id,
@@ -118,18 +195,14 @@ export async function getSharedPlaylistByToken(
 ): Promise<SharedPlaylistView | null> {
   const cacheKey = getCacheKey("shared-playlist", token)
 
-  // Try cache first for the playlist + tracks (viewer-independent data)
-  type CachedSharedPlaylist = {
-    playlist: Omit<SharedPlaylistView["playlist"], "isSavedByViewer">
-    tracks: PlaylistTrack[]
-  }
   let cachedData: CachedSharedPlaylist | null = null
 
   try {
     if (redis) {
       const raw = await redis.get(cacheKey)
-      if (raw) {
-        cachedData = typeof raw === "string" ? JSON.parse(raw) : (raw as CachedSharedPlaylist)
+      const parsed = parseCachedSharedPlaylist(raw)
+      if (parsed) {
+        cachedData = parsed
       }
     }
   } catch (cacheError) {
