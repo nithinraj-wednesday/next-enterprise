@@ -1,6 +1,8 @@
 import { and, desc, eq } from "drizzle-orm"
+import { CACHE_TTL, getCacheKey } from "./cache"
 import { db } from "./db"
 import { favoriteSong, playlist, playlistTrack, user } from "./db-schema"
+import { redis } from "./redis"
 import { Playlist, PlaylistTrack, SharedPlaylistView } from "./types"
 
 export function serializePlaylist(row: typeof playlist.$inferSelect): Playlist {
@@ -114,42 +116,88 @@ export async function getSharedPlaylistByToken(
   token: string,
   viewerUserId?: string
 ): Promise<SharedPlaylistView | null> {
-  const rows = await db
-    .select({
-      id: playlist.id,
-      name: playlist.name,
-      userId: playlist.userId,
-      isPublic: playlist.isPublic,
-      shareToken: playlist.shareToken,
-      sharedAt: playlist.sharedAt,
-      isSavedShared: playlist.isSavedShared,
-      sourcePlaylistId: playlist.sourcePlaylistId,
-      sourceOwnerId: playlist.sourceOwnerId,
-      sourceOwnerName: playlist.sourceOwnerName,
-      createdAt: playlist.createdAt,
-      updatedAt: playlist.updatedAt,
-      ownerName: user.name,
-    })
-    .from(playlist)
-    .innerJoin(user, eq(playlist.userId, user.id))
-    .where(and(eq(playlist.shareToken, token), eq(playlist.isPublic, true), eq(playlist.isSavedShared, false)))
-    .limit(1)
+  const cacheKey = getCacheKey("shared-playlist", token)
 
-  const sourcePlaylist = rows[0]
+  // Try cache first for the playlist + tracks (viewer-independent data)
+  type CachedSharedPlaylist = {
+    playlist: Omit<SharedPlaylistView["playlist"], "isSavedByViewer">
+    tracks: PlaylistTrack[]
+  }
+  let cachedData: CachedSharedPlaylist | null = null
 
-  if (!sourcePlaylist) {
-    return null
+  try {
+    if (redis) {
+      const raw = await redis.get(cacheKey)
+      if (raw) {
+        cachedData = typeof raw === "string" ? JSON.parse(raw) : (raw as CachedSharedPlaylist)
+      }
+    }
+  } catch (cacheError) {
+    console.error("Redis cache read error (shared playlist):", cacheError)
   }
 
-  const tracks = await getPlaylistTracksForUser(sourcePlaylist.userId, sourcePlaylist.id)
+  let playlistData: CachedSharedPlaylist
+
+  if (cachedData) {
+    playlistData = cachedData
+  } else {
+    const rows = await db
+      .select({
+        id: playlist.id,
+        name: playlist.name,
+        userId: playlist.userId,
+        isPublic: playlist.isPublic,
+        shareToken: playlist.shareToken,
+        sharedAt: playlist.sharedAt,
+        isSavedShared: playlist.isSavedShared,
+        sourcePlaylistId: playlist.sourcePlaylistId,
+        sourceOwnerId: playlist.sourceOwnerId,
+        sourceOwnerName: playlist.sourceOwnerName,
+        createdAt: playlist.createdAt,
+        updatedAt: playlist.updatedAt,
+        ownerName: user.name,
+      })
+      .from(playlist)
+      .innerJoin(user, eq(playlist.userId, user.id))
+      .where(and(eq(playlist.shareToken, token), eq(playlist.isPublic, true), eq(playlist.isSavedShared, false)))
+      .limit(1)
+
+    const sourcePlaylist = rows[0]
+
+    if (!sourcePlaylist) {
+      return null
+    }
+
+    const tracks = await getPlaylistTracksForUser(sourcePlaylist.userId, sourcePlaylist.id)
+
+    playlistData = {
+      playlist: {
+        ...serializePlaylist(sourcePlaylist),
+        ownerId: sourcePlaylist.userId,
+        ownerName: sourcePlaylist.ownerName,
+      },
+      tracks,
+    }
+
+    // Cache the viewer-independent data
+    try {
+      if (redis) {
+        await redis.set(cacheKey, JSON.stringify(playlistData), { ex: CACHE_TTL.sharedPlaylist })
+      }
+    } catch (cacheError) {
+      console.error("Redis cache write error (shared playlist):", cacheError)
+    }
+  }
+
+  // Viewer-specific check — always fresh from DB
   let isSavedByViewer = false
 
-  if (viewerUserId && viewerUserId !== sourcePlaylist.userId) {
+  if (viewerUserId && viewerUserId !== playlistData.playlist.ownerId) {
     const existingSnapshot = await db.query.playlist.findFirst({
       where: and(
         eq(playlist.userId, viewerUserId),
         eq(playlist.isSavedShared, true),
-        eq(playlist.sourcePlaylistId, sourcePlaylist.id)
+        eq(playlist.sourcePlaylistId, playlistData.playlist.id)
       ),
     })
 
@@ -158,12 +206,10 @@ export async function getSharedPlaylistByToken(
 
   return {
     playlist: {
-      ...serializePlaylist(sourcePlaylist),
-      ownerId: sourcePlaylist.userId,
-      ownerName: sourcePlaylist.ownerName,
+      ...playlistData.playlist,
       isSavedByViewer,
     },
-    tracks,
+    tracks: playlistData.tracks,
   }
 }
 

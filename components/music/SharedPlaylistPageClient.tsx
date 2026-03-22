@@ -103,7 +103,7 @@ export function SharedPlaylistPageClient({ data }: SharedPlaylistPageClientProps
       <div className="noise-overlay" />
       <div className="hero-gradient pointer-events-none fixed inset-0" />
 
-      <main className={cn("relative z-10 mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12", currentTrack && "pb-28")}>
+      <main className={cn("relative z-10 mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12", currentTrack && "pb-32")}>
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="bg-gold/10 text-gold flex size-11 items-center justify-center rounded-2xl border border-white/10">

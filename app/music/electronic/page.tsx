@@ -150,7 +150,7 @@ function ElectronicContent() {
         </header>
 
         <main
-          className={cn("relative z-10 mx-auto max-w-screen-xl px-4 py-6 sm:px-6 sm:py-10", currentTrack && "pb-28")}
+          className={cn("relative z-10 mx-auto max-w-screen-xl px-4 py-6 sm:px-6 sm:py-10", currentTrack && "pb-32")}
         >
           <TrackListLayout
             title="Electronic"

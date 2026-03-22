@@ -164,7 +164,7 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
           </div>
         </SidebarHeader>
 
-        <SidebarContent>
+        <SidebarContent className="pb-24">
           {/* Main Navigation */}
           <SidebarGroup>
             <SidebarGroupLabel>Menu</SidebarGroupLabel>
