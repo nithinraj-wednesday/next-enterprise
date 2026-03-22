@@ -11,7 +11,9 @@ import {
 } from "framer-motion"
 import Link from "next/link"
 import { type MouseEvent, useCallback, useEffect, useRef, useState } from "react"
+import { ProfileDropdown } from "@/components/ProfileDropdown"
 import { ThemeToggle } from "@/components/ThemeToggle"
+import { useSession } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
 
 const NAV_LINKS = [
@@ -98,6 +100,8 @@ function NavLink({
 }
 
 export function LandingNav() {
+  const { data: sessionData } = useSession()
+  const isLoggedIn = Boolean(sessionData?.user)
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [activeSection, setActiveSection] = useState("")
@@ -238,18 +242,32 @@ export function LandingNav() {
         {/* Auth buttons */}
         <div className="hidden items-center gap-3 md:flex">
           <ThemeToggle />
-          <Link
-            href="/sign-in"
-            className="text-muted-foreground hover:text-foreground font-body rounded-full px-4 py-2 text-sm transition-colors"
-          >
-            Sign In
-          </Link>
-          <Link
-            href="/music"
-            className="bg-gold text-primary-foreground font-body rounded-full px-5 py-2.5 text-sm font-medium transition-all hover:shadow-[0_0_20px_-5px_var(--gold-glow)] hover:brightness-110"
-          >
-            Get Started
-          </Link>
+          {isLoggedIn ? (
+            <>
+              <Link
+                href="/music"
+                className="bg-gold text-primary-foreground font-body rounded-full px-5 py-2.5 text-sm font-medium transition-all hover:shadow-[0_0_20px_-5px_var(--gold-glow)] hover:brightness-110"
+              >
+                Go to App
+              </Link>
+              <ProfileDropdown />
+            </>
+          ) : (
+            <>
+              <Link
+                href="/sign-in"
+                className="text-muted-foreground hover:text-foreground font-body rounded-full px-4 py-2 text-sm transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/music"
+                className="bg-gold text-primary-foreground font-body rounded-full px-5 py-2.5 text-sm font-medium transition-all hover:shadow-[0_0_20px_-5px_var(--gold-glow)] hover:brightness-110"
+              >
+                Get Started
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile toggle */}
@@ -308,18 +326,34 @@ export function LandingNav() {
                   transition={{ duration: 0.3, delay: 0.3 }}
                   className="border-border/50 mt-2 flex flex-col gap-2 border-t pt-3"
                 >
-                  <Link
-                    href="/sign-in"
-                    className="text-muted-foreground font-body rounded-lg px-3 py-2.5 text-center text-sm"
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    href="/music"
-                    className="bg-gold text-primary-foreground font-body rounded-full px-5 py-2.5 text-center text-sm font-medium"
-                  >
-                    Get Started
-                  </Link>
+                  {isLoggedIn ? (
+                    <>
+                      <Link
+                        href="/music"
+                        className="bg-gold text-primary-foreground font-body rounded-full px-5 py-2.5 text-center text-sm font-medium"
+                      >
+                        Go to App
+                      </Link>
+                      <div className="flex justify-center py-1">
+                        <ProfileDropdown />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href="/sign-in"
+                        className="text-muted-foreground font-body rounded-lg px-3 py-2.5 text-center text-sm"
+                      >
+                        Sign In
+                      </Link>
+                      <Link
+                        href="/music"
+                        className="bg-gold text-primary-foreground font-body rounded-full px-5 py-2.5 text-center text-sm font-medium"
+                      >
+                        Get Started
+                      </Link>
+                    </>
+                  )}
                 </motion.div>
               </div>
             </div>

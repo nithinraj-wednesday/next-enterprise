@@ -313,7 +313,7 @@ function MusicPageContent() {
         </header>
 
         <main
-          className={cn("relative z-10 mx-auto max-w-screen-xl px-4 py-2 sm:px-6 sm:py-4", currentTrack && "pb-28")}
+          className={cn("relative z-10 mx-auto max-w-screen-xl px-4 py-2 sm:px-6 sm:py-4", currentTrack && "pb-32")}
         >
           {playlistStatus ? (
             <div

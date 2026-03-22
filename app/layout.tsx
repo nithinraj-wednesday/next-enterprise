@@ -42,8 +42,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   toast: "!bg-card !border-border !shadow-lg !shadow-gold-glow/10 !rounded-xl !font-body",
                   title: "!text-foreground !font-medium",
                   description: "!text-muted-foreground",
-                  success: "!border-gold/30 [&>svg]:!text-gold",
-                  error: "!border-destructive/30 [&>svg]:!text-destructive",
+                  success: "!border-gold/30 [&_[data-icon]_svg]:!text-gold [&_[data-icon]_svg]:!fill-gold",
+                  error:
+                    "!border-destructive/30 [&_[data-icon]_svg]:!text-destructive [&_[data-icon]_svg]:!fill-destructive",
                   actionButton: "!bg-gold !text-background !font-medium",
                   closeButton: "!text-muted-foreground hover:!text-foreground !border-border",
                 },

@@ -1,10 +1,12 @@
 import { and, eq } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
 import { requireServerSession } from "@/lib/auth-server"
+import { getCacheKey } from "@/lib/cache"
 import { db } from "@/lib/db"
 import { favoriteSong, playlist, playlistTrack } from "@/lib/db-schema"
 import { getPlaylistTracksForUser } from "@/lib/playlists"
 import { getPostHogClient } from "@/lib/posthog-server"
+import { redis } from "@/lib/redis"
 import { Track } from "@/lib/types"
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -84,6 +86,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       addedAt: new Date(),
     })
 
+    // Invalidate shared playlist cache if this playlist is shared
+    try {
+      if (redis && targetPlaylist.shareToken) {
+        await redis.del(getCacheKey("shared-playlist", targetPlaylist.shareToken))
+      }
+    } catch (cacheError) {
+      console.error("Redis cache invalidation error:", cacheError)
+    }
+
     try {
       const posthog = getPostHogClient()
       if (posthog) {
@@ -146,6 +157,15 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     await db.delete(playlistTrack).where(and(eq(playlistTrack.playlistId, id), eq(playlistTrack.trackId, trackId)))
+
+    // Invalidate shared playlist cache if this playlist is shared
+    try {
+      if (redis && targetPlaylist.shareToken) {
+        await redis.del(getCacheKey("shared-playlist", targetPlaylist.shareToken))
+      }
+    } catch (cacheError) {
+      console.error("Redis cache invalidation error:", cacheError)
+    }
 
     // Fire and forget analytics
     ;(async () => {

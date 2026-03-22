@@ -45,7 +45,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const cacheKey = getCacheKey("playlists", session.user.id)
     try {
       if (redis) {
-        await redis.del(cacheKey)
+        const keysToDelete = [cacheKey]
+        if (targetPlaylist.shareToken) {
+          keysToDelete.push(getCacheKey("shared-playlist", targetPlaylist.shareToken))
+        }
+        await redis.del(...keysToDelete)
       }
     } catch (cacheError) {
       console.error("Redis cache invalidation error:", cacheError)
@@ -93,7 +97,11 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     const cacheKey = getCacheKey("playlists", session.user.id)
     try {
       if (redis) {
-        await redis.del(cacheKey)
+        const keysToDelete = [cacheKey]
+        if (targetPlaylist.shareToken) {
+          keysToDelete.push(getCacheKey("shared-playlist", targetPlaylist.shareToken))
+        }
+        await redis.del(...keysToDelete)
       }
     } catch (cacheError) {
       console.error("Redis cache invalidation error:", cacheError)

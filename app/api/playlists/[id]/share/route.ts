@@ -51,7 +51,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const cacheKey = getCacheKey("playlists", session.user.id)
     try {
       if (redis) {
-        await redis.del(cacheKey)
+        const keysToDelete = [cacheKey]
+        if (updatedPlaylist.shareToken) {
+          keysToDelete.push(getCacheKey("shared-playlist", updatedPlaylist.shareToken))
+        }
+        await redis.del(...keysToDelete)
       }
     } catch (cacheError) {
       console.error("Redis cache invalidation error:", cacheError)
