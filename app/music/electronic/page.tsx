@@ -3,12 +3,12 @@
 import { EllipsisVertical } from "lucide-react"
 import { useFeatureFlagVariantKey } from "posthog-js/react"
 import { Suspense, useCallback, useEffect, useState } from "react"
-import { MusicAppHeader, PlayerBar, TrackGridSkeleton } from "@/components/music/MusicComponents"
+import { MusicAppHeader, TrackGridSkeleton } from "@/components/music/MusicComponents"
 import { MusicSidebarLayout } from "@/components/music/MusicSidebar"
 import { TrackListLayout } from "@/components/music/TrackListLayout"
 import { TrackOptionsMenu } from "@/components/music/TrackOptionsMenu"
 import { Button } from "@/components/ui/button"
-import { useMusic } from "@/hooks/use-music"
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext"
 import { useMusicManagement } from "@/hooks/use-music-management"
 import { useSession } from "@/lib/auth-client"
 import { SearchResponse, Track } from "@/lib/types"
@@ -16,28 +16,8 @@ import { cn } from "@/lib/utils"
 
 function ElectronicContent() {
   const { data: sessionData } = useSession()
-  const {
-    tracks,
-    loading,
-    currentTrack,
-    isPlaying,
-    progress,
-    duration,
-    volume,
-    isShuffled,
-    repeatMode,
-    searchMusic,
-    playTrack,
-    togglePlayPause,
-    seekTo,
-    setVolumeLevel,
-    toggleShuffle,
-    playPrevious,
-    playNext,
-    toggleRepeat,
-    addToQueue,
-    formatTime,
-  } = useMusic()
+  const { tracks, loading, currentTrack, isPlaying, searchMusic, playTrack, togglePlayPause, addToQueue, formatTime } =
+    useMusicPlayer()
 
   const {
     favoriteIds,
@@ -209,24 +189,6 @@ function ElectronicContent() {
             />
           )}
         </main>
-
-        <PlayerBar
-          currentTrack={currentTrack}
-          isPlaying={isPlaying}
-          progress={progress}
-          duration={duration}
-          volume={volume}
-          onTogglePlay={togglePlayPause}
-          onSeek={seekTo}
-          onVolumeChange={setVolumeLevel}
-          onShuffle={toggleShuffle}
-          onPrevious={playPrevious}
-          onNext={playNext}
-          onRepeat={toggleRepeat}
-          isShuffled={isShuffled}
-          repeatMode={repeatMode}
-          formatTime={formatTime}
-        />
       </div>
     </MusicSidebarLayout>
   )

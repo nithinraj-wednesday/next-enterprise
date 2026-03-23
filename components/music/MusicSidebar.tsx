@@ -29,7 +29,9 @@ import {
   SidebarRail,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext"
 import { SearchResponse, Track } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
 interface Artist {
   artistId: number
@@ -49,6 +51,7 @@ const MAIN_NAV = [
 
 export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
   const pathname = usePathname()
+  const { currentTrack } = useMusicPlayer()
   const [artists, setArtists] = useState<Artist[]>([])
   const [artistsLoading, setArtistsLoading] = useState(true)
   const [electronicTracks, setElectronicTracks] = useState<Track[]>([])
@@ -163,7 +166,7 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
           </div>
         </SidebarHeader>
 
-        <SidebarContent className="pb-24">
+        <SidebarContent className={cn(currentTrack && "pb-24")}>
           {/* Main Navigation */}
           <SidebarGroup>
             <SidebarGroupLabel>Menu</SidebarGroupLabel>
@@ -298,11 +301,11 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
                     <SidebarMenuItem key={artist.artistId}>
                       <SidebarMenuButton asChild tooltip={artist.artistName}>
                         <Link href={`/music?search=${encodeURIComponent(artist.artistName)}`}>
-                          <div className="group-hover:border-gold/30 relative size-7 shrink-0 overflow-hidden rounded-full border border-white/10">
+                          <div className="relative size-7 shrink-0">
                             <Image
-                              src="/images/artist-placeholder.png"
+                              src="/images/artist-placeholder-new.png"
                               alt={artist.artistName}
-                              className="object-cover transition-transform group-hover:scale-110"
+                              className="scale-110 object-cover"
                               fill
                               sizes="28px"
                             />

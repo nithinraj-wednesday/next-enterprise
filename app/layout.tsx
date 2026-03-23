@@ -2,9 +2,11 @@ import "styles/tailwind.css"
 import { Metadata } from "next"
 import { DM_Sans, Syne } from "next/font/google"
 import { Toaster } from "sonner"
+import { GlobalPlayerBar } from "@/components/music/GlobalPlayerBar"
 import { PostHogProvider } from "@/components/providers/PostHogProvider"
 import { ThemeProvider } from "@/components/ThemeProvider"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext"
 import { cn } from "@/lib/utils"
 
 const syne = Syne({
@@ -34,7 +36,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-body antialiased">
         <PostHogProvider>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange={false}>
-            <TooltipProvider>{children}</TooltipProvider>
+            <TooltipProvider>
+              <MusicPlayerProvider>
+                {children}
+                <GlobalPlayerBar />
+              </MusicPlayerProvider>
+            </TooltipProvider>
             <Toaster
               position="top-right"
               toastOptions={{

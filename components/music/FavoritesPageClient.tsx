@@ -1,11 +1,11 @@
 "use client"
 
-import { EllipsisVertical, Loader2, PencilLine, Plus, Share2, Trash2 } from "lucide-react"
+import { ArrowUpDown, EllipsisVertical, Loader2, PencilLine, Plus, Share2, Trash2 } from "lucide-react"
 import Link from "next/link"
 import posthog from "posthog-js"
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
-import { MusicAppHeader, PlayerBar, SearchBar, TrackRow } from "@/components/music/MusicComponents"
+import { MusicAppHeader, SearchBar, TrackRow } from "@/components/music/MusicComponents"
 import { MusicSidebarLayout } from "@/components/music/MusicSidebar"
 import { SharePlaylistDialog } from "@/components/music/SharePlaylistDialog"
 import { TrackOptionsMenu } from "@/components/music/TrackOptionsMenu"
@@ -39,7 +39,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import { useMusic } from "@/hooks/use-music"
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext"
 import { favoriteToTrack } from "@/lib/favorites"
 import { FavoriteSong, Playlist, PlaylistResponse, PlaylistTracksResponse, Track } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -100,27 +100,9 @@ export function FavoritesPageClient({
   const [isDeletingPlaylist, setIsDeletingPlaylist] = useState(false)
 
   const [searchTerm, setSearchTerm] = useState("")
+  const [sortOrder, setSortOrder] = useState<"latest" | "oldest">("latest")
 
-  const {
-    currentTrack,
-    isPlaying,
-    progress,
-    duration,
-    volume,
-    isShuffled,
-    repeatMode,
-    playTrack,
-    togglePlayPause,
-    seekTo,
-    setVolumeLevel,
-    toggleShuffle,
-    playPrevious,
-    playNext,
-    toggleRepeat,
-    setTrackList,
-    addToQueue,
-    formatTime,
-  } = useMusic()
+  const { currentTrack, isPlaying, playTrack, togglePlayPause, setTrackList, addToQueue, formatTime } = useMusicPlayer()
 
   const likedTracks = useMemo(
     () =>
@@ -128,11 +110,10 @@ export function FavoritesPageClient({
         .sort((left, right) => {
           const leftTime = new Date(left.createdAt).getTime()
           const rightTime = new Date(right.createdAt).getTime()
-
-          return rightTime - leftTime
+          return sortOrder === "latest" ? rightTime - leftTime : leftTime - rightTime
         })
         .map(favoriteToTrack),
-    [favorites]
+    [favorites, sortOrder]
   )
 
   const ownedPlaylistIdSet = useMemo(() => new Set(ownedPlaylistIds), [ownedPlaylistIds])
@@ -157,7 +138,12 @@ export function FavoritesPageClient({
   const selectedPlaylistTracks =
     selectedPlaylistId === LIKED_PLAYLIST_ID ? undefined : playlistTracks[selectedPlaylistId]
 
-  const activeTracks = selectedPlaylistId === LIKED_PLAYLIST_ID ? likedTracks : selectedPlaylistTracks ?? EMPTY_TRACKS
+  const sortedPlaylistTracks = useMemo(() => {
+    if (!selectedPlaylistTracks) return EMPTY_TRACKS
+    return sortOrder === "latest" ? selectedPlaylistTracks : [...selectedPlaylistTracks].reverse()
+  }, [selectedPlaylistTracks, sortOrder])
+
+  const activeTracks = selectedPlaylistId === LIKED_PLAYLIST_ID ? likedTracks : sortedPlaylistTracks
 
   const handlePlayTrack = useCallback(
     (track: Track) => {
@@ -843,7 +829,10 @@ export function FavoritesPageClient({
                 </Card>
               ))}
             </div>
-            <ScrollBar orientation="horizontal" />
+            <ScrollBar
+              orientation="horizontal"
+              className="h-2 transition-all duration-200 focus-within:h-3.5 hover:h-3.5"
+            />
           </ScrollArea>
 
           <Card className="glass-card border-border/30 overflow-hidden rounded-[2rem] border">
@@ -862,13 +851,24 @@ export function FavoritesPageClient({
                   </span>
                 ) : null}
               </div>
-              <div className="flex items-center gap-2">
-                <CardDescription>{selectedPlaylistTrackCount} tracks</CardDescription>
-                {searchTerm && (
-                  <span className="text-muted-foreground/60 text-xs">
-                    · {filteredTracks.length} found for &quot;{searchTerm}&quot;
-                  </span>
-                )}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CardDescription>{selectedPlaylistTrackCount} tracks</CardDescription>
+                  {searchTerm && (
+                    <span className="text-muted-foreground/60 text-xs">
+                      · {filteredTracks.length} found for &quot;{searchTerm}&quot;
+                    </span>
+                  )}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSortOrder((prev) => (prev === "latest" ? "oldest" : "latest"))}
+                  className="text-muted-foreground hover:text-foreground gap-1.5 text-xs"
+                >
+                  {sortOrder === "latest" ? "Latest first" : "Oldest first"}
+                  <ArrowUpDown className="size-3.5" />
+                </Button>
               </div>
             </CardHeader>
 
@@ -1061,24 +1061,6 @@ export function FavoritesPageClient({
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-
-        <PlayerBar
-          currentTrack={currentTrack}
-          isPlaying={isPlaying}
-          progress={progress}
-          duration={duration}
-          volume={volume}
-          onTogglePlay={togglePlayPause}
-          onSeek={seekTo}
-          onVolumeChange={setVolumeLevel}
-          onShuffle={toggleShuffle}
-          onPrevious={playPrevious}
-          onNext={playNext}
-          onRepeat={toggleRepeat}
-          isShuffled={isShuffled}
-          repeatMode={repeatMode}
-          formatTime={formatTime}
-        />
       </div>
     </MusicSidebarLayout>
   )

@@ -244,6 +244,24 @@ export function useMusic() {
     toast.success(`Added "${track.trackName}" to queue`)
   }, [])
 
+  const stopPlayback = useCallback(() => {
+    if (audioRef.current) {
+      if (endedHandlerRef.current) {
+        audioRef.current.removeEventListener("ended", endedHandlerRef.current)
+      }
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+    if (progressInterval.current) {
+      clearInterval(progressInterval.current)
+      progressInterval.current = null
+    }
+    setCurrentTrack(null)
+    setIsPlaying(false)
+    setProgress(0)
+    setDuration(0)
+  }, [])
+
   return {
     tracks,
     loading,
@@ -266,5 +284,6 @@ export function useMusic() {
     setTrackList,
     addToQueue,
     formatTime,
+    stopPlayback,
   }
 }
