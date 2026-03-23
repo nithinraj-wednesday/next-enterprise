@@ -123,11 +123,11 @@ function ArtistsContent() {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-secondary/70 rounded-2xl border border-white/8 p-4">
+                <div className="bg-secondary/70 flex flex-col justify-between rounded-2xl border border-white/8 p-4">
                   <div className="text-muted-foreground text-[11px] tracking-[0.22em] uppercase">Artists</div>
                   <div className="text-foreground mt-2 text-2xl font-semibold">{artists.length}</div>
                 </div>
-                <div className="bg-secondary/70 rounded-2xl border border-white/8 p-4">
+                <div className="bg-secondary/70 flex flex-col justify-between rounded-2xl border border-white/8 p-4">
                   <div className="text-muted-foreground text-[11px] tracking-[0.22em] uppercase">Genres Tagged</div>
                   <div className="text-foreground mt-2 text-2xl font-semibold">{taggedGenreCount}</div>
                 </div>
@@ -188,11 +188,6 @@ function ArtistsContent() {
                       <span className="bg-background/70 text-muted-foreground inline-flex rounded-full border border-white/8 px-3 py-1 text-xs">
                         {artist.primaryGenreName || "All genres"}
                       </span>
-                      {artist.artistLinkUrl ? (
-                        <span className="bg-background/70 text-muted-foreground inline-flex rounded-full border border-white/8 px-3 py-1 text-xs">
-                          Official profile
-                        </span>
-                      ) : null}
                     </div>
 
                     <span className="text-gold inline-flex items-center gap-1 text-sm font-medium">
