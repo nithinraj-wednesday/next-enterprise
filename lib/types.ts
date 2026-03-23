@@ -86,6 +86,7 @@ export interface PlayerBarProps {
   isShuffled: boolean
   repeatMode: "off" | "all" | "one"
   formatTime: (s: number) => string
+  onClose?: () => void
 }
 
 export interface Playlist {

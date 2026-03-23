@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation"
 import posthog from "posthog-js"
 import { type FormEvent, Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
-import { EmptyState, MusicAppHeader, PlayerBar, SearchBar, TrackGridSkeleton } from "@/components/music/MusicComponents"
+import { EmptyState, MusicAppHeader, SearchBar, TrackGridSkeleton } from "@/components/music/MusicComponents"
 import { MusicSidebarLayout } from "@/components/music/MusicSidebar"
 import { TrackListLayout } from "@/components/music/TrackListLayout"
 import { TrackOptionsMenu } from "@/components/music/TrackOptionsMenu"
@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useMusic } from "@/hooks/use-music"
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext"
 import { useMusicManagement } from "@/hooks/use-music-management"
 import { useRecentlySearched } from "@/hooks/use-recently-searched"
 import { useSession } from "@/lib/auth-client"
@@ -32,28 +32,8 @@ import { FEATURED_SEARCHES, SEARCH_DEFAULTS, ViewMode } from "./constants"
 
 function MusicPageContent() {
   const { data: sessionData } = useSession()
-  const {
-    tracks,
-    loading,
-    currentTrack,
-    isPlaying,
-    progress,
-    duration,
-    volume,
-    isShuffled,
-    repeatMode,
-    searchMusic,
-    playTrack,
-    togglePlayPause,
-    seekTo,
-    setVolumeLevel,
-    toggleShuffle,
-    playPrevious,
-    playNext,
-    toggleRepeat,
-    addToQueue,
-    formatTime,
-  } = useMusic()
+  const { tracks, loading, currentTrack, isPlaying, searchMusic, playTrack, togglePlayPause, addToQueue, formatTime } =
+    useMusicPlayer()
 
   const {
     favoriteIds,
@@ -462,24 +442,6 @@ function MusicPageContent() {
             </div>
           </section>
         </main>
-
-        <PlayerBar
-          currentTrack={currentTrack}
-          isPlaying={isPlaying}
-          progress={progress}
-          duration={duration}
-          volume={volume}
-          onTogglePlay={togglePlayPause}
-          onSeek={seekTo}
-          onVolumeChange={setVolumeLevel}
-          onShuffle={toggleShuffle}
-          onPrevious={playPrevious}
-          onNext={playNext}
-          onRepeat={toggleRepeat}
-          isShuffled={isShuffled}
-          repeatMode={repeatMode}
-          formatTime={formatTime}
-        />
       </div>
     </MusicSidebarLayout>
   )

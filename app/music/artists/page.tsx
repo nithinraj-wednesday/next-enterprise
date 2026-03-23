@@ -4,9 +4,9 @@ import { ArrowRight, Disc3 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { Suspense, useEffect, useMemo, useState } from "react"
-import { MusicAppHeader, PlayerBar, TrackGridSkeleton } from "@/components/music/MusicComponents"
+import { MusicAppHeader, TrackGridSkeleton } from "@/components/music/MusicComponents"
 import { MusicSidebarLayout } from "@/components/music/MusicSidebar"
-import { useMusic } from "@/hooks/use-music"
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext"
 import { useMusicManagement } from "@/hooks/use-music-management"
 import { useSession } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
@@ -21,23 +21,7 @@ interface Artist {
 function ArtistsContent() {
   const { data: sessionData } = useSession()
   const { playlists } = useMusicManagement()
-  const {
-    currentTrack,
-    isPlaying,
-    progress,
-    duration,
-    volume,
-    isShuffled,
-    repeatMode,
-    togglePlayPause,
-    seekTo,
-    setVolumeLevel,
-    toggleShuffle,
-    playPrevious,
-    playNext,
-    toggleRepeat,
-    formatTime,
-  } = useMusic()
+  const { currentTrack } = useMusicPlayer()
 
   const [artists, setArtists] = useState<Artist[]>([])
   const [artistsLoading, setArtistsLoading] = useState(true)
@@ -159,14 +143,14 @@ function ArtistsContent() {
                   href={`/music?search=${encodeURIComponent(artist.artistName)}`}
                   className="group from-secondary/80 via-secondary/55 to-secondary/30 border-border/50 hover:border-gold/25 block overflow-hidden rounded-[1.5rem] border bg-gradient-to-br p-4 transition-all duration-300 hover:shadow-[0_28px_70px_-42px_rgba(245,158,11,0.45)]"
                 >
-                  <div className="flex items-start gap-4">
-                    <div className="relative size-[72px] shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-black/20">
+                  <div className="flex items-center gap-4">
+                    <div className="relative size-[88px] shrink-0">
                       <Image
-                        src="/images/artist-placeholder.png"
+                        src="/images/artist-placeholder-new.png"
                         alt={artist.artistName}
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
                         fill
-                        sizes="72px"
+                        sizes="88px"
                       />
                     </div>
 
@@ -200,24 +184,6 @@ function ArtistsContent() {
             </div>
           )}
         </main>
-
-        <PlayerBar
-          currentTrack={currentTrack}
-          isPlaying={isPlaying}
-          progress={progress}
-          duration={duration}
-          volume={volume}
-          onTogglePlay={togglePlayPause}
-          onSeek={seekTo}
-          onVolumeChange={setVolumeLevel}
-          onShuffle={toggleShuffle}
-          onPrevious={playPrevious}
-          onNext={playNext}
-          onRepeat={toggleRepeat}
-          isShuffled={isShuffled}
-          repeatMode={repeatMode}
-          formatTime={formatTime}
-        />
       </div>
     </MusicSidebarLayout>
   )

@@ -5,10 +5,10 @@ import Link from "next/link"
 import posthog from "posthog-js"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
-import { PlayerBar, TrackRow } from "@/components/music/MusicComponents"
+import { TrackRow } from "@/components/music/MusicComponents"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useMusic } from "@/hooks/use-music"
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext"
 import { useSession } from "@/lib/auth-client"
 import { SharedPlaylistView, Track } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -22,25 +22,7 @@ export function SharedPlaylistPageClient({ data }: SharedPlaylistPageClientProps
   const { data: sessionData } = useSession()
   const [isSavedByViewer, setIsSavedByViewer] = useState(playlist.isSavedByViewer)
   const [isSaving, setIsSaving] = useState(false)
-  const {
-    currentTrack,
-    isPlaying,
-    progress,
-    duration,
-    volume,
-    isShuffled,
-    repeatMode,
-    playTrack,
-    togglePlayPause,
-    seekTo,
-    setVolumeLevel,
-    toggleShuffle,
-    playPrevious,
-    playNext,
-    toggleRepeat,
-    setTrackList,
-    formatTime,
-  } = useMusic()
+  const { currentTrack, isPlaying, playTrack, togglePlayPause, setTrackList, formatTime } = useMusicPlayer()
 
   useEffect(() => {
     setTrackList(tracks)
@@ -190,24 +172,6 @@ export function SharedPlaylistPageClient({ data }: SharedPlaylistPageClientProps
           </CardContent>
         </Card>
       </main>
-
-      <PlayerBar
-        currentTrack={currentTrack}
-        isPlaying={isPlaying}
-        progress={progress}
-        duration={duration}
-        volume={volume}
-        onTogglePlay={togglePlayPause}
-        onSeek={seekTo}
-        onVolumeChange={setVolumeLevel}
-        onShuffle={toggleShuffle}
-        onPrevious={playPrevious}
-        onNext={playNext}
-        onRepeat={toggleRepeat}
-        isShuffled={isShuffled}
-        repeatMode={repeatMode}
-        formatTime={formatTime}
-      />
     </div>
   )
 }

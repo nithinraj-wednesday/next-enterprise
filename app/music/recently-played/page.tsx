@@ -2,12 +2,12 @@
 
 import { EllipsisVertical } from "lucide-react"
 import { Suspense, useCallback, useEffect, useState } from "react"
-import { MusicAppHeader, PlayerBar, TrackGridSkeleton } from "@/components/music/MusicComponents"
+import { MusicAppHeader, TrackGridSkeleton } from "@/components/music/MusicComponents"
 import { MusicSidebarLayout } from "@/components/music/MusicSidebar"
 import { TrackListLayout } from "@/components/music/TrackListLayout"
 import { TrackOptionsMenu } from "@/components/music/TrackOptionsMenu"
 import { Button } from "@/components/ui/button"
-import { useMusic } from "@/hooks/use-music"
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext"
 import { useMusicManagement } from "@/hooks/use-music-management"
 import { useSession } from "@/lib/auth-client"
 import { Track } from "@/lib/types"
@@ -15,25 +15,7 @@ import { cn } from "@/lib/utils"
 
 function RecentlyPlayedContent() {
   const { data: sessionData } = useSession()
-  const {
-    currentTrack,
-    isPlaying,
-    progress,
-    duration,
-    volume,
-    isShuffled,
-    repeatMode,
-    playTrack,
-    togglePlayPause,
-    seekTo,
-    setVolumeLevel,
-    toggleShuffle,
-    playPrevious,
-    playNext,
-    toggleRepeat,
-    addToQueue,
-    formatTime,
-  } = useMusic()
+  const { currentTrack, isPlaying, playTrack, togglePlayPause, addToQueue, formatTime } = useMusicPlayer()
 
   const {
     favoriteIds,
@@ -132,24 +114,6 @@ function RecentlyPlayedContent() {
             onViewModeChange={setViewMode}
           />
         </main>
-
-        <PlayerBar
-          currentTrack={currentTrack}
-          isPlaying={isPlaying}
-          progress={progress}
-          duration={duration}
-          volume={volume}
-          onTogglePlay={togglePlayPause}
-          onSeek={seekTo}
-          onVolumeChange={setVolumeLevel}
-          onShuffle={toggleShuffle}
-          onPrevious={playPrevious}
-          onNext={playNext}
-          onRepeat={toggleRepeat}
-          isShuffled={isShuffled}
-          repeatMode={repeatMode}
-          formatTime={formatTime}
-        />
       </div>
     </MusicSidebarLayout>
   )

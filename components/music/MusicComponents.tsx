@@ -22,6 +22,7 @@ import { getArtworkUrl } from "@/app/music/constants"
 import { RecentlySearchedDropdown } from "@/components/music/RecentlySearchedDropdown"
 import { ProfileDropdown } from "@/components/ProfileDropdown"
 import { ThemeToggle } from "@/components/ThemeToggle"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { PlayerBarProps, SearchBarProps, TrackCardProps, TrackRowProps } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -506,6 +507,7 @@ export function PlayerBar({
   isShuffled,
   repeatMode,
   formatTime,
+  onClose,
 }: PlayerBarProps) {
   const collapsedProgressBarRef = useRef<HTMLDivElement>(null)
   const expandedProgressBarRef = useRef<HTMLDivElement>(null)
@@ -557,15 +559,20 @@ export function PlayerBar({
           >
             <div className="mx-auto flex h-full w-full max-w-screen-md flex-col px-5 pt-4 pb-6 sm:px-8">
               <div className="mb-3 flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => setIsExpanded(false)}
-                  className="bg-secondary/65 text-muted-foreground hover:text-foreground hover:bg-secondary flex size-9 items-center justify-center rounded-full transition-colors"
-                  aria-label="Collapse player"
-                  aria-expanded={isExpanded}
-                >
-                  <ChevronDown className="size-4" />
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => setIsExpanded(false)}
+                      className="bg-secondary/65 text-muted-foreground hover:text-foreground hover:bg-secondary flex size-9 items-center justify-center rounded-full transition-colors"
+                      aria-label="Collapse player"
+                      aria-expanded={isExpanded}
+                    >
+                      <ChevronDown className="size-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">Collapse</TooltipContent>
+                </Tooltip>
                 <p className="text-muted-foreground text-xs tracking-[0.2em] uppercase">Now Playing</p>
                 <div className="size-9" />
               </div>
@@ -607,76 +614,106 @@ export function PlayerBar({
               </div>
 
               <div className="mt-5 flex items-center justify-center gap-4 sm:gap-6">
-                <button
-                  onClick={onShuffle}
-                  className={cn(
-                    "p-2 transition-colors",
-                    isShuffled ? "text-gold" : "text-muted-foreground hover:text-foreground"
-                  )}
-                  aria-label={isShuffled ? "Shuffle on" : "Shuffle off"}
-                  aria-pressed={isShuffled}
-                >
-                  <HugeiconsIcon icon={ShuffleIcon} className="size-5" strokeWidth={2} />
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={onShuffle}
+                      className={cn(
+                        "p-2 transition-colors",
+                        isShuffled ? "text-gold" : "text-muted-foreground hover:text-foreground"
+                      )}
+                      aria-label={isShuffled ? "Shuffle on" : "Shuffle off"}
+                      aria-pressed={isShuffled}
+                    >
+                      <HugeiconsIcon icon={ShuffleIcon} className="size-5" strokeWidth={2} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">{isShuffled ? "Shuffle on" : "Shuffle off"}</TooltipContent>
+                </Tooltip>
 
-                <button
-                  onClick={onPrevious}
-                  className="text-muted-foreground hover:text-foreground p-2 transition-colors"
-                  aria-label="Previous"
-                >
-                  <HugeiconsIcon icon={PreviousIcon} className="size-6" fill="currentColor" />
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={onPrevious}
+                      className="text-muted-foreground hover:text-foreground p-2 transition-colors"
+                      aria-label="Previous"
+                    >
+                      <HugeiconsIcon icon={PreviousIcon} className="size-6" fill="currentColor" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">Previous</TooltipContent>
+                </Tooltip>
 
-                <button
-                  onClick={onTogglePlay}
-                  className="bg-foreground text-background flex size-14 items-center justify-center rounded-full shadow-xl transition-transform hover:scale-105 active:scale-95"
-                  aria-label={isPlaying ? "Pause" : "Play"}
-                  id="player-play-pause"
-                >
-                  {isPlaying ? (
-                    <HugeiconsIcon icon={PauseIcon} className="size-7" fill="currentColor" />
-                  ) : (
-                    <HugeiconsIcon icon={PlayIcon} className="ml-0.5 size-7" fill="currentColor" />
-                  )}
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={onTogglePlay}
+                      className="bg-foreground text-background flex size-14 items-center justify-center rounded-full shadow-xl transition-transform hover:scale-105 active:scale-95"
+                      aria-label={isPlaying ? "Pause" : "Play"}
+                      id="player-play-pause"
+                    >
+                      {isPlaying ? (
+                        <HugeiconsIcon icon={PauseIcon} className="size-7" fill="currentColor" />
+                      ) : (
+                        <HugeiconsIcon icon={PlayIcon} className="ml-0.5 size-7" fill="currentColor" />
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">{isPlaying ? "Pause" : "Play"}</TooltipContent>
+                </Tooltip>
 
-                <button
-                  onClick={onNext}
-                  className="text-muted-foreground hover:text-foreground p-2 transition-colors"
-                  aria-label="Next"
-                >
-                  <HugeiconsIcon icon={NextIcon} className="size-6" fill="currentColor" />
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={onNext}
+                      className="text-muted-foreground hover:text-foreground p-2 transition-colors"
+                      aria-label="Next"
+                    >
+                      <HugeiconsIcon icon={NextIcon} className="size-6" fill="currentColor" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">Next</TooltipContent>
+                </Tooltip>
 
-                <button
-                  onClick={onRepeat}
-                  className={cn(
-                    "p-2 transition-colors",
-                    repeatMode !== "off" ? "text-gold" : "text-muted-foreground hover:text-foreground"
-                  )}
-                  aria-label={`Repeat ${repeatMode}`}
-                  aria-pressed={repeatMode !== "off"}
-                >
-                  <HugeiconsIcon
-                    icon={RepeatIcon}
-                    className={cn("size-5", repeatMode === "one" && "text-xs")}
-                    strokeWidth={2}
-                  />
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={onRepeat}
+                      className={cn(
+                        "p-2 transition-colors",
+                        repeatMode !== "off" ? "text-gold" : "text-muted-foreground hover:text-foreground"
+                      )}
+                      aria-label={`Repeat ${repeatMode}`}
+                      aria-pressed={repeatMode !== "off"}
+                    >
+                      <HugeiconsIcon
+                        icon={RepeatIcon}
+                        className={cn("size-5", repeatMode === "one" && "text-xs")}
+                        strokeWidth={2}
+                      />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">{`Repeat ${repeatMode}`}</TooltipContent>
+                </Tooltip>
               </div>
 
               <div className="mt-5 flex items-center justify-center gap-3">
-                <button
-                  onClick={() => onVolumeChange(volume > 0 ? 0 : 0.7)}
-                  className="text-muted-foreground hover:text-foreground p-1 transition-colors"
-                  aria-label="Volume"
-                >
-                  {volume === 0 ? (
-                    <HugeiconsIcon icon={VolumeMute01Icon} className="size-5" strokeWidth={2} />
-                  ) : (
-                    <HugeiconsIcon icon={VolumeHighIcon} className="size-5" strokeWidth={2} />
-                  )}
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => onVolumeChange(volume > 0 ? 0 : 0.7)}
+                      className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+                      aria-label="Volume"
+                    >
+                      {volume === 0 ? (
+                        <HugeiconsIcon icon={VolumeMute01Icon} className="size-5" strokeWidth={2} />
+                      ) : (
+                        <HugeiconsIcon icon={VolumeHighIcon} className="size-5" strokeWidth={2} />
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">{volume === 0 ? "Unmute" : "Mute"}</TooltipContent>
+                </Tooltip>
 
                 <div
                   ref={volumeBarRef}
@@ -736,162 +773,217 @@ export function PlayerBar({
 
             {/* Center: Playback controls */}
             <div className="hidden items-center justify-center gap-1 sm:flex sm:gap-4">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onShuffle()
-                }}
-                className={cn(
-                  "p-2 transition-all hover:scale-110",
-                  isShuffled
-                    ? "text-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                aria-label={isShuffled ? "Shuffle on" : "Shuffle off"}
-                aria-pressed={isShuffled}
-              >
-                <HugeiconsIcon icon={ShuffleIcon} className="size-4.5" strokeWidth={2.5} />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onShuffle()
+                    }}
+                    className={cn(
+                      "p-2 transition-all hover:scale-110",
+                      isShuffled
+                        ? "text-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                    aria-label={isShuffled ? "Shuffle on" : "Shuffle off"}
+                    aria-pressed={isShuffled}
+                  >
+                    <HugeiconsIcon icon={ShuffleIcon} className="size-4.5" strokeWidth={2.5} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">{isShuffled ? "Shuffle on" : "Shuffle off"}</TooltipContent>
+              </Tooltip>
 
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onPrevious()
-                }}
-                className="text-muted-foreground hover:text-foreground p-2 transition-all hover:scale-110"
-                aria-label="Previous"
-              >
-                <HugeiconsIcon icon={PreviousIcon} className="size-6" fill="currentColor" />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onPrevious()
+                    }}
+                    className="text-muted-foreground hover:text-foreground p-2 transition-all hover:scale-110"
+                    aria-label="Previous"
+                  >
+                    <HugeiconsIcon icon={PreviousIcon} className="size-6" fill="currentColor" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">Previous</TooltipContent>
+              </Tooltip>
 
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onTogglePlay()
-                }}
-                className="bg-foreground text-background hover:shadow-gold/20 flex size-10 items-center justify-center rounded-full shadow-lg transition-all hover:scale-110 active:scale-95"
-                aria-label={isPlaying ? "Pause" : "Play"}
-                id="player-play-pause"
-              >
-                {isPlaying ? (
-                  <HugeiconsIcon icon={PauseIcon} className="size-5" fill="currentColor" />
-                ) : (
-                  <HugeiconsIcon icon={PlayIcon} className="ml-0.5 size-5" fill="currentColor" />
-                )}
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onTogglePlay()
+                    }}
+                    className="bg-foreground text-background hover:shadow-gold/20 flex size-10 items-center justify-center rounded-full shadow-lg transition-all hover:scale-110 active:scale-95"
+                    aria-label={isPlaying ? "Pause" : "Play"}
+                    id="player-play-pause"
+                  >
+                    {isPlaying ? (
+                      <HugeiconsIcon icon={PauseIcon} className="size-5" fill="currentColor" />
+                    ) : (
+                      <HugeiconsIcon icon={PlayIcon} className="ml-0.5 size-5" fill="currentColor" />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">{isPlaying ? "Pause" : "Play"}</TooltipContent>
+              </Tooltip>
 
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onNext()
-                }}
-                className="text-muted-foreground hover:text-foreground p-2 transition-all hover:scale-110"
-                aria-label="Next"
-              >
-                <HugeiconsIcon icon={NextIcon} className="size-6" fill="currentColor" />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onNext()
+                    }}
+                    className="text-muted-foreground hover:text-foreground p-2 transition-all hover:scale-110"
+                    aria-label="Next"
+                  >
+                    <HugeiconsIcon icon={NextIcon} className="size-6" fill="currentColor" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">Next</TooltipContent>
+              </Tooltip>
 
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onRepeat()
-                }}
-                className={cn(
-                  "p-2 transition-all hover:scale-110",
-                  repeatMode !== "off"
-                    ? "text-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                aria-label={`Repeat ${repeatMode}`}
-                aria-pressed={repeatMode !== "off"}
-              >
-                <HugeiconsIcon icon={RepeatIcon} className="size-4.5" strokeWidth={2.5} />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onRepeat()
+                    }}
+                    className={cn(
+                      "p-2 transition-all hover:scale-110",
+                      repeatMode !== "off"
+                        ? "text-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                    aria-label={`Repeat ${repeatMode}`}
+                    aria-pressed={repeatMode !== "off"}
+                  >
+                    <HugeiconsIcon icon={RepeatIcon} className="size-4.5" strokeWidth={2.5} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">{`Repeat ${repeatMode}`}</TooltipContent>
+              </Tooltip>
             </div>
 
             {/* Simplified controls for smaller screens (below sm) */}
             <div className="flex items-center justify-center gap-1 sm:hidden">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onShuffle()
-                }}
-                className={cn(
-                  "p-1.5 transition-colors",
-                  isShuffled ? "text-gold" : "text-muted-foreground hover:text-foreground"
-                )}
-                aria-label={isShuffled ? "Shuffle on" : "Shuffle off"}
-                aria-pressed={isShuffled}
-              >
-                <HugeiconsIcon icon={ShuffleIcon} className="size-4" strokeWidth={2.5} />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onPrevious()
-                }}
-                className="text-muted-foreground hover:text-foreground p-1.5 transition-colors"
-                aria-label="Previous"
-              >
-                <HugeiconsIcon icon={PreviousIcon} className="size-5" fill="currentColor" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onTogglePlay()
-                }}
-                className="bg-foreground text-background flex size-9 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95"
-                aria-label={isPlaying ? "Pause" : "Play"}
-              >
-                {isPlaying ? (
-                  <HugeiconsIcon icon={PauseIcon} className="size-5" fill="currentColor" />
-                ) : (
-                  <HugeiconsIcon icon={PlayIcon} className="ml-0.5 size-5" fill="currentColor" />
-                )}
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onNext()
-                }}
-                className="text-muted-foreground hover:text-foreground p-1.5 transition-colors"
-                aria-label="Next"
-              >
-                <HugeiconsIcon icon={NextIcon} className="size-5" fill="currentColor" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onRepeat()
-                }}
-                className={cn(
-                  "p-1.5 transition-colors",
-                  repeatMode !== "off" ? "text-gold" : "text-muted-foreground hover:text-foreground"
-                )}
-                aria-label={`Repeat ${repeatMode}`}
-                aria-pressed={repeatMode !== "off"}
-              >
-                <HugeiconsIcon icon={RepeatIcon} className="size-4" strokeWidth={2.5} />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onShuffle()
+                    }}
+                    className={cn(
+                      "p-1.5 transition-colors",
+                      isShuffled ? "text-gold" : "text-muted-foreground hover:text-foreground"
+                    )}
+                    aria-label={isShuffled ? "Shuffle on" : "Shuffle off"}
+                    aria-pressed={isShuffled}
+                  >
+                    <HugeiconsIcon icon={ShuffleIcon} className="size-4" strokeWidth={2.5} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">{isShuffled ? "Shuffle on" : "Shuffle off"}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onPrevious()
+                    }}
+                    className="text-muted-foreground hover:text-foreground p-1.5 transition-colors"
+                    aria-label="Previous"
+                  >
+                    <HugeiconsIcon icon={PreviousIcon} className="size-5" fill="currentColor" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">Previous</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onTogglePlay()
+                    }}
+                    className="bg-foreground text-background flex size-9 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95"
+                    aria-label={isPlaying ? "Pause" : "Play"}
+                  >
+                    {isPlaying ? (
+                      <HugeiconsIcon icon={PauseIcon} className="size-5" fill="currentColor" />
+                    ) : (
+                      <HugeiconsIcon icon={PlayIcon} className="ml-0.5 size-5" fill="currentColor" />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">{isPlaying ? "Pause" : "Play"}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onNext()
+                    }}
+                    className="text-muted-foreground hover:text-foreground p-1.5 transition-colors"
+                    aria-label="Next"
+                  >
+                    <HugeiconsIcon icon={NextIcon} className="size-5" fill="currentColor" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">Next</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onRepeat()
+                    }}
+                    className={cn(
+                      "p-1.5 transition-colors",
+                      repeatMode !== "off" ? "text-gold" : "text-muted-foreground hover:text-foreground"
+                    )}
+                    aria-label={`Repeat ${repeatMode}`}
+                    aria-pressed={repeatMode !== "off"}
+                  >
+                    <HugeiconsIcon icon={RepeatIcon} className="size-4" strokeWidth={2.5} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">{`Repeat ${repeatMode}`}</TooltipContent>
+              </Tooltip>
             </div>
 
             {/* Right: Volume + Expand */}
             <div className="hidden items-center justify-end gap-3 sm:flex">
               <div className="flex items-center gap-2 pr-2">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onVolumeChange(volume > 0 ? 0 : 0.7)
-                  }}
-                  className="text-muted-foreground hover:text-foreground p-1 transition-colors"
-                  aria-label="Volume"
-                >
-                  {volume === 0 ? (
-                    <HugeiconsIcon icon={VolumeMute01Icon} className="size-4" strokeWidth={2} />
-                  ) : (
-                    <HugeiconsIcon icon={VolumeHighIcon} className="size-4" strokeWidth={2} />
-                  )}
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onVolumeChange(volume > 0 ? 0 : 0.7)
+                      }}
+                      className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+                      aria-label="Volume"
+                    >
+                      {volume === 0 ? (
+                        <HugeiconsIcon icon={VolumeMute01Icon} className="size-4" strokeWidth={2} />
+                      ) : (
+                        <HugeiconsIcon icon={VolumeHighIcon} className="size-4" strokeWidth={2} />
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">{volume === 0 ? "Unmute" : "Mute"}</TooltipContent>
+                </Tooltip>
                 <div
                   ref={collapsedVolumeBarRef}
                   onClick={(e) => handleVolumeClick(e, collapsedVolumeBarRef)}
@@ -908,33 +1000,81 @@ export function PlayerBar({
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setIsExpanded(true)
-                }}
-                className="bg-secondary/60 text-muted-foreground hover:text-foreground hover:bg-secondary flex size-9 items-center justify-center rounded-full border border-white/5 shadow-sm transition-all"
-                aria-label="Expand player"
-                aria-expanded={isExpanded}
-              >
-                <ChevronUp className="size-4" />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setIsExpanded(true)
+                    }}
+                    className="bg-secondary/60 text-muted-foreground hover:text-foreground hover:bg-secondary flex size-9 items-center justify-center rounded-full border border-white/5 shadow-sm transition-all"
+                    aria-label="Expand player"
+                    aria-expanded={isExpanded}
+                  >
+                    <ChevronUp className="size-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">Expand player</TooltipContent>
+              </Tooltip>
+              {onClose && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onClose()
+                      }}
+                      className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+                      aria-label="Close player"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">Close player</TooltipContent>
+                </Tooltip>
+              )}
             </div>
 
-            {/* Expand button for small screens */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation()
-                setIsExpanded(true)
-              }}
-              className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center rounded-full transition-colors sm:hidden"
-              aria-label="Expand player"
-              aria-expanded={isExpanded}
-            >
-              <ChevronUp className="size-4" />
-            </button>
+            {/* Expand + Close buttons for small screens */}
+            <div className="flex items-center gap-1 sm:hidden">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setIsExpanded(true)
+                    }}
+                    className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center rounded-full transition-colors"
+                    aria-label="Expand player"
+                    aria-expanded={isExpanded}
+                  >
+                    <ChevronUp className="size-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">Expand player</TooltipContent>
+              </Tooltip>
+              {onClose && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onClose()
+                      }}
+                      className="text-muted-foreground hover:text-foreground flex size-7 items-center justify-center transition-colors"
+                      aria-label="Close player"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">Close player</TooltipContent>
+                </Tooltip>
+              )}
+            </div>
           </div>
         </div>
       )}
