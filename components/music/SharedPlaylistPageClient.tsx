@@ -3,7 +3,7 @@
 import { Globe2, Link2 } from "lucide-react"
 import Link from "next/link"
 import posthog from "posthog-js"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useState } from "react"
 import { toast } from "sonner"
 import { TrackRow } from "@/components/music/MusicComponents"
 import { Button } from "@/components/ui/button"
@@ -24,19 +24,16 @@ export function SharedPlaylistPageClient({ data }: SharedPlaylistPageClientProps
   const [isSaving, setIsSaving] = useState(false)
   const { currentTrack, isPlaying, playTrack, togglePlayPause, setTrackList, formatTime } = useMusicPlayer()
 
-  useEffect(() => {
-    setTrackList(tracks)
-  }, [setTrackList, tracks])
-
   const handlePlayTrack = useCallback(
     (track: Track) => {
       if (currentTrack?.trackId === track.trackId) {
         togglePlayPause()
       } else {
+        setTrackList(tracks)
         playTrack(track)
       }
     },
-    [currentTrack, playTrack, togglePlayPause]
+    [currentTrack, playTrack, togglePlayPause, setTrackList, tracks]
   )
 
   const handleSaveToLibrary = useCallback(async () => {

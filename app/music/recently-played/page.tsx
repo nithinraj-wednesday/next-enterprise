@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils"
 
 function RecentlyPlayedContent() {
   const { data: sessionData } = useSession()
-  const { currentTrack, isPlaying, playTrack, togglePlayPause, addToQueue, formatTime } = useMusicPlayer()
+  const { currentTrack, isPlaying, playTrack, togglePlayPause, addToQueue, setTrackList, formatTime } = useMusicPlayer()
 
   const {
     favoriteIds,
@@ -52,10 +52,11 @@ function RecentlyPlayedContent() {
       if (currentTrack?.trackId === track.trackId) {
         togglePlayPause()
       } else {
+        setTrackList(tracks)
         playTrack(track)
       }
     },
-    [currentTrack, playTrack, togglePlayPause]
+    [currentTrack, playTrack, togglePlayPause, setTrackList, tracks]
   )
 
   const renderPlaylistMenu = useCallback(

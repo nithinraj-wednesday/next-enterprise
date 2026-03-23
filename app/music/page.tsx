@@ -264,7 +264,7 @@ function MusicPageContent() {
         }
       />
     ),
-    [playlists, handleAddToPlaylist, playlistTracksMap, addToQueue]
+    [playlists, handleAddToPlaylist, handleRemoveFromPlaylist, playlistTracksMap, addToQueue]
   )
 
   return (

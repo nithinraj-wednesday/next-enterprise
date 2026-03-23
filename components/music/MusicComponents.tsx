@@ -7,6 +7,7 @@ import {
   PlayIcon,
   PreviousIcon,
   RepeatIcon,
+  RepeatOne01Icon,
   Search01Icon,
   ShuffleIcon,
   VolumeHighIcon,
@@ -687,8 +688,8 @@ export function PlayerBar({
                       aria-pressed={repeatMode !== "off"}
                     >
                       <HugeiconsIcon
-                        icon={RepeatIcon}
-                        className={cn("size-5", repeatMode === "one" && "text-xs")}
+                        icon={repeatMode === "one" ? RepeatOne01Icon : RepeatIcon}
+                        className="size-5"
                         strokeWidth={2}
                       />
                     </button>

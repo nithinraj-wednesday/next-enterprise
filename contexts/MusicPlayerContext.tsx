@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useCallback, useContext, type ReactNode } from "react"
+import { type ReactNode, createContext, useCallback, useContext } from "react"
 import { useMusic } from "@/hooks/use-music"
 
 type MusicPlayerContextValue = ReturnType<typeof useMusic> & {

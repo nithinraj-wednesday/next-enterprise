@@ -301,11 +301,11 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
                     <SidebarMenuItem key={artist.artistId}>
                       <SidebarMenuButton asChild tooltip={artist.artistName}>
                         <Link href={`/music?search=${encodeURIComponent(artist.artistName)}`}>
-                          <div className="group-hover:border-gold/30 relative size-7 shrink-0">
+                          <div className="relative size-7 shrink-0">
                             <Image
                               src="/images/artist-placeholder-new.png"
                               alt={artist.artistName}
-                              className="object-cover transition-transform group-hover:scale-110"
+                              className="scale-110 object-cover"
                               fill
                               sizes="28px"
                             />
