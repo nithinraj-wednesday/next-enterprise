@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowUpDown, EllipsisVertical, Loader2, PencilLine, Plus, Share2, Trash2 } from "lucide-react"
+import { EllipsisVertical, Loader2, PencilLine, Plus, Share2, Trash2 } from "lucide-react"
 import Link from "next/link"
 import posthog from "posthog-js"
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react"
@@ -851,7 +851,7 @@ export function FavoritesPageClient({
                   </span>
                 ) : null}
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <CardDescription>{selectedPlaylistTrackCount} tracks</CardDescription>
                   {searchTerm && (
@@ -860,15 +860,40 @@ export function FavoritesPageClient({
                     </span>
                   )}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSortOrder((prev) => (prev === "latest" ? "oldest" : "latest"))}
-                  className="text-muted-foreground hover:text-foreground gap-1.5 text-xs"
+                <div
+                  role="tablist"
+                  aria-label="Track sort order"
+                  className="bg-secondary/60 border-border/50 flex shrink-0 items-center gap-1 rounded-xl border p-1 shadow-sm"
                 >
-                  {sortOrder === "latest" ? "Latest first" : "Oldest first"}
-                  <ArrowUpDown className="size-3.5" />
-                </Button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={sortOrder === "latest"}
+                    onClick={() => setSortOrder("latest")}
+                    className={cn(
+                      "focus-visible:ring-gold rounded-lg px-3 py-1.5 text-xs font-medium transition-all outline-none focus-visible:ring-1",
+                      sortOrder === "latest"
+                        ? "bg-gold/15 text-gold shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Latest first
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={sortOrder === "oldest"}
+                    onClick={() => setSortOrder("oldest")}
+                    className={cn(
+                      "focus-visible:ring-gold rounded-lg px-3 py-1.5 text-xs font-medium transition-all outline-none focus-visible:ring-1",
+                      sortOrder === "oldest"
+                        ? "bg-gold/15 text-gold shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Oldest first
+                  </button>
+                </div>
               </div>
             </CardHeader>
 
