@@ -6,7 +6,6 @@ import {
   MusicNote01Icon,
   MusicNote02Icon,
   Playlist02Icon,
-  UserMultiple02Icon,
   // @ts-expect-error - hugeicons moduleResolution mismatch
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -242,7 +241,15 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
 
           {/* Genre */}
           <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-            <SidebarGroupLabel>Genre</SidebarGroupLabel>
+            <div className="flex items-center justify-between px-2 pr-4">
+              <SidebarGroupLabel className="px-0">Genre</SidebarGroupLabel>
+              <Link
+                href="/music/genres"
+                className="text-muted-foreground hover:text-gold text-[10px] font-medium transition-colors"
+              >
+                View All
+              </Link>
+            </div>
             <SidebarGroupContent>
               <SidebarMenu>
                 {genreItems.map((genre) => (
@@ -261,10 +268,15 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
 
           {/* Artists */}
           <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-            <SidebarGroupLabel>
-              <HugeiconsIcon icon={UserMultiple02Icon} strokeWidth={2} className="mr-1.5" />
-              Artists
-            </SidebarGroupLabel>
+            <div className="flex items-center justify-between px-2 pr-4">
+              <SidebarGroupLabel className="px-0">Artists</SidebarGroupLabel>
+              <Link
+                href="/music/artists"
+                className="text-muted-foreground hover:text-gold text-[10px] font-medium transition-colors"
+              >
+                View All
+              </Link>
+            </div>
             <SidebarGroupContent>
               <SidebarMenu>
                 {artistsLoading ? (
@@ -286,7 +298,15 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
                     <SidebarMenuItem key={artist.artistId}>
                       <SidebarMenuButton asChild tooltip={artist.artistName}>
                         <Link href={`/music?search=${encodeURIComponent(artist.artistName)}`}>
-                          <HugeiconsIcon icon={UserMultiple02Icon} strokeWidth={2} />
+                          <div className="group-hover:border-gold/30 relative size-7 shrink-0 overflow-hidden rounded-full border border-white/10">
+                            <Image
+                              src="/images/artist-placeholder.png"
+                              alt={artist.artistName}
+                              className="object-cover transition-transform group-hover:scale-110"
+                              fill
+                              sizes="28px"
+                            />
+                          </div>
                           <span>{artist.artistName}</span>
                         </Link>
                       </SidebarMenuButton>

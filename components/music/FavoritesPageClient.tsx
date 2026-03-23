@@ -1,12 +1,13 @@
 "use client"
 
-import { Copy, EllipsisVertical, Globe2, Loader2, PencilLine, Plus, Share2, Trash2 } from "lucide-react"
+import { EllipsisVertical, Loader2, PencilLine, Plus, Share2, Trash2 } from "lucide-react"
 import Link from "next/link"
 import posthog from "posthog-js"
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { MusicAppHeader, PlayerBar, SearchBar, TrackRow } from "@/components/music/MusicComponents"
 import { MusicSidebarLayout } from "@/components/music/MusicSidebar"
+import { SharePlaylistDialog } from "@/components/music/SharePlaylistDialog"
 import { TrackOptionsMenu } from "@/components/music/TrackOptionsMenu"
 import {
   AlertDialog,
@@ -91,6 +92,9 @@ export function FavoritesPageClient({
 
   const [playlistToShare, setPlaylistToShare] = useState<Playlist | null>(null)
   const [isUpdatingShare, setIsUpdatingShare] = useState(false)
+  const [shareEmail, setShareEmail] = useState("")
+  const [shareEmailError, setShareEmailError] = useState<string | null>(null)
+  const [isSendingShareEmail, setIsSendingShareEmail] = useState(false)
 
   const [playlistToDelete, setPlaylistToDelete] = useState<Playlist | null>(null)
   const [isDeletingPlaylist, setIsDeletingPlaylist] = useState(false)
@@ -591,6 +595,51 @@ export function FavoritesPageClient({
     }
   }, [playlistToRename, playlistToShare])
 
+  const handleShareEmailSend = useCallback(async () => {
+    if (!playlistToShare?.shareUrl) {
+      setShareEmailError("Publish this playlist before emailing it.")
+      return
+    }
+
+    const recipientEmail = shareEmail.trim().toLowerCase()
+    if (!recipientEmail) {
+      setShareEmailError("Enter a recipient email address.")
+      return
+    }
+
+    setIsSendingShareEmail(true)
+    setShareEmailError(null)
+
+    try {
+      const response = await fetch(`/api/playlists/${playlistToShare.id}/share/email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: recipientEmail }),
+      })
+
+      const data = (await response.json()) as { ok?: boolean; error?: string }
+      if (!response.ok) {
+        throw new Error(data.error ?? `Failed to send playlist share email: ${response.status}`)
+      }
+
+      setShareEmail("")
+      toast.success("Playlist email sent.")
+    } catch (error) {
+      posthog.captureException(error)
+      console.error("Failed to send playlist share email:", error)
+      setShareEmailError(error instanceof Error ? error.message : "Could not send the playlist email right now.")
+    } finally {
+      setIsSendingShareEmail(false)
+    }
+  }, [playlistToShare, shareEmail])
+
+  useEffect(() => {
+    setShareEmail("")
+    setShareEmailError(null)
+  }, [playlistToShare?.id, playlistToShare?.shareUrl])
+
   return (
     <MusicSidebarLayout>
       <div className="bg-background relative min-h-screen overflow-hidden">
@@ -902,94 +951,24 @@ export function FavoritesPageClient({
         <Dialog
           open={playlistToShare !== null}
           onOpenChange={(open) => {
-            if (!open && !isUpdatingShare) {
+            if (!open && !isUpdatingShare && !isSendingShareEmail) {
               setPlaylistToShare(null)
             }
           }}
         >
           <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Share playlist</DialogTitle>
-              <DialogDescription>
-                {playlistToShare?.isPublic
-                  ? "This playlist has a stable public link. Anyone with the link can save it into their own library."
-                  : "Publish this playlist to create a public, read-only link anyone can open."}
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="flex flex-col gap-4">
-              <div className="bg-secondary/40 border-border/50 flex items-start justify-between rounded-xl border p-4">
-                <div className="space-y-1">
-                  <p className="text-foreground font-medium">{playlistToShare?.name ?? "Playlist"}</p>
-                  <p className="text-muted-foreground text-sm">
-                    {playlistToShare?.isPublic
-                      ? "Anyone with the link can preview tracks and save this playlist to their own library."
-                      : "Only you can see this playlist right now."}
-                  </p>
-                </div>
-
-                <span
-                  className={cn(
-                    "inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] tracking-[0.18em] uppercase",
-                    playlistToShare?.isPublic
-                      ? "border-gold/30 bg-gold/10 text-gold"
-                      : "border-border/60 bg-secondary/55 text-muted-foreground"
-                  )}
-                >
-                  {playlistToShare?.isPublic ? "Public" : "Private"}
-                </span>
-              </div>
-
-              {playlistToShare?.isPublic && playlistToShare.shareUrl ? (
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="share-playlist-link">Share link</Label>
-                  <div className="flex gap-2">
-                    <Input id="share-playlist-link" value={playlistToShare.shareUrl} readOnly />
-                    <Button type="button" variant="outline" onClick={() => void handleCopyShareLink(playlistToShare)}>
-                      <Copy data-icon="inline-start" />
-                      Copy
-                    </Button>
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="flex flex-wrap items-center gap-3">
-                {playlistToShare?.isPublic ? (
-                  <Button type="button" variant="outline" onClick={() => void handleCopyShareLink(playlistToShare)}>
-                    <Copy data-icon="inline-start" />
-                    Copy Link
-                  </Button>
-                ) : (
-                  <Button
-                    type="button"
-                    onClick={() => void handleShareAction()}
-                    disabled={isUpdatingShare}
-                    className="border-gold/30 bg-gold/10 text-gold hover:bg-gold/15"
-                  >
-                    {isUpdatingShare ? (
-                      <>
-                        <Loader2 data-icon="inline-start" className="animate-spin" />
-                        Publishing...
-                      </>
-                    ) : (
-                      <>
-                        <Globe2 data-icon="inline-start" />
-                        Publish Playlist
-                      </>
-                    )}
-                  </Button>
-                )}
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setPlaylistToShare(null)}
-                  disabled={isUpdatingShare}
-                >
-                  Close
-                </Button>
-              </div>
-            </div>
+            <SharePlaylistDialog
+              playlist={playlistToShare}
+              isUpdatingShare={isUpdatingShare}
+              isSendingShareEmail={isSendingShareEmail}
+              shareEmail={shareEmail}
+              shareEmailError={shareEmailError}
+              onCopyShareLink={handleCopyShareLink}
+              onShareEmailChange={setShareEmail}
+              onSendShareEmail={handleShareEmailSend}
+              onPublishPlaylist={handleShareAction}
+              onClose={() => setPlaylistToShare(null)}
+            />
           </DialogContent>
         </Dialog>
 

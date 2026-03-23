@@ -29,6 +29,7 @@ interface MusicAppHeaderProps {
   playlistCount: number
   userName?: string
   searchBar?: React.ReactNode
+  className?: string
 }
 
 interface FavoriteButtonProps {
@@ -77,9 +78,14 @@ export function FavoriteButton({ isFavorite, isPending, onClick }: FavoriteButto
   )
 }
 
-export function MusicAppHeader({ playlistCount: _playlistCount, userName: _userName, searchBar }: MusicAppHeaderProps) {
+export function MusicAppHeader({
+  playlistCount: _playlistCount,
+  userName: _userName,
+  searchBar,
+  className,
+}: MusicAppHeaderProps) {
   return (
-    <div className="mb-8 flex flex-col gap-4 sm:mb-12">
+    <div className={cn("mb-8 flex flex-col gap-4 sm:mb-12", className)}>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Link href="/" className="flex shrink-0 items-center gap-3" aria-label="Go to home page">
