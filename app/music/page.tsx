@@ -7,7 +7,6 @@ import posthog from "posthog-js"
 import { type FormEvent, Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { EmptyState, MusicAppHeader, SearchBar, TrackGridSkeleton } from "@/components/music/MusicComponents"
-import { MusicSidebarLayout } from "@/components/music/MusicSidebar"
 import { TrackListLayout } from "@/components/music/TrackListLayout"
 import { TrackOptionsMenu } from "@/components/music/TrackOptionsMenu"
 import { Button } from "@/components/ui/button"
@@ -268,110 +267,152 @@ function MusicPageContent() {
   )
 
   return (
-    <MusicSidebarLayout>
-      <div className="bg-background relative min-h-screen overflow-hidden">
-        <div className="noise-overlay" />
+    <div className="bg-background relative min-h-screen overflow-hidden">
+      <div className="noise-overlay" />
 
-        <header className="hero-gradient relative pt-8 pb-6 sm:pt-12 sm:pb-8">
-          <div className="relative z-30 mx-auto max-w-screen-xl px-4 sm:px-6">
-            <MusicAppHeader
-              playlistCount={playlists.length + 1}
-              userName={sessionData?.user?.name || undefined}
-              searchBar={
-                <SearchBar
-                  onSearch={handleSearch}
-                  loading={loading}
-                  className="!px-4 !py-2"
-                  recentlySearched={recentlySearched}
-                  onSelectRecentTrack={handleSelectRecentTrack}
-                  onRemoveRecentTrack={removeRecentlySearched}
-                  onClearRecentSearches={clearRecentlySearched}
-                />
-              }
-            />
+      <header className="hero-gradient relative pt-8 pb-6 sm:pt-12 sm:pb-8">
+        <div className="relative z-30 mx-auto max-w-screen-xl px-4 sm:px-6">
+          <MusicAppHeader
+            playlistCount={playlists.length + 1}
+            userName={sessionData?.user?.name || undefined}
+            searchBar={
+              <SearchBar
+                onSearch={handleSearch}
+                loading={loading}
+                className="!px-4 !py-2"
+                recentlySearched={recentlySearched}
+                onSelectRecentTrack={handleSelectRecentTrack}
+                onRemoveRecentTrack={removeRecentlySearched}
+                onClearRecentSearches={clearRecentlySearched}
+              />
+            }
+          />
+        </div>
+      </header>
+
+      <main className={cn("relative z-10 mx-auto max-w-screen-xl px-4 py-2 sm:px-6 sm:py-4", currentTrack && "pb-32")}>
+        {playlistStatus ? (
+          <div
+            className={cn(
+              "animate-fade-up mb-6 rounded-2xl border px-4 py-3 text-sm",
+              playlistStatus.type === "success"
+                ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-100"
+                : "border-red-400/20 bg-red-500/8 text-red-100"
+            )}
+          >
+            {playlistStatus.message}
           </div>
-        </header>
+        ) : null}
 
-        <main
-          className={cn("relative z-10 mx-auto max-w-screen-xl px-4 py-2 sm:px-6 sm:py-4", currentTrack && "pb-32")}
-        >
-          {playlistStatus ? (
-            <div
-              className={cn(
-                "animate-fade-up mb-6 rounded-2xl border px-4 py-3 text-sm",
-                playlistStatus.type === "success"
-                  ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-100"
-                  : "border-red-400/20 bg-red-500/8 text-red-100"
-              )}
-            >
-              {playlistStatus.message}
-            </div>
-          ) : null}
+        {categoryLoadError ? (
+          <div className="animate-fade-up mb-6 rounded-2xl border border-yellow-400/20 bg-yellow-500/8 px-4 py-3 text-sm text-yellow-100">
+            {categoryLoadError}
+          </div>
+        ) : null}
 
-          {categoryLoadError ? (
-            <div className="animate-fade-up mb-6 rounded-2xl border border-yellow-400/20 bg-yellow-500/8 px-4 py-3 text-sm text-yellow-100">
-              {categoryLoadError}
-            </div>
-          ) : null}
+        <div className="mb-12 flex items-center justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="font-display text-foreground text-2xl font-semibold">Discovery</h2>
+            <p className="text-muted-foreground text-sm">
+              Explore popular tracks, search the iTunes catalog, and manage your library.
+            </p>
+          </div>
 
-          <div className="mb-12 flex items-center justify-between gap-4">
-            <div className="flex flex-col gap-1">
-              <h2 className="font-display text-foreground text-2xl font-semibold">Discovery</h2>
-              <p className="text-muted-foreground text-sm">
-                Explore popular tracks, search the iTunes catalog, and manage your library.
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <Button onClick={() => setIsCreateDialogOpen(true)} variant="outline" className="border-border/60">
+              <Plus data-icon="inline-start" />
+              Create Playlist
+            </Button>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create playlist</DialogTitle>
+                <DialogDescription>Create a new playlist without leaving Home.</DialogDescription>
+              </DialogHeader>
+
+              <form onSubmit={handleCreatePlaylist} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="home-create-playlist-name">Playlist name</Label>
+                  <Input
+                    id="home-create-playlist-name"
+                    autoFocus
+                    value={createPlaylistName}
+                    onChange={(event) => setCreatePlaylistName(event.target.value)}
+                    placeholder="Focus Mix, Night Drive..."
+                    maxLength={64}
+                  />
+                </div>
+
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isCreatingPlaylist}>
+                    {isCreatingPlaylist ? (
+                      <>
+                        <Loader2 data-icon="inline-start" className="animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      "Create"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        <section ref={resultsSectionRef} className="mb-12">
+          {hasSearched && (
+            <TrackListLayout
+              title={searchTerm === "trending" ? "Trending Now" : `Results for "${searchTerm}"`}
+              tracks={tracks}
+              loading={loading}
+              currentTrack={currentTrack}
+              isPlaying={isPlaying}
+              onPlay={handlePlayTrack}
+              onToggleFavorite={handleToggleFavorite}
+              favoriteIds={favoriteIds}
+              pendingFavoriteIds={pendingFavoriteIds}
+              formatTime={formatTime}
+              renderPlaylistMenu={renderPlaylistMenu}
+              viewMode={viewMode}
+              onViewModeChange={(mode) => {
+                setViewMode(mode)
+                posthog.capture("view_mode_changed", { view_mode: mode })
+              }}
+              isExpanded={resultsExpanded}
+              onToggleExpand={() => setResultsExpanded(!resultsExpanded)}
+              hasMore={tracks.length > 6}
+              hideViewToggle={tracks.length === 0 && !loading}
+            />
+          )}
+
+          {!hasSearched && !loading && <EmptyState />}
+        </section>
+
+        <section className="mb-10 space-y-6">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="font-display text-foreground text-xl font-semibold">Browse Categories</h2>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Both modes show 6 songs per category first. Use the arrow to expand that category.
               </p>
             </div>
-
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <Button onClick={() => setIsCreateDialogOpen(true)} variant="outline" className="border-border/60">
-                <Plus data-icon="inline-start" />
-                Create Playlist
-              </Button>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create playlist</DialogTitle>
-                  <DialogDescription>Create a new playlist without leaving Home.</DialogDescription>
-                </DialogHeader>
-
-                <form onSubmit={handleCreatePlaylist} className="flex flex-col gap-4">
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="home-create-playlist-name">Playlist name</Label>
-                    <Input
-                      id="home-create-playlist-name"
-                      autoFocus
-                      value={createPlaylistName}
-                      onChange={(event) => setCreatePlaylistName(event.target.value)}
-                      placeholder="Focus Mix, Night Drive..."
-                      maxLength={64}
-                    />
-                  </div>
-
-                  <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button type="submit" disabled={isCreatingPlaylist}>
-                      {isCreatingPlaylist ? (
-                        <>
-                          <Loader2 data-icon="inline-start" className="animate-spin" />
-                          Creating...
-                        </>
-                      ) : (
-                        "Create"
-                      )}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
           </div>
 
-          <section ref={resultsSectionRef} className="mb-12">
-            {hasSearched && (
+          <div className="space-y-8">
+            {FEATURED_SEARCHES.map((category) => (
               <TrackListLayout
-                title={searchTerm === "trending" ? "Trending Now" : `Results for "${searchTerm}"`}
-                tracks={tracks}
-                loading={loading}
+                key={category.query}
+                title={
+                  <span className="flex items-center gap-2">
+                    <HugeiconsIcon icon={category.icon} strokeWidth={2} className="text-gold size-6" />
+                    {category.label}
+                  </span>
+                }
+                tracks={categoryTracks[category.query] ?? []}
+                loading={categoryLoadingMap[category.query] ?? false}
                 currentTrack={currentTrack}
                 isPlaying={isPlaying}
                 onPlay={handlePlayTrack}
@@ -381,69 +422,23 @@ function MusicPageContent() {
                 formatTime={formatTime}
                 renderPlaylistMenu={renderPlaylistMenu}
                 viewMode={viewMode}
-                onViewModeChange={(mode) => {
-                  setViewMode(mode)
-                  posthog.capture("view_mode_changed", { view_mode: mode })
-                }}
-                isExpanded={resultsExpanded}
-                onToggleExpand={() => setResultsExpanded(!resultsExpanded)}
-                hasMore={tracks.length > 6}
-                hideViewToggle={tracks.length === 0 && !loading}
+                onViewModeChange={setViewMode}
+                isExpanded={categoryExpandedMap[category.query] ?? false}
+                onToggleExpand={() =>
+                  setCategoryExpandedMap((current) => ({
+                    ...current,
+                    [category.query]: !current[category.query],
+                  }))
+                }
+                hasMore={(categoryTracks[category.query] ?? []).length > 6}
+                hideViewToggle
+                className="space-y-4"
               />
-            )}
-
-            {!hasSearched && !loading && <EmptyState />}
-          </section>
-
-          <section className="mb-10 space-y-6">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="font-display text-foreground text-xl font-semibold">Browse Categories</h2>
-                <p className="text-muted-foreground mt-1 text-sm">
-                  Both modes show 6 songs per category first. Use the arrow to expand that category.
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-8">
-              {FEATURED_SEARCHES.map((category) => (
-                <TrackListLayout
-                  key={category.query}
-                  title={
-                    <span className="flex items-center gap-2">
-                      <HugeiconsIcon icon={category.icon} strokeWidth={2} className="text-gold size-6" />
-                      {category.label}
-                    </span>
-                  }
-                  tracks={categoryTracks[category.query] ?? []}
-                  loading={categoryLoadingMap[category.query] ?? false}
-                  currentTrack={currentTrack}
-                  isPlaying={isPlaying}
-                  onPlay={handlePlayTrack}
-                  onToggleFavorite={handleToggleFavorite}
-                  favoriteIds={favoriteIds}
-                  pendingFavoriteIds={pendingFavoriteIds}
-                  formatTime={formatTime}
-                  renderPlaylistMenu={renderPlaylistMenu}
-                  viewMode={viewMode}
-                  onViewModeChange={setViewMode}
-                  isExpanded={categoryExpandedMap[category.query] ?? false}
-                  onToggleExpand={() =>
-                    setCategoryExpandedMap((current) => ({
-                      ...current,
-                      [category.query]: !current[category.query],
-                    }))
-                  }
-                  hasMore={(categoryTracks[category.query] ?? []).length > 6}
-                  hideViewToggle
-                  className="space-y-4"
-                />
-              ))}
-            </div>
-          </section>
-        </main>
-      </div>
-    </MusicSidebarLayout>
+            ))}
+          </div>
+        </section>
+      </main>
+    </div>
   )
 }
 

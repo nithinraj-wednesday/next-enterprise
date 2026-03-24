@@ -3,7 +3,6 @@
 import { EllipsisVertical } from "lucide-react"
 import { Suspense, useCallback, useEffect, useState } from "react"
 import { MusicAppHeader, TrackGridSkeleton } from "@/components/music/MusicComponents"
-import { MusicSidebarLayout } from "@/components/music/MusicSidebar"
 import { TrackListLayout } from "@/components/music/TrackListLayout"
 import { TrackOptionsMenu } from "@/components/music/TrackOptionsMenu"
 import { Button } from "@/components/ui/button"
@@ -85,38 +84,34 @@ function RecentlyPlayedContent() {
   )
 
   return (
-    <MusicSidebarLayout>
-      <div className="bg-background relative min-h-screen overflow-hidden">
-        <div className="noise-overlay" />
+    <div className="bg-background relative min-h-screen overflow-hidden">
+      <div className="noise-overlay" />
 
-        <header className="relative pt-8 pb-4 sm:pt-12 sm:pb-6">
-          <div className="relative z-30 mx-auto max-w-screen-xl px-4 sm:px-6">
-            <MusicAppHeader playlistCount={playlists.length + 1} userName={sessionData?.user?.name || undefined} />
-          </div>
-        </header>
+      <header className="relative pt-8 pb-4 sm:pt-12 sm:pb-6">
+        <div className="relative z-30 mx-auto max-w-screen-xl px-4 sm:px-6">
+          <MusicAppHeader playlistCount={playlists.length + 1} userName={sessionData?.user?.name || undefined} />
+        </div>
+      </header>
 
-        <main
-          className={cn("relative z-10 mx-auto max-w-screen-xl px-4 py-6 sm:px-6 sm:py-10", currentTrack && "pb-32")}
-        >
-          <TrackListLayout
-            title="Recently Played"
-            subtitle="Your latest listening history."
-            tracks={tracks}
-            loading={false}
-            currentTrack={currentTrack}
-            isPlaying={isPlaying}
-            onPlay={handlePlayTrack}
-            onToggleFavorite={handleToggleFavorite}
-            favoriteIds={favoriteIds}
-            pendingFavoriteIds={pendingFavoriteIds}
-            formatTime={formatTime}
-            renderPlaylistMenu={renderPlaylistMenu}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-          />
-        </main>
-      </div>
-    </MusicSidebarLayout>
+      <main className={cn("relative z-10 mx-auto max-w-screen-xl px-4 py-6 sm:px-6 sm:py-10", currentTrack && "pb-32")}>
+        <TrackListLayout
+          title="Recently Played"
+          subtitle="Your latest listening history."
+          tracks={tracks}
+          loading={false}
+          currentTrack={currentTrack}
+          isPlaying={isPlaying}
+          onPlay={handlePlayTrack}
+          onToggleFavorite={handleToggleFavorite}
+          favoriteIds={favoriteIds}
+          pendingFavoriteIds={pendingFavoriteIds}
+          formatTime={formatTime}
+          renderPlaylistMenu={renderPlaylistMenu}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+        />
+      </main>
+    </div>
   )
 }
 

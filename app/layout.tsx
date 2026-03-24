@@ -35,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={cn(syne.variable, dmSans.variable)} suppressHydrationWarning>
       <body className="font-body antialiased">
         <PostHogProvider>
-          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange={false}>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange={false}>
             <TooltipProvider>
               <MusicPlayerProvider>
                 {children}

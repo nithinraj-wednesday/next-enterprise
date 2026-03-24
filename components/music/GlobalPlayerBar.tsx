@@ -2,6 +2,7 @@
 
 import { PlayerBar } from "@/components/music/MusicComponents"
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext"
+import { useMusicManagement } from "@/hooks/use-music-management"
 
 export function GlobalPlayerBar() {
   const {
@@ -23,6 +24,11 @@ export function GlobalPlayerBar() {
     closePlayer,
   } = useMusicPlayer()
 
+  const { favoriteIds, pendingFavoriteIds, handleToggleFavorite } = useMusicManagement()
+
+  const isFavorite = currentTrack ? favoriteIds.has(currentTrack.trackId) : false
+  const isFavoritePending = currentTrack ? pendingFavoriteIds.includes(currentTrack.trackId) : false
+
   return (
     <PlayerBar
       currentTrack={currentTrack}
@@ -41,6 +47,9 @@ export function GlobalPlayerBar() {
       repeatMode={repeatMode}
       formatTime={formatTime}
       onClose={closePlayer}
+      isFavorite={isFavorite}
+      isFavoritePending={isFavoritePending}
+      onToggleFavorite={currentTrack ? () => handleToggleFavorite(currentTrack) : undefined}
     />
   )
 }
