@@ -3,8 +3,9 @@
 import {
   Clock04Icon,
   Compass01Icon,
+  DiscAlbumIcon,
+  Mic01Icon,
   MusicNote01Icon,
-  MusicNote02Icon,
   Playlist02Icon,
   // @ts-expect-error - hugeicons moduleResolution mismatch
 } from "@hugeicons/core-free-icons"
@@ -189,18 +190,23 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
           {/* Recently Played */}
           <SidebarGroup>
             <div className="flex items-center justify-between px-2 pr-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-              <SidebarGroupLabel className="px-0">
-                <HugeiconsIcon
-                  icon={Clock04Icon}
-                  strokeWidth={2}
-                  className="mr-1.5 group-data-[collapsible=icon]:mr-0"
-                />
-                <span className="group-data-[collapsible=icon]:hidden">Recently Played</span>
+              <SidebarGroupLabel asChild className="px-0">
+                <Link
+                  href="/music/recently-played"
+                  className="hover:text-sidebar-foreground cursor-pointer transition-colors"
+                >
+                  <HugeiconsIcon
+                    icon={Clock04Icon}
+                    strokeWidth={2}
+                    className="mr-1.5 group-data-[collapsible=icon]:mr-0"
+                  />
+                  <span className="">Recently Played</span>
+                </Link>
               </SidebarGroupLabel>
               {recentlyPlayed.length > 0 && (
                 <Link
                   href="/music/recently-played"
-                  className="text-muted-foreground hover:text-gold text-[10px] font-medium transition-colors group-data-[collapsible=icon]:hidden"
+                  className="text-muted-foreground hover:text-gold text-[10px] font-medium transition-colors"
                 >
                   View All
                 </Link>
@@ -245,7 +251,12 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
           {/* Genre */}
           <SidebarGroup className="group-data-[collapsible=icon]:hidden">
             <div className="flex items-center justify-between px-2 pr-4">
-              <SidebarGroupLabel className="px-0">Genre</SidebarGroupLabel>
+              <SidebarGroupLabel asChild className="px-0">
+                <Link href="/music/genres" className="hover:text-sidebar-foreground cursor-pointer transition-colors">
+                  <HugeiconsIcon icon={DiscAlbumIcon} strokeWidth={2} className="mr-1.5" />
+                  Genre
+                </Link>
+              </SidebarGroupLabel>
               <Link
                 href="/music/genres"
                 className="text-muted-foreground hover:text-gold text-[10px] font-medium transition-colors"
@@ -272,7 +283,12 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
           {/* Artists */}
           <SidebarGroup className="group-data-[collapsible=icon]:hidden">
             <div className="flex items-center justify-between px-2 pr-4">
-              <SidebarGroupLabel className="px-0">Artists</SidebarGroupLabel>
+              <SidebarGroupLabel asChild className="px-0">
+                <Link href="/music/artists" className="hover:text-sidebar-foreground cursor-pointer transition-colors">
+                  <HugeiconsIcon icon={Mic01Icon} strokeWidth={2} className="mr-1.5" />
+                  Artists
+                </Link>
+              </SidebarGroupLabel>
               <Link
                 href="/music/artists"
                 className="text-muted-foreground hover:text-gold text-[10px] font-medium transition-colors"
@@ -323,9 +339,14 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
           {/* Songs (Electronic) */}
           <SidebarGroup className="group-data-[collapsible=icon]:hidden">
             <div className="flex items-center justify-between px-2 pr-4">
-              <SidebarGroupLabel className="px-0">
-                <HugeiconsIcon icon={MusicNote01Icon} strokeWidth={2} className="mr-1.5" />
-                Songs
+              <SidebarGroupLabel asChild className="px-0">
+                <Link
+                  href="/music/electronic"
+                  className="hover:text-sidebar-foreground cursor-pointer transition-colors"
+                >
+                  <HugeiconsIcon icon={MusicNote01Icon} strokeWidth={2} className="mr-1.5" />
+                  Songs
+                </Link>
               </SidebarGroupLabel>
               <Link
                 href="/music/electronic"
@@ -335,40 +356,42 @@ export function MusicSidebarLayout({ children }: MusicSidebarLayoutProps) {
               </Link>
             </div>
             <SidebarGroupContent>
-              <div className="grid grid-cols-1 gap-1 px-1.5">
+              <SidebarMenu>
                 {songsLoading ? (
                   Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="bg-sidebar-accent/50 h-10 w-full animate-pulse rounded-lg" />
+                    <SidebarMenuItem key={i}>
+                      <SidebarMenuButton disabled>
+                        <div className="bg-sidebar-accent h-3 w-24 animate-pulse rounded" />
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
                   ))
                 ) : electronicTracks.length === 0 ? (
-                  <div className="text-sidebar-foreground/50 px-2 py-3 text-xs italic">No songs available</div>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton disabled className="text-sidebar-foreground/50 text-xs italic">
+                      <span>No songs available</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 ) : (
                   electronicTracks.map((track) => (
-                    <Link
-                      key={`electro-${track.trackId}`}
-                      href={`/music?search=${encodeURIComponent(track.trackName)}`}
-                      className="hover:bg-sidebar-accent group flex items-center gap-2 rounded-lg p-1.5 transition-colors"
-                    >
-                      <div className="relative size-8 shrink-0 overflow-hidden rounded-md shadow-sm">
-                        <Image
-                          src={getArtworkUrl(track.artworkUrl100, "small")}
-                          alt={track.trackName}
-                          className="object-cover transition-transform group-hover:scale-110"
-                          fill
-                          sizes="32px"
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100">
-                          <HugeiconsIcon icon={MusicNote02Icon} className="size-3 text-white" />
-                        </div>
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sidebar-foreground truncate text-xs font-medium">{track.trackName}</div>
-                        <div className="text-sidebar-foreground/50 truncate text-[10px]">{track.artistName}</div>
-                      </div>
-                    </Link>
+                    <SidebarMenuItem key={`electro-${track.trackId}`}>
+                      <SidebarMenuButton asChild tooltip={`${track.trackName} — ${track.artistName}`}>
+                        <Link href={`/music?search=${encodeURIComponent(track.trackName)}`}>
+                          <div className="relative size-6 shrink-0 overflow-hidden rounded shadow-sm">
+                            <Image
+                              src={getArtworkUrl(track.artworkUrl100, "small")}
+                              alt={track.trackName}
+                              className="object-cover"
+                              fill
+                              sizes="24px"
+                            />
+                          </div>
+                          <span className="truncate">{track.trackName}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
                   ))
                 )}
-              </div>
+              </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>

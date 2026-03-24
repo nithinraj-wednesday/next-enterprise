@@ -509,6 +509,9 @@ export function PlayerBar({
   repeatMode,
   formatTime,
   onClose,
+  isFavorite,
+  isFavoritePending,
+  onToggleFavorite,
 }: PlayerBarProps) {
   const collapsedProgressBarRef = useRef<HTMLDivElement>(null)
   const expandedProgressBarRef = useRef<HTMLDivElement>(null)
@@ -521,6 +524,17 @@ export function PlayerBar({
       setIsExpanded(false)
     }
   }, [currentTrack?.trackId])
+
+  useEffect(() => {
+    if (!isExpanded) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsExpanded(false)
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [isExpanded])
 
   if (!currentTrack) return null
 
@@ -591,6 +605,24 @@ export function PlayerBar({
               <div className="text-center">
                 <div className="text-foreground truncate text-lg font-semibold">{currentTrack.trackName}</div>
                 <div className="text-muted-foreground truncate text-sm">{currentTrack.artistName}</div>
+                {onToggleFavorite && (
+                  <div className="mt-2 flex justify-center">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div>
+                          <FavoriteButton
+                            isFavorite={isFavorite ?? false}
+                            isPending={isFavoritePending}
+                            onClick={onToggleFavorite}
+                          />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        {isFavorite ? "Remove from favorites" : "Add to favorites"}
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                )}
               </div>
 
               <div className="mt-4">
@@ -770,6 +802,24 @@ export function PlayerBar({
                   </span>
                 </div>
               </div>
+              {onToggleFavorite && (
+                <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div>
+                        <FavoriteButton
+                          isFavorite={isFavorite ?? false}
+                          isPending={isFavoritePending}
+                          onClick={onToggleFavorite}
+                        />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      {isFavorite ? "Remove from favorites" : "Add to favorites"}
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              )}
             </div>
 
             {/* Center: Playback controls */}

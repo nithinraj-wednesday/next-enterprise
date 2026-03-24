@@ -195,6 +195,14 @@ body {
   border-width: 1px;
 }
 
+/* Sidebar scrollbar — hidden but scrollable */
+.sidebar-scrollbar {
+  scrollbar-width: none;
+}
+.sidebar-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* ============================================
    Noise texture overlay
    ============================================ */

@@ -87,6 +87,9 @@ export interface PlayerBarProps {
   repeatMode: "off" | "all" | "one"
   formatTime: (s: number) => string
   onClose?: () => void
+  isFavorite?: boolean
+  isFavoritePending?: boolean
+  onToggleFavorite?: () => void
 }
 
 export interface Playlist {
