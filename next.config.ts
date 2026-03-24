@@ -24,6 +24,10 @@ const config: NextConfig = {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",
       },
+      {
+        protocol: "https",
+        hostname: "*.private.blob.vercel-storage.com",
+      },
     ],
   },
   rewrites: async () => [
