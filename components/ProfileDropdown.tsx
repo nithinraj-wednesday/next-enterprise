@@ -11,6 +11,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { signOut, useSession } from "@/lib/auth-client"
+import { getAvatarUrl } from "@/lib/blob"
 import { cn } from "@/lib/utils"
 
 export function ProfileDropdown() {
@@ -20,7 +21,7 @@ export function ProfileDropdown() {
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const user = sessionData?.user
-  const userImage = user?.image
+  const userImage = getAvatarUrl(user?.image)
   const userName = user?.name
   const userEmail = user?.email
 
@@ -69,6 +70,7 @@ export function ProfileDropdown() {
             width={32}
             height={32}
             className="size-8 rounded-full object-cover"
+            unoptimized
           />
         ) : (
           <div className="bg-gold/20 flex size-8 items-center justify-center rounded-full">

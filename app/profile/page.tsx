@@ -1,8 +1,9 @@
 import { eq, inArray, sql } from "drizzle-orm"
 import { Music, User } from "lucide-react"
-import Image from "next/image"
 import Link from "next/link"
+import { AvatarUpload } from "@/components/profile/avatar-upload"
 import { requireServerSession } from "@/lib/auth-server"
+import { getAvatarUrl } from "@/lib/blob"
 import { db } from "@/lib/db"
 import { favoriteSong, playlist, playlistTrack } from "@/lib/db-schema"
 
@@ -66,6 +67,9 @@ export default async function ProfilePage() {
   const initials = getInitials(displayName, displayEmail)
   const { firstName, lastName } = splitName(displayName)
 
+  // Get signed URL for private blob avatars
+  const avatarUrl = getAvatarUrl(session.user.image)
+
   return (
     <div className="bg-background relative min-h-screen px-4 py-8 sm:px-6 sm:py-12">
       <div className="noise-overlay" />
@@ -84,19 +88,7 @@ export default async function ProfilePage() {
 
         <section className="glass-card rounded-3xl border border-white/10 p-6 sm:p-8">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-            {session.user.image ? (
-              <Image
-                src={session.user.image}
-                alt={`${displayName} profile image`}
-                width={96}
-                height={96}
-                className="h-24 w-24 rounded-full border border-white/15 object-cover"
-              />
-            ) : (
-              <div className="from-gold/30 to-gold/10 text-foreground flex h-24 w-24 items-center justify-center rounded-full border border-white/15 bg-gradient-to-br text-2xl font-semibold">
-                {initials}
-              </div>
-            )}
+            <AvatarUpload currentImage={avatarUrl} initials={initials} userName={displayName} />
 
             <div className="space-y-1">
               <p className="text-foreground text-xl font-semibold">{displayName}</p>
