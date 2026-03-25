@@ -27,14 +27,6 @@
       }
     ]
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.mjs",
-    "vitest.config.ts",
-    ".next/types/**/*.ts",
-    "eslint.config.mjs"
-  ],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.mjs", "vitest.config.ts", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }

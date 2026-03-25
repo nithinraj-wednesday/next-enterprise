@@ -35,7 +35,8 @@ const tooltipArrow = cva([], {
   },
 })
 
-export interface TooltipProps extends VariantProps<typeof tooltipContent>, RadixTooltip.TooltipProps {
+export interface TooltipProps
+  extends VariantProps<typeof tooltipContent>, React.ComponentPropsWithoutRef<typeof RadixTooltip.Root> {
   explainer: React.ReactElement | string
   children: React.ReactElement
   className?: string

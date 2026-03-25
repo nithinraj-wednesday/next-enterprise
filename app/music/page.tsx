@@ -3,7 +3,7 @@
 import { HugeiconsIcon } from "@hugeicons/react"
 import { EllipsisVertical, Loader2, Plus } from "lucide-react"
 import { useSearchParams } from "next/navigation"
-import posthog from "posthog-js"
+import posthogClient from "posthog-js"
 import { type FormEvent, Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { EmptyState, MusicAppHeader, SearchBar, TrackGridSkeleton } from "@/components/music/MusicComponents"
@@ -180,13 +180,13 @@ function MusicPageContent() {
           throw new Error("Playlist was not returned by the API")
         }
 
-        posthog.capture("playlist_created", { playlist_id: data.playlist.id, playlist_name: data.playlist.name })
+        posthogClient.capture("playlist_created", { playlist_id: data.playlist.id, playlist_name: data.playlist.name })
         refreshPlaylists()
         setCreatePlaylistName("")
         setIsCreateDialogOpen(false)
         toast.success(`Created playlist "${data.playlist.name}"`)
       } catch (error) {
-        posthog.captureException(error)
+        posthogClient.captureException(error)
         console.error("Failed to create playlist:", error)
         setPlaylistStatus({ type: "error", message: "Failed to create playlist." })
       } finally {
@@ -221,7 +221,7 @@ function MusicPageContent() {
       setHasSearched(true)
       setResultsExpanded(false)
 
-      posthog.capture("music_search", { term })
+      posthogClient.capture("music_search", { term })
     },
     [searchTerm, searchMusic, searchParams]
   )
@@ -392,7 +392,7 @@ function MusicPageContent() {
               viewMode={viewMode}
               onViewModeChange={(mode) => {
                 setViewMode(mode)
-                posthog.capture("view_mode_changed", { view_mode: mode })
+                posthogClient.capture("view_mode_changed", { view_mode: mode })
               }}
               isExpanded={resultsExpanded}
               onToggleExpand={() => setResultsExpanded(!resultsExpanded)}

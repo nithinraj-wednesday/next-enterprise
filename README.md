@@ -31,7 +31,7 @@ With this template you will get all the boilerplate features included:
 
 - [Next.js 15](https://nextjs.org/) - Performance-optimized configuration using App Directory
 - [Tailwind CSS v4](https://tailwindcss.com/) - Utility-first CSS framework for efficient UI development
-- [ESlint 9](https://eslint.org/) and [Prettier](https://prettier.io/) - Code consistency and error prevention
+- [Oxlint](https://oxc.rs/docs/guide/usage/linter) and [Oxfmt](https://oxc.rs/docs/guide/usage/formatter) - Code consistency and error prevention
 - [Corepack](https://github.com/nodejs/corepack) & [pnpm](https://pnpm.io/) as the package manager - For project management without compromises
 - [Strict TypeScript](https://www.typescriptlang.org/) - Enhanced type safety with carefully crafted config and [ts-reset](https://github.com/total-typescript/ts-reset) library
 - [GitHub Actions](https://github.com/features/actions) - Pre-configured workflows including bundle size and performance tracking

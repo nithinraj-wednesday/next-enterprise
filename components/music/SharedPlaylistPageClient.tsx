@@ -2,7 +2,7 @@
 
 import { Globe2, Link2 } from "lucide-react"
 import Link from "next/link"
-import posthog from "posthog-js"
+import posthogClient from "posthog-js"
 import { useCallback, useState } from "react"
 import { toast } from "sonner"
 import { TrackRow } from "@/components/music/MusicComponents"
@@ -60,13 +60,13 @@ export function SharedPlaylistPageClient({ data }: SharedPlaylistPageClientProps
 
       setIsSavedByViewer(true)
       toast.success("Playlist saved to your library.")
-      posthog.capture("shared_playlist_saved_from_public_page", {
+      posthogClient.capture("shared_playlist_saved_from_public_page", {
         playlist_id: playlist.id,
         playlist_name: playlist.name,
         shared_by: playlist.ownerName,
       })
     } catch (error) {
-      posthog.captureException(error)
+      posthogClient.captureException(error)
       console.error("Failed to save shared playlist:", error)
       toast.error("Could not save this playlist right now.")
     } finally {

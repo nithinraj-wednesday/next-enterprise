@@ -2,7 +2,7 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["typescript", "import", "nextjs"],
   "categories": {
-    "correctness": "off"
+    "correctness": "warn"
   },
   "env": {
     "builtin": true,
@@ -82,7 +82,7 @@
     {
       "files": ["**/*.stories.@(ts|tsx|js|jsx|mjs|cjs)", "**/*.story.@(ts|tsx|js|jsx|mjs|cjs)"],
       "rules": {
-        "react-hooks/rules-of-hooks": "off",
+        "react/rules-of-hooks": "off",
         "import/no-anonymous-default-export": "off",
         "storybook/await-interactions": "error",
         "storybook/context-in-play-function": "error",
