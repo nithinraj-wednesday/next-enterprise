@@ -376,7 +376,7 @@ export function TrackCard({
               </div>
             </div>
 
-            {isActive ? (
+            {isActive && isPlaying ? (
               <div className="absolute bottom-2 left-2 z-10 flex h-3 items-end gap-[2px]">
                 <div className="eq-bar !w-[2px]" />
                 <div className="eq-bar !w-[2px]" />

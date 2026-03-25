@@ -16,7 +16,7 @@ interface TrackListLayoutProps {
   loading: boolean
   currentTrack: Track | null
   isPlaying: boolean
-  onPlay: (track: Track) => void
+  onPlay: (track: Track, sourceTracks?: Track[]) => void
   onToggleFavorite: (track: Track) => void
   favoriteIds: Set<number>
   pendingFavoriteIds: number[]
@@ -118,7 +118,7 @@ export function TrackListLayout({
                   track={track}
                   isActive={currentTrack?.trackId === track.trackId}
                   isPlaying={isPlaying}
-                  onPlay={onPlay}
+                  onPlay={(t) => onPlay(t, tracks)}
                   onToggleFavorite={onToggleFavorite}
                   isFavorite={favoriteIds.has(track.trackId)}
                   isFavoritePending={pendingFavoriteIds.includes(track.trackId)}
@@ -145,7 +145,7 @@ export function TrackListLayout({
                     track={track}
                     isActive={currentTrack?.trackId === track.trackId}
                     isPlaying={isPlaying}
-                    onPlay={onPlay}
+                    onPlay={(t) => onPlay(t, tracks)}
                     onToggleFavorite={onToggleFavorite}
                     isFavorite={favoriteIds.has(track.trackId)}
                     isFavoritePending={pendingFavoriteIds.includes(track.trackId)}

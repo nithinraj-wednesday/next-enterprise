@@ -107,10 +107,11 @@ export function useMusic() {
           return
         }
         if (repeatMode === "all") {
-          const currentIndex = tracks.findIndex((t) => t.trackId === track.trackId)
-          const nextIndex = currentIndex < tracks.length - 1 ? currentIndex + 1 : 0
-          if (tracks[nextIndex]) {
-            playTrack(tracks[nextIndex])
+          const currentTracks = originalTracksRef.current
+          const currentIndex = currentTracks.findIndex((t) => t.trackId === track.trackId)
+          const nextIndex = currentIndex < currentTracks.length - 1 ? currentIndex + 1 : 0
+          if (currentTracks[nextIndex]) {
+            playTrack(currentTracks[nextIndex])
             return
           }
         }
