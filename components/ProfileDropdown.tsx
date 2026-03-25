@@ -1,11 +1,6 @@
 "use client"
 
-import {
-  ArrowRight01Icon,
-  Logout01Icon,
-  UserIcon,
-  // @ts-expect-error - hugeicons moduleResolution mismatch
-} from "@hugeicons/core-free-icons"
+import { ArrowRight01Icon, Logout01Icon, UserIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"

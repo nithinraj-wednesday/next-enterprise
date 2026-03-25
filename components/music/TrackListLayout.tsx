@@ -1,6 +1,5 @@
 "use client"
 
-// @ts-expect-error - hugeicons moduleResolution mismatch
 import { GridViewIcon, ListViewIcon, MusicNote01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ChevronDown, ChevronUp } from "lucide-react"

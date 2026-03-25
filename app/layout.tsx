@@ -1,4 +1,4 @@
-import "styles/tailwind.css"
+import "@/styles/tailwind.css"
 import { Metadata } from "next"
 import { DM_Sans, Syne } from "next/font/google"
 import { Toaster } from "sonner"

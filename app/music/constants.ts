@@ -24,7 +24,6 @@ import {
   MusicNote01Icon,
   MusicNote02Icon,
   SparklesIcon,
-  // @ts-expect-error - hugeicons moduleResolution mismatch
 } from "@hugeicons/core-free-icons"
 import type { IconSvgElement } from "@hugeicons/react"
 

@@ -86,6 +86,9 @@ importers:
       '@t3-oss/env-nextjs':
         specifier: ^0.10.1
         version: 0.10.1(typescript@5.8.3)(zod@3.24.4)
+      '@typescript/native-preview':
+        specifier: 7.0.0-dev.20260325.1
+        version: 7.0.0-dev.20260325.1
       '@upstash/redis':
         specifier: ^1.37.0
         version: 1.37.0
@@ -318,9 +321,6 @@ importers:
       tailwindcss:
         specifier: ^4.1.5
         version: 4.1.5
-      tsc:
-        specifier: ^2.0.4
-        version: 2.0.4
       typed-query-selector:
         specifier: ^2.12.0
         version: 2.12.0
@@ -5010,6 +5010,45 @@ packages:
   '@typescript-eslint/visitor-keys@8.32.0':
     resolution: {integrity: sha512-1rYQTCLFFzOI5Nl0c8LUpJT8HxpwVRn9E4CkMsYfuN6ctmQqExjSTzzSk0Tz2apmXy7WU6/6fyaZVVA/thPN+w==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260325.1':
+    resolution: {integrity: sha512-TN51zclpW+D9Qe55Do1ATeZaZ77E6H5JX5cG86xFTKhXaFaW35ANagS86t6d5xnf0quemXM6EP06so2WLSYCqw==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260325.1':
+    resolution: {integrity: sha512-iRzGkGdJmTGJHk8jI7PSjHjbDGrrw5oImTUfACevJFpB+dA5Hn/bsYlJQ5MR9KmDAJYoRHY1HQp6Dm30zXZw3A==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260325.1':
+    resolution: {integrity: sha512-qY10cp4PurJBD0TT7e4JwMUh2cGySLI+F7r5wZkkARSU/5aXAsWOImnVtshuzyv+MBfhcq8KHB1XMb62Kjrruw==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20260325.1':
+    resolution: {integrity: sha512-MSumEH3jrfCXAtrkgm8DF4IeNiKAoJBpnyGS4WdjIQkqeI6c2wEGRXWJixOJRj3Lp7/CDx5Wo+ySFyjNdC4Uyg==}
+    cpu: [arm]
+    os: [linux]
+
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20260325.1':
+    resolution: {integrity: sha512-p93R+o9pV3IuypB3ydWXJSbzUgdHG3KD+5uFQZyo2A/QR9xnRPgTOhFnHXj9ml/RQvGHbmmAdFe/Xe2GiwnsSQ==}
+    cpu: [x64]
+    os: [linux]
+
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260325.1':
+    resolution: {integrity: sha512-OgoAfFryES4XS08PNXEJL54z4VbxY7VDwLb5z+TnMl5TMqYprk7cZZ+hQtq7XzwgailQyI162CQ81e+vtPuXqQ==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20260325.1':
+    resolution: {integrity: sha512-BuzbtCqAYR/CmWDzaEw3/s80HLHXCIu+eSepRygjiLdd8CiNbIIAwCo2teQ1C5fjsWQ+Iu8iAJItOLpxWWTCzg==}
+    cpu: [x64]
+    os: [win32]
+
+  '@typescript/native-preview@7.0.0-dev.20260325.1':
+    resolution: {integrity: sha512-42I1oVqz2EOkE1vCrzazV3r+zVREq+le4m7Vr4OEz9taH2rhR02yxq+tNygKV3IOUOPLOXkX/soKcgrF3drDHA==}
+    hasBin: true
 
   '@upstash/redis@1.37.0':
     resolution: {integrity: sha512-LqOJ3+XWPLSZ2rGSed5DYG3ixybxb8EhZu3yQqF7MdZX1wLBG/FRcI6xcUZXHy/SS7mmXWyadrud0HJHkOc+uw==}
@@ -10415,10 +10454,6 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
-
-  tsc@2.0.4:
-    resolution: {integrity: sha512-fzoSieZI5KKJVBYGvwbVZs/J5za84f2lSTLPYf6AGiIf43tZ3GNrI1QzTLcjtyDDP4aLxd46RTZq1nQxe7+k5Q==}
-    hasBin: true
 
   tsconfck@3.1.6:
     resolution: {integrity: sha512-ks6Vjr/jEw0P1gmOVwutM3B7fWxoWBL2KRDb1JfqGVawBmO5UsvmWOQFGHBPl5yxYz4eERr19E6L7NMv+Fej4w==}
@@ -16265,6 +16300,37 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 8.32.0
       eslint-visitor-keys: 4.2.0
+
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260325.1':
+    optional: true
+
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260325.1':
+    optional: true
+
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260325.1':
+    optional: true
+
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20260325.1':
+    optional: true
+
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20260325.1':
+    optional: true
+
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260325.1':
+    optional: true
+
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20260325.1':
+    optional: true
+
+  '@typescript/native-preview@7.0.0-dev.20260325.1':
+    optionalDependencies:
+      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20260325.1
+      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20260325.1
+      '@typescript/native-preview-linux-arm': 7.0.0-dev.20260325.1
+      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20260325.1
+      '@typescript/native-preview-linux-x64': 7.0.0-dev.20260325.1
+      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20260325.1
+      '@typescript/native-preview-win32-x64': 7.0.0-dev.20260325.1
 
   '@upstash/redis@1.37.0':
     dependencies:
@@ -22383,8 +22449,6 @@ snapshots:
   ts-pnp@1.2.0(typescript@5.8.3):
     optionalDependencies:
       typescript: 5.8.3
-
-  tsc@2.0.4: {}
 
   tsconfck@3.1.6(typescript@5.8.3):
     optionalDependencies:

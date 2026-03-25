@@ -7,7 +7,6 @@ import {
   Mic01Icon,
   MusicNote01Icon,
   Playlist02Icon,
-  // @ts-expect-error - hugeicons moduleResolution mismatch
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"

@@ -1,6 +1,5 @@
 "use client"
 
-// @ts-expect-error - hugeicons moduleResolution mismatch
 import { SidebarLeftIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { cva, type VariantProps } from "class-variance-authority"
