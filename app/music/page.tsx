@@ -31,8 +31,18 @@ import { FEATURED_SEARCHES, SEARCH_DEFAULTS, ViewMode } from "./constants"
 
 function MusicPageContent() {
   const { data: sessionData } = useSession()
-  const { tracks, loading, currentTrack, isPlaying, searchMusic, playTrack, togglePlayPause, addToQueue, formatTime } =
-    useMusicPlayer()
+  const {
+    tracks,
+    loading,
+    currentTrack,
+    isPlaying,
+    searchMusic,
+    playTrack,
+    togglePlayPause,
+    addToQueue,
+    formatTime,
+    setTrackList,
+  } = useMusicPlayer()
 
   const {
     favoriteIds,
@@ -217,7 +227,10 @@ function MusicPageContent() {
   )
 
   const handlePlayTrack = useCallback(
-    (track: Track) => {
+    (track: Track, sourceTracks?: Track[]) => {
+      if (sourceTracks) {
+        setTrackList(sourceTracks)
+      }
       if (currentTrack?.trackId === track.trackId) {
         togglePlayPause()
       } else {
@@ -227,7 +240,7 @@ function MusicPageContent() {
         addRecentlySearched(track)
       }
     },
-    [currentTrack, playTrack, togglePlayPause, hasSearched, tracks, addRecentlySearched]
+    [currentTrack, playTrack, togglePlayPause, hasSearched, tracks, addRecentlySearched, setTrackList]
   )
 
   const handleSelectRecentTrack = useCallback(
