@@ -1,6 +1,5 @@
 "use client"
 
-// @ts-expect-error Will Fix it
 import { GithubIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"

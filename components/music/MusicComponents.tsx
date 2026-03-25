@@ -12,7 +12,6 @@ import {
   ShuffleIcon,
   VolumeHighIcon,
   VolumeMute01Icon,
-  // @ts-expect-error - hugeicons moduleResolution mismatch
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ChevronDown, ChevronUp, X } from "lucide-react"

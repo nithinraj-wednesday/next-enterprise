@@ -1,6 +1,5 @@
 "use client"
 
-// @ts-expect-error Will Fix it
 import { ArrowRight01Icon, Tick02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
