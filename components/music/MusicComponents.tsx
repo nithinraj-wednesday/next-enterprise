@@ -67,7 +67,7 @@ export function FavoriteButton({ isFavorite, isPending, onClick }: FavoriteButto
         "backdrop-blur-sm",
         isFavorite
           ? "border-gold/40 bg-gold/15 text-gold shadow-[0_0_24px_-10px_var(--gold-glow)]"
-          : "text-muted-foreground hover:border-gold/30 hover:text-gold border-border bg-background/80 dark:border-white/10 dark:bg-black/35",
+          : "text-muted-foreground hover:border-gold/30 hover:text-gold border-border bg-background/80 dark:border-white/15 dark:bg-black/60 dark:shadow-[0_0_8px_2px_rgba(0,0,0,0.4)]",
         isPending && "cursor-wait opacity-70"
       )}
     >
