@@ -132,7 +132,7 @@ export function FavoritesPageClient({
   const selectedPlaylistTrackCount =
     selectedPlaylistId === LIKED_PLAYLIST_ID
       ? likedTracks.length
-      : playlistTracksMap[selectedPlaylistId]?.size ?? playlistTracks[selectedPlaylistId]?.length ?? 0
+      : (playlistTracksMap[selectedPlaylistId]?.size ?? playlistTracks[selectedPlaylistId]?.length ?? 0)
 
   const selectedPlaylistTracks =
     selectedPlaylistId === LIKED_PLAYLIST_ID ? undefined : playlistTracks[selectedPlaylistId]
@@ -905,8 +905,8 @@ export function FavoritesPageClient({
                   {searchTerm
                     ? `No matches found for "${searchTerm}" in this playlist.`
                     : selectedPlaylistId === LIKED_PLAYLIST_ID
-                    ? "No liked songs yet. Add songs from Discover to fill this playlist."
-                    : "No songs in this playlist yet."}
+                      ? "No liked songs yet. Add songs from Discover to fill this playlist."
+                      : "No songs in this playlist yet."}
                 </p>
                 {selectedPlaylistId === LIKED_PLAYLIST_ID ? (
                   <Button asChild variant="outline">

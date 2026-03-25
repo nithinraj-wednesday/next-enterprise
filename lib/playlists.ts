@@ -90,7 +90,7 @@ export function serializePlaylist(row: typeof playlist.$inferSelect): Playlist {
     isPublic: row.isPublic,
     shareUrl: row.isPublic && row.shareToken ? `/shared/${row.shareToken}` : undefined,
     sharedAt: row.sharedAt ? row.sharedAt.toISOString() : undefined,
-    ownerName: row.isSavedShared ? row.sourceOwnerName ?? undefined : undefined,
+    ownerName: row.isSavedShared ? (row.sourceOwnerName ?? undefined) : undefined,
     savedAt: row.isSavedShared ? row.createdAt.toISOString() : undefined,
     isSavedShared: row.isSavedShared || undefined,
     createdAt: row.createdAt.toISOString(),

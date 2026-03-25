@@ -1,7 +1,7 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
 import posthog from "posthog-js"
+import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 import { createOptimisticFavorite, trackToFavoritePayload } from "@/lib/favorites"
 import { FavoriteSong, Playlist, PlaylistsResponse, PlaylistTracksResponse, Track } from "@/lib/types"

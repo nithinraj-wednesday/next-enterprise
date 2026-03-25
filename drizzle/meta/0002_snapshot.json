@@ -105,12 +105,8 @@
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -213,22 +209,15 @@
           "name": "favorite_song_user_id_user_id_fk",
           "tableFrom": "favorite_song",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "favorite_song_user_id_track_id_pk": {
-          "columns": [
-            "user_id",
-            "track_id"
-          ],
+          "columns": ["user_id", "track_id"],
           "name": "favorite_song_user_id_track_id_pk"
         }
       },
@@ -328,9 +317,7 @@
       "indexes": {
         "playlist_share_token_unique": {
           "name": "playlist_share_token_unique",
-          "columns": [
-            "share_token"
-          ],
+          "columns": ["share_token"],
           "isUnique": true
         }
       },
@@ -339,12 +326,8 @@
           "name": "playlist_user_id_user_id_fk",
           "tableFrom": "playlist",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -384,22 +367,15 @@
           "name": "playlist_track_playlist_id_playlist_id_fk",
           "tableFrom": "playlist_track",
           "tableTo": "playlist",
-          "columnsFrom": [
-            "playlist_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["playlist_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "playlist_track_playlist_id_track_id_pk": {
-          "columns": [
-            "playlist_id",
-            "track_id"
-          ],
+          "columns": ["playlist_id", "track_id"],
           "name": "playlist_track_playlist_id_track_id_pk"
         }
       },
@@ -437,12 +413,8 @@
           "name": "saved_shared_playlist_user_id_user_id_fk",
           "tableFrom": "saved_shared_playlist",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -450,22 +422,15 @@
           "name": "saved_shared_playlist_playlist_id_playlist_id_fk",
           "tableFrom": "saved_shared_playlist",
           "tableTo": "playlist",
-          "columnsFrom": [
-            "playlist_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["playlist_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "saved_shared_playlist_user_id_playlist_id_pk": {
-          "columns": [
-            "user_id",
-            "playlist_id"
-          ],
+          "columns": ["user_id", "playlist_id"],
           "name": "saved_shared_playlist_user_id_playlist_id_pk"
         }
       },
@@ -535,9 +500,7 @@
       "indexes": {
         "session_token_unique": {
           "name": "session_token_unique",
-          "columns": [
-            "token"
-          ],
+          "columns": ["token"],
           "isUnique": true
         }
       },
@@ -546,12 +509,8 @@
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -617,9 +576,7 @@
       "indexes": {
         "user_email_unique": {
           "name": "user_email_unique",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "isUnique": true
         }
       },

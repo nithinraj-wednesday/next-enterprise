@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* oxlint-disable @typescript-eslint/no-unused-vars */
 import { eq } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
 import { requireServerSession } from "@/lib/auth-server"

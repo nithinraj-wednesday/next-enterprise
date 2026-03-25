@@ -2,8 +2,8 @@
 
 import { useState, useCallback, useRef, useEffect } from "react"
 import { toast } from "sonner"
-import { Track, SearchResponse } from "@/lib/types"
 import { SEARCH_DEFAULTS, PLAYBACK_INTERVAL_MS } from "@/app/music/constants"
+import { Track, SearchResponse } from "@/lib/types"
 
 export function useMusic() {
   const [tracks, setTracks] = useState<Track[]>([])

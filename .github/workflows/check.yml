@@ -33,7 +33,7 @@ jobs:
       - name: Lint check
         run: pnpm run lint
       - name: Format check
-        run: pnpm run prettier
+        run: pnpm run format:check
       - name: Unit & Integration tests
         run: pnpm run test
       - name: Smoke & Acceptance tests

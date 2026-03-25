@@ -1,0 +1,13 @@
+{
+  "sortTailwindcss": {},
+  "sortImports": {
+    "partitionByNewline": true,
+    "newlinesBetween": false
+  },
+  "trailingComma": "es5",
+  "tabWidth": 2,
+  "printWidth": 120,
+  "semi": false,
+  "sortPackageJson": false,
+  "ignorePatterns": [".next", "node_modules"]
+}
