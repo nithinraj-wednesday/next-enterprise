@@ -1,6 +1,6 @@
-import posthog from "posthog-js"
+import posthogClient from "posthog-js"
 
-posthog.init(process.env.NEXT_PUBLIC_POSTHOG_TOKEN!, {
+posthogClient.init(process.env.NEXT_PUBLIC_POSTHOG_TOKEN!, {
   api_host: "/ingest",
   ui_host: "https://eu.posthog.com",
   defaults: "2026-01-30",
@@ -9,5 +9,5 @@ posthog.init(process.env.NEXT_PUBLIC_POSTHOG_TOKEN!, {
 })
 
 if (process.env.NODE_ENV === "development" && typeof window !== "undefined") {
-  ;(window as unknown as Record<string, unknown>).posthog = posthog
+  ;(window as unknown as Record<string, unknown>).posthog = posthogClient
 }

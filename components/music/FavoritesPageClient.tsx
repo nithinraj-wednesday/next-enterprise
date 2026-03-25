@@ -2,7 +2,7 @@
 
 import { EllipsisVertical, Loader2, PencilLine, Plus, Share2, Trash2 } from "lucide-react"
 import Link from "next/link"
-import posthog from "posthog-js"
+import posthogClient from "posthog-js"
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { MusicAppHeader, SearchBar, TrackRow } from "@/components/music/MusicComponents"
@@ -132,7 +132,7 @@ export function FavoritesPageClient({
   const selectedPlaylistTrackCount =
     selectedPlaylistId === LIKED_PLAYLIST_ID
       ? likedTracks.length
-      : playlistTracksMap[selectedPlaylistId]?.size ?? playlistTracks[selectedPlaylistId]?.length ?? 0
+      : (playlistTracksMap[selectedPlaylistId]?.size ?? playlistTracks[selectedPlaylistId]?.length ?? 0)
 
   const selectedPlaylistTracks =
     selectedPlaylistId === LIKED_PLAYLIST_ID ? undefined : playlistTracks[selectedPlaylistId]
@@ -257,13 +257,13 @@ export function FavoritesPageClient({
           throw new Error(`Favorite delete failed: ${response.status}`)
         }
 
-        posthog.capture("favorite_removed", {
+        posthogClient.capture("favorite_removed", {
           track_id: track.trackId,
           track_name: track.trackName,
           artist_name: track.artistName,
         })
       } catch (error) {
-        posthog.captureException(error)
+        posthogClient.captureException(error)
         console.error("Failed to remove favorite:", error)
         setPageError("Could not remove that track right now.")
         setFavorites((current) => [favorite, ...current.filter((entry) => entry.trackId !== favorite.trackId)])
@@ -287,7 +287,7 @@ export function FavoritesPageClient({
         throw new Error(`Failed to add track to playlist: ${response.status}`)
       }
 
-      posthog.capture("track_added_to_playlist", {
+      posthogClient.capture("track_added_to_playlist", {
         playlist_id: playlistId,
         track_id: track.trackId,
         track_name: track.trackName,
@@ -315,7 +315,7 @@ export function FavoritesPageClient({
         }
       })
     } catch (error) {
-      posthog.captureException(error)
+      posthogClient.captureException(error)
       console.error("Failed to add track to playlist:", error)
       setPageError("Failed to add track to that playlist.")
     }
@@ -334,7 +334,7 @@ export function FavoritesPageClient({
         throw new Error(`Failed to remove track from playlist: ${response.status}`)
       }
 
-      posthog.capture("track_removed_from_playlist", { playlist_id: playlistId, track_id: trackId })
+      posthogClient.capture("track_removed_from_playlist", { playlist_id: playlistId, track_id: trackId })
 
       setPlaylistTracksMap((current) => {
         const next = { ...current }
@@ -356,7 +356,7 @@ export function FavoritesPageClient({
         }
       })
     } catch (error) {
-      posthog.captureException(error)
+      posthogClient.captureException(error)
       console.error("Failed to remove track from playlist:", error)
       setPageError("Failed to remove track from that playlist.")
     }
@@ -392,13 +392,13 @@ export function FavoritesPageClient({
           throw new Error("Playlist was not returned by the API")
         }
 
-        posthog.capture("playlist_created", { playlist_id: data.playlist.id, playlist_name: data.playlist.name })
+        posthogClient.capture("playlist_created", { playlist_id: data.playlist.id, playlist_name: data.playlist.name })
         setPlaylists((current) => [data.playlist, ...current])
         setOwnedPlaylistIds((current) => [data.playlist.id, ...current])
         setCreatePlaylistName("")
         setIsCreateDialogOpen(false)
       } catch (error) {
-        posthog.captureException(error)
+        posthogClient.captureException(error)
         console.error("Failed to create playlist:", error)
         setPageError("Failed to create playlist.")
       } finally {
@@ -442,14 +442,14 @@ export function FavoritesPageClient({
           throw new Error("Updated playlist was not returned by the API")
         }
 
-        posthog.capture("playlist_renamed", { playlist_id: data.playlist.id, new_name: data.playlist.name })
+        posthogClient.capture("playlist_renamed", { playlist_id: data.playlist.id, new_name: data.playlist.name })
         setPlaylists((current) =>
           current.map((playlist) => (playlist.id === data.playlist.id ? data.playlist : playlist))
         )
         setPlaylistToRename(null)
         setRenamePlaylistName("")
       } catch (error) {
-        posthog.captureException(error)
+        posthogClient.captureException(error)
         console.error("Failed to rename playlist:", error)
         setPageError("Failed to rename playlist.")
       } finally {
@@ -478,7 +478,10 @@ export function FavoritesPageClient({
 
       const deletedPlaylistId = playlistToDelete.id
 
-      posthog.capture("playlist_deleted", { playlist_id: deletedPlaylistId, playlist_name: playlistToDelete.name })
+      posthogClient.capture("playlist_deleted", {
+        playlist_id: deletedPlaylistId,
+        playlist_name: playlistToDelete.name,
+      })
 
       setPlaylists((current) => current.filter((playlist) => playlist.id !== deletedPlaylistId))
       setOwnedPlaylistIds((current) => current.filter((playlistId) => playlistId !== deletedPlaylistId))
@@ -503,7 +506,7 @@ export function FavoritesPageClient({
 
       setPlaylistToDelete(null)
     } catch (error) {
-      posthog.captureException(error)
+      posthogClient.captureException(error)
       console.error("Failed to delete playlist:", error)
       setPageError("Failed to delete playlist.")
     } finally {
@@ -526,7 +529,7 @@ export function FavoritesPageClient({
       await navigator.clipboard.writeText(absoluteUrl)
       toast.success("Share link copied.")
     } catch (error) {
-      posthog.captureException(error)
+      posthogClient.captureException(error)
       console.error("Failed to copy share link:", error)
       setPageError("Could not copy the share link right now.")
     }
@@ -564,7 +567,7 @@ export function FavoritesPageClient({
         setPlaylistToRename(data.playlist)
       }
 
-      posthog.capture("playlist_share_enabled", {
+      posthogClient.capture("playlist_share_enabled", {
         playlist_id: data.playlist.id,
         playlist_name: data.playlist.name,
         is_public: data.playlist.isPublic,
@@ -572,7 +575,7 @@ export function FavoritesPageClient({
 
       toast.success(data.playlist.shareUrl ? "Share link ready." : "Playlist published.")
     } catch (error) {
-      posthog.captureException(error)
+      posthogClient.captureException(error)
       console.error("Failed to update playlist share state:", error)
       setPageError("Failed to update playlist sharing.")
     } finally {
@@ -612,7 +615,7 @@ export function FavoritesPageClient({
       setShareEmail("")
       toast.success("Playlist email sent.")
     } catch (error) {
-      posthog.captureException(error)
+      posthogClient.captureException(error)
       console.error("Failed to send playlist share email:", error)
       setShareEmailError(error instanceof Error ? error.message : "Could not send the playlist email right now.")
     } finally {
@@ -905,8 +908,8 @@ export function FavoritesPageClient({
                   {searchTerm
                     ? `No matches found for "${searchTerm}" in this playlist.`
                     : selectedPlaylistId === LIKED_PLAYLIST_ID
-                    ? "No liked songs yet. Add songs from Discover to fill this playlist."
-                    : "No songs in this playlist yet."}
+                      ? "No liked songs yet. Add songs from Discover to fill this playlist."
+                      : "No songs in this playlist yet."}
                 </p>
                 {selectedPlaylistId === LIKED_PLAYLIST_ID ? (
                   <Button asChild variant="outline">

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server"
 import { SEARCH_DEFAULTS } from "@/app/music/constants"
 import { CACHE_TTL, getCacheKey } from "@/lib/cache"

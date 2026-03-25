@@ -1,7 +1,7 @@
 "use client"
 
+import posthogClient from "posthog-js"
 import { useCallback, useEffect, useState } from "react"
-import posthog from "posthog-js"
 import { toast } from "sonner"
 import { createOptimisticFavorite, trackToFavoritePayload } from "@/lib/favorites"
 import { FavoriteSong, Playlist, PlaylistsResponse, PlaylistTracksResponse, Track } from "@/lib/types"
@@ -100,7 +100,7 @@ export function useMusicManagement() {
           isFavorite ? `Removed "${track.trackName}" from favorites` : `Added "${track.trackName}" to favorites`
         )
 
-        posthog.capture(isFavorite ? "favorite_removed" : "favorite_added", {
+        posthogClient.capture(isFavorite ? "favorite_removed" : "favorite_added", {
           track_id: track.trackId,
           track_name: track.trackName,
         })
@@ -134,7 +134,7 @@ export function useMusicManagement() {
       })
 
       toast.success(`Added to playlist`)
-      posthog.capture("track_added_to_playlist", {
+      posthogClient.capture("track_added_to_playlist", {
         playlist_id: playlistId,
         track_id: track.trackId,
       })
@@ -165,7 +165,7 @@ export function useMusicManagement() {
       })
 
       toast.success(`Removed from playlist`)
-      posthog.capture("track_removed_from_playlist", {
+      posthogClient.capture("track_removed_from_playlist", {
         playlist_id: playlistId,
         track_id: trackId,
       })
