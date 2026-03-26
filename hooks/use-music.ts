@@ -1,8 +1,20 @@
 "use client"
 
+import posthogClient from "posthog-js"
 import { useState, useCallback, useRef, useEffect } from "react"
 import { toast } from "sonner"
 import { SEARCH_DEFAULTS, PLAYBACK_INTERVAL_MS } from "@/app/music/constants"
+import {
+  buildPlaybackSummaryEvent,
+  buildTrackPlayedEvent,
+  createPlaybackSession,
+  getPreviewDurationSeconds,
+  recordPlaybackPause,
+  recordPlaybackSeek,
+  type PlaybackEndReason,
+  type PlaybackSession,
+  updatePlaybackSession,
+} from "@/lib/playback-analytics"
 import { Track, SearchResponse } from "@/lib/types"
 
 export function useMusic() {
@@ -20,22 +32,79 @@ export function useMusic() {
   const endedHandlerRef = useRef<(() => void) | null>(null)
   const originalTracksRef = useRef<Track[]>([])
   const queueRef = useRef<Track[]>([])
+  const playbackSessionRef = useRef<PlaybackSession | null>(null)
+
+  const clearProgressInterval = useCallback(() => {
+    if (progressInterval.current) {
+      clearInterval(progressInterval.current)
+      progressInterval.current = null
+    }
+  }, [])
+
+  const syncPlaybackProgress = useCallback((audio: HTMLAudioElement) => {
+    const session = playbackSessionRef.current
+
+    if (session) {
+      updatePlaybackSession(session, audio.currentTime)
+    }
+
+    if (audio.currentTime && audio.duration) {
+      setProgress((audio.currentTime / audio.duration) * 100)
+    }
+  }, [])
+
+  const startProgressInterval = useCallback(
+    (audio: HTMLAudioElement) => {
+      clearProgressInterval()
+      progressInterval.current = setInterval(() => {
+        syncPlaybackProgress(audio)
+      }, PLAYBACK_INTERVAL_MS)
+    },
+    [clearProgressInterval, syncPlaybackProgress]
+  )
+
+  const flushPlaybackSession = useCallback((reason: PlaybackEndReason, audio?: HTMLAudioElement | null) => {
+    const session = playbackSessionRef.current
+
+    if (!session) return
+
+    if (audio) {
+      updatePlaybackSession(session, audio.currentTime)
+    }
+
+    const event = buildPlaybackSummaryEvent(
+      session,
+      reason,
+      getPreviewDurationSeconds(session.track, audio?.duration ?? undefined)
+    )
+
+    if (event) {
+      posthogClient.capture(event.event, event.properties)
+    }
+
+    playbackSessionRef.current = null
+  }, [])
+
+  const cleanupAudio = useCallback(() => {
+    if (audioRef.current) {
+      if (endedHandlerRef.current) {
+        audioRef.current.removeEventListener("ended", endedHandlerRef.current)
+      }
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+
+    endedHandlerRef.current = null
+    clearProgressInterval()
+  }, [clearProgressInterval])
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (audioRef.current) {
-        if (endedHandlerRef.current) {
-          audioRef.current.removeEventListener("ended", endedHandlerRef.current)
-        }
-        audioRef.current.pause()
-        audioRef.current = null
-      }
-      if (progressInterval.current) {
-        clearInterval(progressInterval.current)
-      }
+      flushPlaybackSession("unmounted", audioRef.current)
+      cleanupAudio()
     }
-  }, [])
+  }, [cleanupAudio, flushPlaybackSession])
 
   const searchMusic = useCallback(
     async (query: string, entity = SEARCH_DEFAULTS.entity, limit = SEARCH_DEFAULTS.limit) => {
@@ -74,32 +143,46 @@ export function useMusic() {
       }
 
       if (audioRef.current) {
-        audioRef.current.pause()
-        if (endedHandlerRef.current) {
-          audioRef.current.removeEventListener("ended", endedHandlerRef.current)
-        }
-      }
-
-      if (progressInterval.current) {
-        clearInterval(progressInterval.current)
+        flushPlaybackSession("switched_track", audioRef.current)
+        cleanupAudio()
       }
 
       const audio = new Audio(track.previewUrl)
       audio.volume = volume
       audioRef.current = audio
+      setDuration(0)
 
       audio.addEventListener("loadedmetadata", () => {
         setDuration(audio.duration)
       })
 
       const endedHandler = () => {
+        clearProgressInterval()
+        flushPlaybackSession("ended", audio)
+
         if (repeatMode === "one") {
-          if (audioRef.current) {
-            audioRef.current.currentTime = 0
-            audioRef.current.play().catch(console.error)
-          }
+          audio.currentTime = 0
+          const nextSession = createPlaybackSession(track)
+          const event = buildTrackPlayedEvent(track, nextSession.sessionId)
+          playbackSessionRef.current = nextSession
+          audio
+            .play()
+            .then(() => {
+              posthogClient.capture(event.event, event.properties)
+              startProgressInterval(audio)
+              setCurrentTrack(track)
+              setProgress(0)
+              setIsPlaying(true)
+            })
+            .catch((err) => {
+              console.error("Playback failed:", err)
+              playbackSessionRef.current = null
+              setIsPlaying(false)
+            })
           return
         }
+
+        cleanupAudio()
 
         if (queueRef.current.length > 0) {
           const nextFromQueue = queueRef.current.shift()!
@@ -117,7 +200,7 @@ export function useMusic() {
         }
         setIsPlaying(false)
         setProgress(0)
-        if (progressInterval.current) clearInterval(progressInterval.current)
+        setDuration(0)
       }
       audio.addEventListener("ended", endedHandler)
       endedHandlerRef.current = endedHandler
@@ -125,24 +208,26 @@ export function useMusic() {
       audio
         .play()
         .then(() => {
+          const session = createPlaybackSession(track)
+          playbackSessionRef.current = session
+          const event = buildTrackPlayedEvent(track, session.sessionId)
+          posthogClient.capture(event.event, event.properties)
           setCurrentTrack(track)
           setIsPlaying(true)
           setProgress(0)
+          startProgressInterval(audio)
         })
         .catch((err) => {
           console.error("Playback failed:", err)
+          cleanupAudio()
+          playbackSessionRef.current = null
           setCurrentTrack(null)
           setIsPlaying(false)
           setProgress(0)
+          setDuration(0)
         })
-
-      progressInterval.current = setInterval(() => {
-        if (audio.currentTime && audio.duration) {
-          setProgress((audio.currentTime / audio.duration) * 100)
-        }
-      }, PLAYBACK_INTERVAL_MS)
     },
-    [volume]
+    [cleanupAudio, clearProgressInterval, flushPlaybackSession, repeatMode, startProgressInterval, volume]
   )
 
   // Listen for play-track events from sidebar
@@ -156,26 +241,56 @@ export function useMusic() {
   }, [playTrack])
 
   const togglePlayPause = useCallback(() => {
-    if (!audioRef.current) return
+    const audio = audioRef.current
+    if (!audio) return
+
     if (isPlaying) {
-      audioRef.current.pause()
-      if (progressInterval.current) clearInterval(progressInterval.current)
+      syncPlaybackProgress(audio)
+      if (playbackSessionRef.current) {
+        recordPlaybackPause(playbackSessionRef.current)
+      }
+      audio.pause()
+      clearProgressInterval()
+      setIsPlaying(false)
     } else {
-      audioRef.current.play()
-      progressInterval.current = setInterval(() => {
-        if (audioRef.current && audioRef.current.currentTime && audioRef.current.duration) {
-          setProgress((audioRef.current.currentTime / audioRef.current.duration) * 100)
-        }
-      }, PLAYBACK_INTERVAL_MS)
+      let nextSession: PlaybackSession | null = null
+      let nextEvent: ReturnType<typeof buildTrackPlayedEvent> | null = null
+
+      if (playbackSessionRef.current) {
+        playbackSessionRef.current.lastKnownTime = audio.currentTime
+      } else if (currentTrack) {
+        nextSession = createPlaybackSession(currentTrack)
+        nextEvent = buildTrackPlayedEvent(currentTrack, nextSession.sessionId)
+        playbackSessionRef.current = nextSession
+      }
+
+      audio
+        .play()
+        .then(() => {
+          if (nextEvent) {
+            posthogClient.capture(nextEvent.event, nextEvent.properties)
+          }
+          startProgressInterval(audio)
+          setIsPlaying(true)
+        })
+        .catch((err) => {
+          console.error("Playback failed:", err)
+          if (nextSession) {
+            playbackSessionRef.current = null
+          }
+          setIsPlaying(false)
+        })
     }
-    setIsPlaying(!isPlaying)
-  }, [isPlaying])
+  }, [clearProgressInterval, currentTrack, isPlaying, startProgressInterval, syncPlaybackProgress])
 
   const seekTo = useCallback(
     (percentage: number) => {
       if (!audioRef.current || !duration) return
       const time = (percentage / 100) * duration
       audioRef.current.currentTime = time
+      if (playbackSessionRef.current) {
+        recordPlaybackSeek(playbackSessionRef.current, time)
+      }
       setProgress(percentage)
     },
     [duration]
@@ -246,22 +361,13 @@ export function useMusic() {
   }, [])
 
   const stopPlayback = useCallback(() => {
-    if (audioRef.current) {
-      if (endedHandlerRef.current) {
-        audioRef.current.removeEventListener("ended", endedHandlerRef.current)
-      }
-      audioRef.current.pause()
-      audioRef.current = null
-    }
-    if (progressInterval.current) {
-      clearInterval(progressInterval.current)
-      progressInterval.current = null
-    }
+    flushPlaybackSession("stopped", audioRef.current)
+    cleanupAudio()
     setCurrentTrack(null)
     setIsPlaying(false)
     setProgress(0)
     setDuration(0)
-  }, [])
+  }, [cleanupAudio, flushPlaybackSession])
 
   return {
     tracks,
